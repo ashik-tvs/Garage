@@ -1,6 +1,3 @@
-
-
-
 import React, { useState } from "react";
 import Search from "../../home/Search";
 import NoImage from "../../../assets/No Image.png";
@@ -24,6 +21,16 @@ const recommendedProducts = [
     model: "Grand i10 1.1L Crdi",
     fuel: "Petrol",
     year: "2013 to 2016",
+  },
+  {
+    brand: "Bosch",
+    code: "LF6079",
+    title: "Rear Brake Pad Disc Set - F(EON)",
+    price: 425,
+    mrp: 600,
+    model: "Grand i10 1.1L Crdi",
+    fuel: "Petrol",
+    year: "2016 to 2020",
   },
   {
     brand: "Bosch",
@@ -74,15 +81,36 @@ const PartNumber = () => {
       <div className="pn-layout">
         {/* LEFT PANEL */}
         <div className="pn-left">
-          <h4 className="pn-left-title">Part Number Details</h4>
-          <img src={NoImage} alt="vehicle" className="pn-car-img" />
+          <div className="pn-title">
+            {" "}
+            <h4 className="pn-left-title">Part Number Details</h4>
+          </div>
+          <div className="pn-left-img">
+            {" "}
+            <img src={NoImage} alt="vehicle" className="pn-car-img" />
+          </div>
 
           <div className="pn-info">
-            <div><label>Make</label><span>Hyundai</span></div>
-            <div><label>Model</label><span>Grand i10</span></div>
-            <div><label>Variant</label><span>1.1L</span></div>
-            <div><label>Year</label><span>2021</span></div>
-            <div><label>Fuel Type</label><span>Petrol</span></div>
+            <div>
+              <label>Make</label>
+              <span>Hyundai</span>
+            </div>
+            <div>
+              <label>Model</label>
+              <span>Grand i10</span>
+            </div>
+            <div>
+              <label>Variant</label>
+              <span>1.1L</span>
+            </div>
+            <div>
+              <label>Year</label>
+              <span>2021</span>
+            </div>
+            <div>
+              <label>Fuel Type</label>
+              <span>Petrol</span>
+            </div>
           </div>
         </div>
 
@@ -120,4 +148,3 @@ const PartNumber = () => {
 };
 
 export default PartNumber;
-

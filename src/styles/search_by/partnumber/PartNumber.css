@@ -1,5 +1,3 @@
-
-
 .pn-wrapper {
   background: #f8fafc;
 }
@@ -8,7 +6,7 @@
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 20px;
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
 }
 
 /* LEFT */
@@ -16,8 +14,16 @@
   background: #fff;
   border-radius: 10px;
   padding: 16px;
+  align-items: center;
 }
-
+.pn-left-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.pn-left-img {
+  display: flex;
+  justify-content: center;
+}
 .pn-left-title {
   font-size: 14px;
   color: #2563eb;
@@ -25,9 +31,10 @@
 }
 
 .pn-car-img {
-  width: 100%;
+  width: 50%;
   border-radius: 8px;
   margin-bottom: 16px;
+
 }
 
 .pn-info div {
@@ -63,6 +70,10 @@
   border-radius: 20px;
   font-size: 12px;
   cursor: pointer;
+}
+.pn-filter img {
+  width: 12px;
+  height: 8px;
 }
 
 .pn-grid {

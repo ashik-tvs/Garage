@@ -1,13 +1,27 @@
 .srp-container {
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
   background: #fff;
   border-radius: 8px;
   font-family: Arial, sans-serif;
+}
+.srp-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
 }
 
 .srp-search-key {
   margin-bottom: 10px;
   font-size: 16px;
+}
+.srp-search-key-title{
+    font-weight: 300;
+    color: #424242;
+
+}
+.srp-search-key-value{
+color: #3749A6;
 }
 
 .srp-vehicle-info {
@@ -15,20 +29,65 @@
   font-size: 14px;
   text-align: right;
 }
+/* ---------- VEHICLE INFO BAR ---------- */
+.srp-vehicle-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0px 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  background: #fff;
+  float: right;
+}
+
+.srp-vehicle-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.srp-edit-icon {
+  width: 28px;
+  height: 28px;
+  background: #f36f21;
+  padding: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
 .srp-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.srp-table th,
+.srp-table th {
+  padding: 10px;
+  text-align: center;
+  vertical-align: middle;
+  width: 23%;
+  background-color: #f5f7f9;
+  font-weight: 100;
+  color: #454545;
+}
+
 .srp-table td {
   border: 1px solid #e5e7eb;
   padding: 10px;
   text-align: center;
   vertical-align: middle;
+  width: 23%;
 }
-
+.srp-card-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+.srp-card-image img {
+  width: 80px;
+  height: 80px;
+}
 .srp-product-card {
   display: flex;
   flex-direction: column;
@@ -56,10 +115,18 @@
   color: #fff;
 }
 
-.srp-mytvs { background-color: #007bff; }
-.srp-valeo { background-color: #00c853; }
-.srp-hyundai { background-color: #f57c00; }
-.srp-eta { background-color: #a1a1a1; }
+.srp-mytvs {
+  background-color: #007bff;
+}
+.srp-valeo {
+  background-color: #00c853;
+}
+.srp-hyundai {
+  background-color: #f57c00;
+}
+.srp-eta {
+  background-color: #a1a1a1;
+}
 
 .srp-price {
   font-size: 12px;
@@ -88,7 +155,11 @@
   background: #fff;
   cursor: pointer;
 }
-
+.srp-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
 .srp-submit-btn {
   margin-top: 20px;
   padding: 8px 20px;
@@ -97,6 +168,7 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  width: 100px;
 }
 
 .srp-note {
@@ -133,7 +205,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -151,7 +223,7 @@
   padding: 30px;
   text-align: center;
   z-index: 1001;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
 .srp-popup-check {

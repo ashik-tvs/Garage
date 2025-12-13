@@ -9,6 +9,7 @@ import ServiceTypeProduct from "./components/search_by/service_type/ServiceTypeP
 import Cart from "./components/cart/Cart.jsx";
 import Search from "./components/home/Search.jsx";
 import PartNumber from "./components/search_by/partnumber/PartNumber.jsx";
+import Image from "./components/search_by/image/Image.jsx";
 import { CartProvider } from "./context/CartContext.js";
 // import Login from "./components/login/Login.jsx";
 
@@ -38,6 +39,7 @@ function App() {
               element={<ServiceTypeProduct />}
             />
             <Route path="/search-by-part-number" element={<PartNumber />} />
+            <Route path="/search-by-image" element={<Image />} />
             <Route path="/cart" element={<Cart />} />
           </Route>
 
