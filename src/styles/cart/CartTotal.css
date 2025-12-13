@@ -1,0 +1,126 @@
+.cardtotal {
+  width: 89%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.cardtotal-frame {
+  width: 100%;
+}
+
+.cardtotal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 20px;
+}
+
+.cardtotal-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  font-size: 15px;
+}
+
+.cardtotal-row.total {
+  font-weight: 700;
+  margin-top: 15px;
+}
+
+.cardtotal-sep {
+  width: 100%;
+  height: 1px;
+  background: #E2E8F0;
+  margin: 12px 0;
+}
+
+.cardtotal-cta {
+  width: 100%;
+  padding: 12px;
+  background: #20409A;
+  color: #fff;
+  border-radius: 6px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+/* --- Center Loader --- */
+.loading-center {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.loader {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #ff7f32;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* --- Success Card --- */
+.success-popup-center {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.success-card {
+  width: 320px;
+  padding: 40px 28px;
+  background: #fff;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.2);
+}
+
+.success-tick {
+  width: 70px;
+  height: 70px;
+  background: #ff7f32;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 35px;
+  border-radius: 50%;
+  margin: auto;
+}
+
+.success-msg {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #444;
+  font-weight: 600;
+}
+/* Transparent grey overlay (same for loader + success popup) */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);  /* light white/grey overlay */
+  z-index: 90;
+}

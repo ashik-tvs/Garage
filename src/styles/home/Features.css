@@ -1,0 +1,148 @@
+.sixcat {
+  width: 100%;
+  background: #ffffff;
+  box-sizing: border-box;
+  padding: 10px 0;
+}
+
+.sixcat-inner {
+  width: 95%;
+  max-width: 1250px;
+  margin: 0 auto;
+  padding: 0 7px;
+  box-sizing: border-box;
+}
+
+.sixcat-title {
+  font-size: clamp(22px, 2vw, 28px);
+  color: #20409a;
+  margin: 0 0 20px 0;
+  text-align: left;
+  font-weight: 500;
+}
+
+/* Responsive flexible row */
+.sixcat-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+/* Category item */
+.sixcat-item {
+  flex: 1 1 180px;
+  max-width: 190px;
+  height: 75px;
+  background: #ffffff;
+  border: 2px solid #20409a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+}
+
+.sixcat-label {
+  font-size: clamp(13px, 1vw, 15px);
+  color: #20409a;
+  transition: color 0.25s ease;
+  user-select: none;
+}
+
+.sixcat-icon {
+  width: clamp(60px, 4vw, 60px);
+  height: clamp(60px, 4vw, 60px);
+  object-fit: contain;
+  /* filter: grayscale(100%) brightness(0.5); */
+  transition: filter 0.25s ease;
+}
+
+/* Hover & Active States */
+.sixcat-item:hover,
+.sixcat-item--active {
+  border: 2px solid #20409a;
+  box-shadow: 0 8px 20px rgba(32, 64, 154, 0.15);
+  transform: translateY(-3px);
+}
+
+.sixcat-item:hover .sixcat-label,
+.sixcat-item--active .sixcat-label {
+  color: #20409a;
+  font-weight: 600;
+}
+
+/* Default hover color effect for all */
+.sixcat-item:hover .sixcat-icon,
+.sixcat-item--active .sixcat-icon {
+  /* filter: brightness(1) saturate(1.4); */
+  transition: all 0.3s ease;
+}
+
+/* Keyboard focus */
+.sixcat-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(32, 64, 154, 0.25);
+}
+
+/* ✅ Large desktop (1440px+) */
+@media (min-width: 1440px) {
+  .sixcat-inner {
+    max-width: 1400px;
+  }
+
+  .sixcat-item {
+    flex: 1 1 200px;
+  }
+}
+
+/* ✅ Laptop screens (1024–1366px) */
+@media (max-width: 1366px) {
+  .sixcat-inner {
+    width: 92%;
+  }
+
+  .sixcat-row {
+    gap: 16px;
+  }
+
+  .sixcat-item {
+    flex: 1 1 160px;
+    height: 75px;
+  }
+
+  .sixcat-label {
+    font-size: 14px;
+  }
+}
+
+/* ✅ Tablet landscape (768–1023px) */
+@media (max-width: 1024px) {
+  .sixcat-inner {
+    width: 90%;
+  }
+
+  .sixcat-title {
+    font-size: 22px;
+  }
+
+  .sixcat-row {
+    gap: 15px;
+    justify-content: space-between;
+  }
+
+  .sixcat-item {
+    flex: 1 1 45%;
+    height: 75px;
+  }
+
+  .sixcat-icon {
+    width: 50px;
+    height: 50px;
+  }
+}

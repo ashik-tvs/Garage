@@ -1,0 +1,128 @@
+/* Container */
+.cartdetails {
+  width: 100%;
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Header */
+.cartdetails-header {
+  display: grid;
+  grid-template-columns: 1.3fr 0.6fr 0.6fr 0.6fr 0.3fr;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #E5E7EB;
+  color: #64748B;
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.cartdetails-col-clear {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.cartdetails-clearall-btn {
+  background: none;
+  border: none;
+  color: #CB1D1D;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+      white-space: nowrap;
+}
+
+/* Body */
+.cartdetails-body {
+  font-size: 12px;
+}
+
+.cartdetails-row {
+  display: grid;
+  grid-template-columns: 1.3fr 0.6fr 0.6fr 0.6fr 0.3fr;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #F1F5F9;
+  gap: 5px;
+}
+
+/* Product Column */
+.cartdetails-product {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cartdetails-product img {
+  width: 75px;
+  height: 60px;
+  object-fit: contain;
+  margin-top: 2px;
+}
+
+.cartdetails-product span {
+  font-size: 12px;
+  color: #1E293B;
+  font-weight: 500;
+}
+
+/* Price */
+.cartdetails-price {
+  font-size: 12px;
+  color: #111827;
+}
+
+/* Quantity Controls */
+.cartdetails-quantity-box {
+  width: 70px;
+  height: 30px;
+  border: 1.5px solid #CBD5E1;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 8px;
+}
+
+.cartdetails-qty-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #1E293B;
+}
+
+.cartdetails-qty-value {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Remove Button */
+.cartdetails-remove-btn {
+  background: rgba(203, 29, 29, 0.1);
+  color: #CB1D1D;
+  border: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16px;
+}
+
+/* Empty Cart */
+.empty-cart-wrapper {
+  text-align: center;
+}
+
+.empty-cart-img {
+  width: 170px;
+  margin-bottom: 20px;
+}

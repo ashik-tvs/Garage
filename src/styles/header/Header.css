@@ -1,0 +1,144 @@
+/* HEADER MAIN WRAPPER */
+.header-body {
+  width: 100%;
+  height: 65px;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+}
+
+/* INNER CONTAINER */
+.header-container {
+  width: 95%;
+  max-width: 1450px; /* ensures perfect center on big screens */
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+/* LEFT LOGO */
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-logo {
+  height: 35px;
+  object-fit: contain;
+}
+
+
+/* RIGHT SIDE */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 35px;
+}
+
+.header-item {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+}
+
+.header-icon {
+  height: 22px;
+  margin-right: 6px;
+}
+
+.header-text {
+  font-size: 14px;
+  color: #5c5c5c;
+  font-weight: 500;
+}
+
+
+/* CART COUNT BADGE */
+.header-cart {
+  position: relative;
+}
+
+.header-cart-count {
+  position: absolute;
+  top: -6px;
+  right: -10px;
+  background: #ff0000;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 50%;
+}
+
+
+/* ------------------------------------ */
+/*        RESPONSIVE (DESKTOP ONLY)     */
+/* ------------------------------------ */
+
+/* Large laptops (max-width: 1366px) */
+@media (max-width: 1366px) {
+  .header-right {
+    gap: 25px;
+  }
+
+  .header-icon {
+    height: 20px;
+  }
+
+  .header-text {
+    font-size: 13px;
+  }
+}
+
+/* Medium laptops (max-width: 1280px) */
+@media (max-width: 1280px) {
+  .header-right {
+    gap: 50px;
+  }
+
+  .header-logo {
+    height: 32px;
+  }
+}
+
+/* Small laptops (max-width: 1100px) */
+@media (max-width: 1100px) {
+  .header-container {
+    width: 90%;
+  }
+
+  .header-right {
+    gap: 40px;
+  }
+
+  .header-text {
+    font-size: 12px;
+  }
+}
+
+/* Very small desktop / big tablets like iPad landscape (max-width: 900px) */
+@media (max-width: 900px) {
+  .header-right {
+    gap: 30px;
+  }
+
+  .header-icon {
+    height: 18px;
+  }
+
+  .header-logo {
+    height: 30px;
+  }
+
+  .header-text {
+    display: none; /* hide text on small desktops to keep clean look */
+  }
+}

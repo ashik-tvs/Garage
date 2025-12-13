@@ -1,0 +1,55 @@
+/* =============== CART PAGE LAYOUT =============== */
+
+.cart-page {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  max-width: 1165px;
+  margin: 30px auto;
+  padding: 0 20px;
+  gap: 70px;
+}
+
+/* Left Section */
+.cart-left {
+  flex: 1;
+  min-width: 750px;
+}
+
+/* Right Section */
+.cart-right {
+  width: 340px;
+  flex-shrink: 0;
+    position: sticky;
+  top: 120px;
+}
+@media (max-width: 1024px) {
+  .cart-page {
+    flex-direction: column;
+  }
+
+  .cart-right {
+    width: 100%;
+    margin-top: 25px;
+  }
+
+  .cart-left {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .cartdetails-header,
+  .cartdetails-row {
+    grid-template-columns: 1fr 0.5fr 0.5fr;
+  }
+
+  .cartdetails-subtotal,
+  .cartdetails-clear {
+    display: none;
+  }
+
+  .cardtotal {
+    width: 100%;
+  }
+}

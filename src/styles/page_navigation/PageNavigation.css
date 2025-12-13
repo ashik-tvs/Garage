@@ -1,0 +1,41 @@
+/* ---- BREADCRUMB ---- */
+.breadcrumb-container {
+  max-width: 1165px;
+  margin: 10px auto 10px auto;
+}
+
+.breadcrumb-tabs {
+  display: flex;
+  align-items: center;
+  gap: clamp(0px, 0.0vw, 10px);
+}
+
+/* Each breadcrumb box */
+.crumb {
+  padding: 6px 24px;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: clamp(8px, 0vw, 10px);
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+
+  /* angled look */
+  clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+  border-radius: 4px;
+
+  transition: 0.25s ease;
+}
+
+/* Hover effect */
+.crumb:hover {
+  background: #e3ebff;
+  color: #20409a;
+}
+
+/* Active last tab */
+.crumb.active {
+  background: #dbe7ff;
+  color: #20409a;
+  font-weight: 600;
+}

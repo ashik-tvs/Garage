@@ -1,0 +1,96 @@
+.section-container {
+  width: 100%;
+  padding: 10px 0;
+}
+
+.section-header {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.see-more {
+  font-size: 14px;
+  color: #ff6a00;
+  cursor: pointer;
+}
+
+.grid-container {
+  width: 90%;
+  margin: 20px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 25px;
+}
+/* === Figma Look Category Card === */
+.cat-card {
+  min-width: 110px;
+  max-width: 110px;
+  border-radius: 10px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image box */
+.cat-img-box {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image */
+.cat-img {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+}
+
+/* Text */
+.cat-label {
+  margin-top: 10px;
+  font-size: 14px;
+  text-align: center;
+  font-weight: 500;
+  background: #f3f3f3;
+  padding: 4px;
+  width: 100px;
+  border-radius: 2px;
+}
+/* Responsive */
+@media (max-width: 768px) {
+  .cat-card {
+    min-width: 95px;
+  }
+
+  .cat-img {
+    width: 60px;
+    height: 60px;
+  }
+}
+/* Responsive */
+@media (max-width: 1200px) {
+  .item-card {
+    min-width: 100px;
+  }
+  .item-img {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .item-card {
+    min-width: 90px;
+  }
+  .item-img {
+    width: 55px;
+    height: 55px;
+  }
+}

@@ -1,0 +1,161 @@
+.srp-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  font-family: Arial, sans-serif;
+}
+
+.srp-search-key {
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.srp-vehicle-info {
+  margin-bottom: 20px;
+  font-size: 14px;
+  text-align: right;
+}
+
+.srp-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.srp-table th,
+.srp-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.srp-product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.srp-product-card img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
+.srp-badges {
+  display: flex;
+  gap: 5px;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.srp-badge {
+  padding: 2px 4px;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.srp-mytvs { background-color: #007bff; }
+.srp-valeo { background-color: #00c853; }
+.srp-hyundai { background-color: #f57c00; }
+.srp-eta { background-color: #a1a1a1; }
+
+.srp-price {
+  font-size: 12px;
+  color: #111827;
+}
+
+.srp-price del {
+  font-size: 10px;
+  color: #9ca3af;
+  margin-left: 5px;
+}
+
+.srp-qty-box {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.srp-qty-box button {
+  width: 20px;
+  height: 20px;
+  font-size: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.srp-submit-btn {
+  margin-top: 20px;
+  padding: 8px 20px;
+  background-color: #f97316;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.srp-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #f44336;
+}
+.srp-card-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.srp-checkbox-left {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+}
+
+.srp-submit-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.srp-blur {
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.srp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  z-index: 1000;
+}
+
+.srp-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  z-index: 1001;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+}
+
+.srp-popup-check {
+  font-size: 40px;
+  color: #f97316;
+  margin-bottom: 15px;
+}

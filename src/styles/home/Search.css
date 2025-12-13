@@ -1,0 +1,110 @@
+.search-wrapper {
+    width: 100%;
+    padding: 20px 0;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+}
+
+/* 🔥 FIXED BANNER FULL SIZE */
+.search-banner-container {
+    width: 89%;
+    height: 150px;
+  background-size: cover !important;   /* ensure full stretch */
+  background-position: left center !important; /* car visible */
+  background-repeat: no-repeat !important;
+    border-radius: 4px;
+  display: flex;
+  align-items: center;
+
+  /* Reduce cutting on big screens */
+  padding: 0 50px;
+}
+
+/* Content box on right */
+.search-content {
+  width: 50%;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Title */
+.search-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+  margin: 0;
+}
+
+/* Search box */
+.search-box {
+  width: 60%;
+  height: 42px;
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.search-icon {
+  width: 18px;
+  opacity: 0.7;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-mic {
+  font-size: 20px;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+.search-upload {
+  font-size: 22px;
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+/* Fix for 1100px screens */
+@media (max-width: 1100px) {
+  .search-content {
+    width: 55%;
+  }
+}
+
+/* Fix for tablets */
+@media (max-width: 900px) {
+  .search-banner-container {
+    height: 260px;
+    background-position: center;
+    justify-content: center;
+    padding: 0 20px;
+  }
+
+  .search-content {
+    width: 80%;
+    text-align: center;
+    margin: 0 auto;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .search-banner-container {
+    height: 260px;
+  }
+
+  .search-title {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,111 @@
+.st-s-service-type-search {
+  padding: 0px 20px 20px 20px;
+}
+
+/* Row for vehicle search + filters */
+.st-s-filter-container {
+  margin: 20px 0;
+}
+
+.st-s-row-center {
+  display: flex;
+  align-items: center; /* center vertically */
+  justify-content: center; /* center horizontally if needed */
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+/* Vehicle Number Search */
+.st-s-vehicle-number-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.st-s-vehicle-input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.st-s-search-btn {
+  background-color: #ff6c00;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* OR Text */
+.st-s-or-text {
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0 10px;
+}
+
+/* Filters */
+.st-s-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.st-s-filter-dropdown {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.st-s-find-btn {
+  background-color: #ff6c00;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Make Grid */
+.st-s-make-grid-container {
+  margin-top: 30px;
+}
+
+.st-s-make-title {
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.st-s-make-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 15px;
+}
+
+.st-s-make-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.st-s-make-card:hover {
+  transform: scale(1.05);
+}
+
+.st-s-make-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  margin-bottom: 5px;
+}
+
+.st-s-make-name {
+  font-size: 12px;
+  text-align: center;
+}
