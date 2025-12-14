@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import Search from "../../home/Search";
+import { useCart } from "../../../context/CartContext";
 import NoImage from "../../../assets/No Image.png";
 import DropDownIcon from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
@@ -46,33 +47,63 @@ const recommendedProducts = [
 
 const otherProducts = [...recommendedProducts];
 
-const ProductCard = ({ item }) => (
-  <div className="pn-card">
-    <img src={NoImage} alt="product" className="pn-product-img" />
+/* ---------------- PRODUCT CARD ---------------- */
+const ProductCard = ({ item }) => {
+  const { cartItems, addToCart,removeFromCart } = useCart();
 
-    <div className="pn-badges">
-      <span className="pn-badge brand">{item.brand}</span>
-      <span className="pn-badge success">In stock</span>
-      <span className="pn-badge muted">1-2 Days</span>
+  const isAdded = cartItems.some(
+    (cartItem) => cartItem.partNumber === item.code
+  );
+
+  const handleAddToCart = () => {
+    if (!isAdded) {
+      addToCart({
+        partNumber: item.code,
+        itemDescription: item.title,
+        listPrice: item.price,
+        imageUrl: NoImage,
+        brand: item.brand,
+      });
+    }
+  };
+
+  return (
+    <div className="pn-card">
+      <img src={NoImage} alt="product" className="pn-product-img" />
+
+      <div className="pn-badges">
+        <span className="pn-badge brand">{item.brand}</span>
+        <span className="pn-badge success">In stock</span>
+        <span className="pn-badge muted">1-2 Days</span>
+      </div>
+
+      <div className="pn-code">{item.code}</div>
+      <div className="pn-title">{item.title}</div>
+
+      <div className="pn-price-row">
+        <span className="pn-price">₹ {item.price}.00</span>
+        <span className="pn-mrp">₹ {item.mrp}.00</span>
+
+        <button
+          className={`pn-add-btn ${isAdded ? "added" : ""}`}
+          onClick={() =>
+            isAdded ? removeFromCart(item.code) : handleAddToCart()
+          }
+        >
+          {isAdded ? "Added" : "Add"}
+        </button>
+      </div>
+
+      <div className="pn-meta">
+        <span>{item.model}</span>
+        <span>{item.fuel}</span>
+        <span>{item.year}</span>
+      </div>
     </div>
+  );
+};
 
-    <div className="pn-code">{item.code}</div>
-    <div className="pn-title">{item.title}</div>
-
-    <div className="pn-price-row">
-      <span className="pn-price">₹ {item.price}.00</span>
-      <span className="pn-mrp">₹ {item.mrp}.00</span>
-      <button className="pn-add-btn">Add</button>
-    </div>
-
-    <div className="pn-meta">
-      <span>{item.model}</span>
-      <span>{item.fuel}</span>
-      <span>{item.year}</span>
-    </div>
-  </div>
-);
-
+/* ---------------- MAIN PAGE ---------------- */
 const PartNumber = () => {
   return (
     <div className="pn-wrapper">
@@ -81,14 +112,8 @@ const PartNumber = () => {
       <div className="pn-layout">
         {/* LEFT PANEL */}
         <div className="pn-left">
-          <div className="pn-title">
-            {" "}
-            <h4 className="pn-left-title">Part Number Details</h4>
-          </div>
-          <div className="pn-left-img">
-            {" "}
-            <img src={NoImage} alt="vehicle" className="pn-car-img" />
-          </div>
+          <h4 className="pn-left-title">Part Number Details</h4>
+          <img src={NoImage} alt="vehicle" className="pn-car-img" />
 
           <div className="pn-info">
             <div>

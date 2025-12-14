@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Search from "../../home/Search";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
@@ -101,7 +100,6 @@ const Product = () => {
       imageUrl: NoImage,
     });
 
-    navigate("/cart");
   };
 
   const renderProductCard = (product) => (
@@ -137,7 +135,6 @@ const Product = () => {
 
   return (
     <div className="product-container">
-      <Search />
 
       {/* ---------- TOP SECTION ---------- */}
       <div className="product-top-row">

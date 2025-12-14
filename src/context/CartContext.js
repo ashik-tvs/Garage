@@ -1,10 +1,19 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    const storedCart = localStorage.getItem("cartItems");
+    return storedCart ? JSON.parse(storedCart) : [];
+  });
 
+  /* 🔁 Persist cart data */
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
+
+  /* ➕ Add to cart */
   const addToCart = (product) => {
     setCartItems((prev) => {
       const existing = prev.find(
@@ -23,25 +32,36 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  const updateQuantity = (partNumber, change) => {
+  /* 🔢 Update quantity */
+  const updateQuantity = (partNumber, delta) => {
     setCartItems((prev) =>
       prev
         .map((item) =>
           item.partNumber === partNumber
-            ? { ...item, quantity: item.quantity + change }
+            ? { ...item, quantity: item.quantity + delta }
             : item
         )
         .filter((item) => item.quantity > 0)
     );
   };
 
+  /* ❌ Remove item */
   const removeFromCart = (partNumber) => {
     setCartItems((prev) =>
       prev.filter((item) => item.partNumber !== partNumber)
     );
   };
 
-  const clearCart = () => setCartItems([]);
+  /* 🧹 Clear cart */
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
+  /* 💰 Cart total */
+  const cartTotal = cartItems.reduce(
+    (sum, item) => sum + item.quantity * item.listPrice,
+    0
+  );
 
   return (
     <CartContext.Provider
@@ -51,6 +71,7 @@ export const CartProvider = ({ children }) => {
         updateQuantity,
         removeFromCart,
         clearCart,
+        cartTotal,
       }}
     >
       {children}

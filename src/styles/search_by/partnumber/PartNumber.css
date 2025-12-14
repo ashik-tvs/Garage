@@ -154,14 +154,19 @@
 }
 
 .pn-add-btn {
-  margin-left: auto;
-  background: #f97316;
+  background: #f7931e;
   color: #fff;
   border: none;
+  padding: 6px 14px;
   border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
   cursor: pointer;
+  font-size: 13px;
+}
+
+.pn-add-btn.added {
+  background: #2e7d32;
+  cursor: pointer;
+  opacity: 0.85;
 }
 
 .pn-meta {
