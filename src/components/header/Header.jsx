@@ -45,7 +45,6 @@ const Header = () => {
             onClick={() => navigate("/cart")}
             style={{ cursor: "pointer" }}
           
-            onClick={() => navigate("/cart")}
           >
             <img src={CartIcon} alt="Cart" className="header-icon" />
             <span className="header-text">Cart</span>

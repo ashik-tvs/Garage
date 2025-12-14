@@ -13,25 +13,16 @@
   box-sizing: border-box;
 }
 
-.sixcat-title {
-  font-size: clamp(22px, 2vw, 28px);
-  color: #20409a;
-  margin: 0 0 20px 0;
-  text-align: left;
-  font-weight: 500;
-}
-
-/* Responsive flexible row */
+/* ---------------- ROW ---------------- */
 .sixcat-row {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-start;
   align-items: center;
   gap: 20px;
   width: 100%;
 }
 
-/* Category item */
+/* ---------------- ITEM ---------------- */
 .sixcat-item {
   flex: 1 1 180px;
   max-width: 190px;
@@ -39,58 +30,56 @@
   background: #ffffff;
   border: 2px solid #20409a;
   border-radius: 8px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   padding: 0 12px;
-  cursor: pointer;
-  transition: all 0.25s ease;
   box-sizing: border-box;
+
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  will-change: transform;
 }
 
+/* ---------------- LABEL ---------------- */
 .sixcat-label {
-  font-size: clamp(13px, 1vw, 15px);
+  min-width: 95px;            /* 🔒 prevents reflow */
+  font-size: 14px;
+  font-weight: 600;           /* same weight always → no jump */
   color: #20409a;
-  transition: color 0.25s ease;
   user-select: none;
 }
 
+/* ---------------- ICON ---------------- */
 .sixcat-icon {
-  width: clamp(60px, 4vw, 60px);
-  height: clamp(60px, 4vw, 60px);
+  width: 60px;
+  height: 60px;
   object-fit: contain;
-  /* filter: grayscale(100%) brightness(0.5); */
-  transition: filter 0.25s ease;
+  flex-shrink: 0;
+  transition: transform 0.25s ease;
 }
 
-/* Hover & Active States */
+/* ---------------- HOVER / ACTIVE ---------------- */
 .sixcat-item:hover,
 .sixcat-item--active {
-  border: 2px solid #20409a;
   box-shadow: 0 8px 20px rgba(32, 64, 154, 0.15);
-  transform: translateY(-3px);
+  transform: translateY(-1px);
 }
 
-.sixcat-item:hover .sixcat-label,
-.sixcat-item--active .sixcat-label {
-  color: #20409a;
-  font-weight: 600;
-}
-
-/* Default hover color effect for all */
 .sixcat-item:hover .sixcat-icon,
 .sixcat-item--active .sixcat-icon {
-  /* filter: brightness(1) saturate(1.4); */
-  transition: all 0.3s ease;
+  transform: scale(1.05);
 }
 
-/* Keyboard focus */
+/* ---------------- ACCESSIBILITY ---------------- */
 .sixcat-item:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(32, 64, 154, 0.25);
+  box-shadow: 0 0 0 3px rgba(32, 64, 154, 0.3);
 }
 
-/* ✅ Large desktop (1440px+) */
+/* ---------------- LARGE DESKTOP ---------------- */
 @media (min-width: 1440px) {
   .sixcat-inner {
     max-width: 1400px;
@@ -101,7 +90,7 @@
   }
 }
 
-/* ✅ Laptop screens (1024–1366px) */
+/* ---------------- LAPTOP ---------------- */
 @media (max-width: 1366px) {
   .sixcat-inner {
     width: 92%;
@@ -115,20 +104,12 @@
     flex: 1 1 160px;
     height: 75px;
   }
-
-  .sixcat-label {
-    font-size: 14px;
-  }
 }
 
-/* ✅ Tablet landscape (768–1023px) */
+/* ---------------- TABLET ---------------- */
 @media (max-width: 1024px) {
   .sixcat-inner {
     width: 90%;
-  }
-
-  .sixcat-title {
-    font-size: 22px;
   }
 
   .sixcat-row {

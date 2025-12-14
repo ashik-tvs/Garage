@@ -94,6 +94,13 @@
   align-items: center;
   justify-content: center;
 }
+.header-body,
+.header-container,
+.header-right,
+.header-item,
+.header-cart {
+  overflow: visible;
+}
 
 /* ------------------------------------ */
 /*        RESPONSIVE (DESKTOP ONLY)     */
