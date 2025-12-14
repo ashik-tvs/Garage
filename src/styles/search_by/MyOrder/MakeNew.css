@@ -1,0 +1,354 @@
+/* Make Container */
+.make-container {
+  position: relative;
+  width: 100%;
+  max-width: 1365px;
+  min-height: 760px;
+  background: #FFFFFF;
+  padding: 20px;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Make Header */
+.make-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+/* Back Button */
+.make-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: #F36F21;
+  border: 1px solid rgba(233, 233, 233, 0.08);
+  border-radius: 70px;
+  cursor: pointer;
+  padding: 0;
+  transform: matrix(-1, 0, 0, 1, 0, 0);
+}
+
+.make-back-icon {
+  width: 7px;
+  height: 10px;
+  border-left: 1.5px solid #FFFFFF;
+  border-bottom: 1.5px solid #FFFFFF;
+  transform: rotate(45deg);
+}
+
+/* Make Title */
+.make-title {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 48px;
+  letter-spacing: 0.04em;
+  color: #424242;
+  margin: 0;
+}
+
+/* Make Grid Wrapper */
+.make-grid-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  max-width: 1310px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* Make Row */
+.make-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.make-row-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Hide scrollbar */
+.make-row-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.make-row-inner {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Make Card */
+.make-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 20px;
+  gap: 10px;
+  min-width: 110px;
+  width: 110px;
+  height: 109px;
+  background: #FFFFFF;
+  border: 1px solid #DFDFDF;
+  border-radius: 10px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.make-card:hover {
+  border-color: #F36F21;
+  box-shadow: 0px 2px 8px rgba(243, 111, 33, 0.2);
+}
+
+/* Wide Card Variant for ASHOK LEYLAND */
+.make-card-wide {
+  min-width: 119px;
+  width: 119px;
+}
+
+/* Medium Card Variant for FORCE MOTOR and MERCEDES BENZ */
+.make-card-medium {
+  min-width: 112px;
+  width: 112px;
+}
+
+/* Medium-Large Card Variant for SONALIKA */
+.make-card-medium-large {
+  min-width: 116px;
+  width: 116px;
+}
+
+/* BYD Card Variant */
+.make-card-byd {
+  min-width: 120px;
+  width: 120px;
+}
+
+/* Image Wrapper */
+.make-img-wrapper {
+  width: 70px;
+  height: 66px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.make-card-wide .make-img-wrapper {
+  width: 79px;
+}
+
+.make-card-medium .make-img-wrapper {
+  width: 70px;
+}
+
+.make-card-medium-large .make-img-wrapper {
+  width: 76px;
+}
+
+.make-card-byd .make-img-wrapper {
+  width: 80px;
+  flex-grow: 1;
+}
+
+/* Make Image */
+.make-img {
+  width: 100%;
+  max-width: 70px;
+  height: auto;
+  max-height: 50px;
+  object-fit: contain;
+}
+
+/* Make Text */
+.make-text {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 0px;
+  gap: 10px;
+  width: 70px;
+  height: 13px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.make-card-wide .make-text {
+  width: 79px;
+}
+
+.make-card-medium .make-text {
+  width: 72px;
+}
+
+.make-card-medium-large .make-text {
+  width: 76px;
+}
+
+.make-card-byd .make-text {
+  width: 80px;
+}
+
+/* Make Name */
+.make-name {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 10px;
+  line-height: 128.91%;
+  text-align: center;
+  color: #454545;
+  margin: 0;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1366px) {
+  .make-container {
+    max-width: 100%;
+  }
+
+  .make-grid-wrapper {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .make-container {
+    padding: 15px;
+  }
+
+  .make-title {
+    font-size: 18px;
+    line-height: 36px;
+  }
+
+  .make-row-inner {
+    gap: 8px;
+    overflow-x: auto;
+  }
+
+  .make-card {
+    min-width: 90px;
+    width: 90px;
+    height: 95px;
+    padding: 8px 15px;
+  }
+
+  .make-card-wide {
+    min-width: 100px;
+    width: 100px;
+  }
+
+  .make-card-medium {
+    min-width: 95px;
+    width: 95px;
+  }
+
+  .make-card-medium-large {
+    min-width: 98px;
+    width: 98px;
+  }
+
+  .make-card-byd {
+    min-width: 100px;
+    width: 100px;
+  }
+
+  .make-img-wrapper {
+    width: 60px;
+    height: 56px;
+  }
+
+  .make-text {
+    width: 60px;
+  }
+
+  .make-name {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .make-container {
+    padding: 10px;
+  }
+
+  .make-title {
+    font-size: 16px;
+    line-height: 32px;
+  }
+
+  .make-row-inner {
+    gap: 6px;
+  }
+
+  .make-card {
+    min-width: 80px;
+    width: 80px;
+    height: 85px;
+    padding: 6px 12px;
+  }
+
+  .make-card-wide {
+    min-width: 90px;
+    width: 90px;
+  }
+
+  .make-card-medium {
+    min-width: 85px;
+    width: 85px;
+  }
+
+  .make-card-medium-large {
+    min-width: 88px;
+    width: 88px;
+  }
+
+  .make-card-byd {
+    min-width: 90px;
+    width: 90px;
+  }
+
+  .make-img-wrapper {
+    width: 50px;
+    height: 46px;
+  }
+
+  .make-text {
+    width: 50px;
+  }
+
+  .make-name {
+    font-size: 8px;
+  }
+}

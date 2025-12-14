@@ -10,6 +10,12 @@ import Cart from "./components/cart/Cart.jsx";
 import Search from "./components/home/Search.jsx";
 import PartNumber from "./components/search_by/partnumber/PartNumber.jsx";
 import Image from "./components/search_by/image/Image.jsx";
+import MyOrder from "./components/search_by/MyOrder/MyOrder.jsx";
+import Brand from "./components/search_by/MyOrder/Brand.jsx";
+import MakeNew from "./components/search_by/MyOrder/MakeNew.jsx";
+import Model from "./components/search_by/MyOrder/Model.jsx";
+import Category from "./components/search_by/MyOrder/Category.jsx";
+// import Make1 from "./components/search_by/MyOrder/Make1.jsx";
 import { CartProvider } from "./context/CartContext.js";
 // import Login from "./components/login/Login.jsx";
 
@@ -40,6 +46,12 @@ function App() {
             />
             <Route path="/search-by-part-number" element={<PartNumber />} />
             <Route path="/search-by-image" element={<Image />} />
+            <Route path="/my-orders" element={<MyOrder />} />
+            <Route path="/brand" element={<Brand />} />
+            <Route path="/MakeNew" element={<MakeNew />} />
+            <Route path="/Model" element={<Model />} />
+            <Route path="/Category" element={<Category />} />
+            {/* <Route path="/make1" element={<Make1 />} /> */}
             <Route path="/cart" element={<Cart />} />
           </Route>
 

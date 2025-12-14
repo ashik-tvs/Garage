@@ -1,0 +1,199 @@
+/* Hide scrollbar globally for this page */
+* {
+  overflow-x: hidden;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Container */
+.brand-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px 40px;
+  background: #FFFFFF;
+  font-family: 'Poppins', sans-serif;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.brand-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.brand-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Top Section */
+.brand-top-section {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  margin-bottom: 50px;
+}
+
+/* Back Button */
+.brand-back-button {
+  width: 24px;
+  height: 24px;
+  background: #F36F21;
+  border: 1px solid rgba(233, 233, 233, 0.08);
+  border-radius: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  /* transform: matrix(-1, 0, 0, 1, 0, 0); */
+  gap: 10px;
+}
+
+.brand-back-button img {
+  width: 10px;
+  height: 10px;
+  /* filter: brightness(0) invert(1); */
+  /* border: 1.5px solid #FFFFFF; */
+  /* transform: matrix(1, 0, 0, -1, 0, 0); */
+}
+
+/* Title */
+.brand-title {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 48px;
+  letter-spacing: 0.04em;
+  color: #424242;
+  margin: 0;
+}
+
+/* Brands Grid */
+.brands-grid {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  align-content: flex-start;
+  padding: 0px;
+  gap: 55px 43px;
+  width: 100%;
+  max-width: 1297px;
+  margin: 0 auto;
+}
+
+/* Brand Card */
+.brand-card {
+  width: 90.95px;
+  height: 86.99px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.brand-image-wrapper {
+  box-sizing: border-box;
+  position: relative;
+  width: 90.95px;
+  height: 86.99px;
+  background: #FFFFFF;
+  border: 1px solid rgba(69, 69, 69, 0.1);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.brand-image-wrapper:hover {
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.brand-image {
+  max-width: 70px;
+  max-height: 70px;
+  object-fit: contain;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+  .brands-grid {
+    gap: 40px 35px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .brand-container {
+    padding: 20px;
+  }
+
+  .brands-grid {
+    gap: 35px 30px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-top-section {
+    margin-bottom: 30px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+    line-height: 36px;
+  }
+
+  .brands-grid {
+    gap: 25px 20px;
+    justify-content: center;
+  }
+
+  .brand-card {
+    width: 80px;
+    height: 76px;
+  }
+
+  .brand-image-wrapper {
+    width: 80px;
+    height: 76px;
+  }
+
+  .brand-image {
+    max-width: 60px;
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brands-grid {
+    gap: 20px 15px;
+  }
+
+  .brand-card {
+    width: 70px;
+    height: 66px;
+  }
+
+  .brand-image-wrapper {
+    width: 70px;
+    height: 66px;
+  }
+
+  .brand-image {
+    max-width: 50px;
+    max-height: 50px;
+  }
+}

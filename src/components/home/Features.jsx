@@ -16,10 +16,10 @@ const Features = () => {
   const categories = [
     { id: 1, label: "Fast Movers", icon: Speedometer, path: "/fast-movers" },
     { id: 2, label: "High Value", icon: Brake, path: "/high-value" },
-    { id: 3, label: "CNG", icon: Car1, path: "/cng" },
+    { id: 3, label: "CNG", icon: Car1, path: "/MakeNew" },
     { id: 4, label: "Discontinued Model", icon: Car, path: "/discontinue-model" },
     { id: 5, label: "Electric", icon: ElectricCar, path: null },
-    { id: 6, label: "Only with us", icon: MyTVS, path: null },
+    { id: 6, label: "Only with us", icon: MyTVS, path: "/brand" },
   ];
 
   const [activeId, setActiveId] = useState(null);
