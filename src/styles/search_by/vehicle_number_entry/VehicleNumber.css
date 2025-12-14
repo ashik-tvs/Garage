@@ -157,6 +157,7 @@
   border-radius: 8px;
   background: #fff;
 }
+
 .service-header {
   display: flex;
   align-items: center;
@@ -166,38 +167,47 @@
   color: #fff;
   justify-content: space-between;
 }
+
 .service-header img {
   width: 20px;
   height: 20px;
 }
+
 .service-header h4 {
   margin: 0;
   font-size: 15px;
   font-weight: 700;
 }
+
+/* 🔹 Bullet list */
 .service-panel ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+    list-style-type: disc;
+    padding-left: 32px;
+    margin: 10px 0;
+    background-color: #F3F3F3;
+
 }
+
+/* 🔹 Bullet items */
 .service-panel li {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f2f2f2;
-  cursor: pointer;
+  padding: 6px 0;            /* Remove box feel */
+  border-bottom: none;       /* Remove divider */
+  cursor: default;           /* Not clickable */
   font-size: 14px;
   color: #444;
 }
+
+/* ❌ Remove select behavior */
 .service-panel li:hover {
-  background: #fafafa;
+  background: transparent;
 }
+
 .service-panel li.selected {
-  background: #fff4ea;
-  color: #f7931e;
-  font-weight: 700;
+  background: transparent;
+  color: #444;
+  font-weight: 400;
 }
-.service-panel li:last-child {
-  border-bottom: none;
-}
+
 
 /* Layout */
 .vehicle-content {

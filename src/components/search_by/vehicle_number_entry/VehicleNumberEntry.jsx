@@ -72,27 +72,24 @@ const CategoryGrid = ({ title, items, onSelect }) => (
 );
 
 const ServicePanel = ({ services }) => {
-  const [selected, setSelected] = useState(services[0]);
   return (
     <div className="service-panel">
       <div className="service-header">
         <h4>Service Type</h4>
-        <img src={ServiceTypeIcon} alt="" />
+        <img src={ServiceTypeIcon} alt="service" />
       </div>
-      <ul>
-        {services.map((s, i) => (
-          <li
-            key={i}
-            className={selected === s ? "selected" : ""}
-            onClick={() => setSelected(s)}
-          >
-            {s}
+
+      <ul className="service-list">
+        {services.map((service, i) => (
+          <li key={i} className="service-item">
+            {service}
           </li>
         ))}
       </ul>
     </div>
   );
 };
+
 
 // -------------------- MAIN --------------------
 const VehicleNumberEntry = () => {
