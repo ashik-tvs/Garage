@@ -37,7 +37,7 @@ const SUB_CATEGORIES = [
 ];
 
 // -------------------- SMALL COMPONENTS --------------------
-const VehicleSelection = ({ vehicle, onEdit }) => (
+const VehicleSelection = ({ vehicle, onEdit, showEdit, onCancel, onConfirm }) => (
   <div className="Vne-selection">
     <div className="Vne-selection-tags">
       {[vehicle.make, vehicle.model, vehicle.variant, vehicle.fuel, vehicle.year].map(
@@ -49,6 +49,28 @@ const VehicleSelection = ({ vehicle, onEdit }) => (
       )}
       <img src={EditIcon} className="Vne-edit-icon" alt="edit" onClick={onEdit} />
     </div>
+    
+    {showEdit && (
+      <div className="Vne-edit-dropdowns">
+        <select className="Vne-dropdown">
+          <option>Select Make</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Model</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Variant</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Fuel type</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Year</option>
+        </select>
+        <button className="Vne-find-btn" onClick={onConfirm}>Find Auto Parts</button>
+      </div>
+    )}
+    
     <div className="Vne-selection-hint">You can change your vehicle details</div>
   </div>
 );
@@ -114,12 +136,23 @@ const VehicleNumberEntry = () => {
     });
   };
 
+  const handleConfirmEdit = () => {
+    setShowPopup(false);
+    // Add logic to update vehicle details here
+  };
+
   return (
     <div className="Vne-vehicle-page">
       <Search />
 
       <div className="Vne-vehicle-content">
-        <VehicleSelection vehicle={vehicle} onEdit={() => setShowPopup(true)} />
+        <VehicleSelection 
+          vehicle={vehicle} 
+          onEdit={() => setShowPopup(!showPopup)}
+          showEdit={showPopup}
+          onCancel={() => setShowPopup(false)}
+          onConfirm={handleConfirmEdit}
+        />
 
         <div className="Vne-main-content">
           <div className="Vne-left-section">
@@ -150,37 +183,6 @@ const VehicleNumberEntry = () => {
           </div>
         </div>
       </div>
-
-      {/* ---------------- POPUP ---------------- */}
-      {showPopup && (
-        <div className="Vne-popup-overlay">
-          <div className="Vne-popup-card">
-            <h3>Edit Vehicle</h3>
-
-            <input
-              className="Vne-plate-input"
-              placeholder="Enter Vehicle Number"
-            />
-
-            <div className="Vne-popup-divider">OR</div>
-
-            <select><option>Make</option></select>
-            <select><option>Model</option></select>
-            <select><option>Year</option></select>
-            <select><option>Variant</option></select>
-
-            <div className="Vne-popup-actions">
-              <button
-                className="Vne-cancel-btn"
-                onClick={() => setShowPopup(false)}
-              >
-                Cancel
-              </button>
-              <button className="Vne-confirm-btn">Confirm</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
