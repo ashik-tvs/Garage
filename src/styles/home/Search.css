@@ -51,12 +51,12 @@
   margin-left: auto;
 }
 
-.search-icon {
+.search-s-icon {
   width: 18px;
   opacity: 0.7;
 }
 
-.search-input {
+.search-s-input {
   flex: 1;
   border: none;
   font-size: 14px;

@@ -1,9 +1,14 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Make.css";
 
 const Make = () => {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+    const handleMakeClick = (make) => {
+    navigate('/Model');
+  };
 
   const brands = [
     { id: 1, name: "MARUTI", icon: NoImage },
@@ -34,7 +39,7 @@ const Make = () => {
 
       <div className="grid-container">
         {visibleBrands.map((b) => (
-          <div key={b.id} className="brand-card">
+          <div key={b.id} className="brand-card" onClick={() => handleMakeClick(b)}>
             <img src={b.icon} alt={b.name} className="brand-img" />
             <p className="brand-label">{b.name}</p>
           </div>

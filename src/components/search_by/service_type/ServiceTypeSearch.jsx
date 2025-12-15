@@ -5,16 +5,46 @@ import NoImage from "../../../assets/No Image.png";
 import "../../../styles/search_by/service_type/ServiceTypeSearch.css";
 
 const carMakes = [
-  "MARUTHI", "HYUNDAI", "TATA", "MAHINDRA", "ABARTH", "ASHOK LEYLAND",
-  "AUDI", "BENTLEY", "DAEWOO", "DATSUN", "FERRARI", "ICML", "ISUZU",
-  "HINDUSTUN", "SONALIKA", "MASERATI", "JAGUAR", "MERCEDES BENZ",
-  "ROLLS ROYALS", "TVS", "SCANIA", "LEXUS", "SSANGYONG", "MITSUBISHI",
-  "BYD", "VOLVO", "KIA", "JEEP", "PEUGEOT"
+  "MARUTHI",
+  "HYUNDAI",
+  "TATA",
+  "MAHINDRA",
+  "ABARTH",
+  "ASHOK LEYLAND",
+  "AUDI",
+  "BENTLEY",
+  "DAEWOO",
+  "DATSUN",
+  "FERRARI",
+  "ICML",
+  "ISUZU",
+  "HINDUSTUN",
+  "SONALIKA",
+  "MASERATI",
+  "JAGUAR",
+  "MERCEDES BENZ",
+  "ROLLS ROYALS",
+  "TVS",
+  "SCANIA",
+  "LEXUS",
+  "SSANGYONG",
+  "MITSUBISHI",
+  "BYD",
+  "VOLVO",
+  "KIA",
+  "JEEP",
+  "PEUGEOT",
 ];
 
 const ServiceTypeSearch = () => {
   const [vehicleNumber, setVehicleNumber] = useState("");
   const navigate = useNavigate();
+
+  const handleMakeClick = (make) => {
+    navigate("/service-type-model", {
+      state: { make },
+    });
+  };
 
   const handleSearch = () => {
     if (!vehicleNumber) {
@@ -70,10 +100,7 @@ const ServiceTypeSearch = () => {
             <select className="st-s-filter-dropdown">
               <option>Select Year</option>
             </select>
-            <button
-              className="st-s-find-btn"
-              onClick={handleFindAutoParts}
-            >
+            <button className="st-s-find-btn" onClick={handleFindAutoParts}>
               Find Auto Parts
             </button>
           </div>
@@ -85,7 +112,11 @@ const ServiceTypeSearch = () => {
         <p className="st-s-make-title">Search by Make (OR)</p>
         <div className="st-s-make-grid">
           {carMakes.map((name, index) => (
-            <div key={index} className="st-s-make-card">
+            <div
+              key={index}
+              className="st-s-make-card"
+              onClick={() => handleMakeClick(name)}
+            >
               <img src={NoImage} alt={name} className="st-s-make-logo" />
               <p className="st-s-make-name">{name}</p>
             </div>
