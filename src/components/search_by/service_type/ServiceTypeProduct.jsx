@@ -142,54 +142,42 @@ const ServiceTypeProduct = () => {
             Rear Brake Pad Replacement
           </span>
         </div>
-        <div className="srp-vehicle-bar">
-          <span className="srp-vehicle-text">
-            Hyundai - Grand - i10 - Petrol - 2021
-          </span>
+        <div className="srp-vehicle-section">
+          <div className="srp-vehicle-bar">
+            <span className="srp-vehicle-text">
+              Hyundai - Grand - i10 - Petrol - 2021
+            </span>
 
-          <img
-            src={EditIcon}
-            alt="edit"
-            className="srp-edit-icon"
-            onClick={() => setShowPopup(true)}
-          />
+            <img
+              src={EditIcon}
+              alt="edit"
+              className="srp-edit-icon"
+              onClick={() => setShowPopup(!showPopup)}
+            />
+          </div>
+          
+          {showPopup && (
+            <div className="srp-edit-dropdowns">
+              <select className="srp-dropdown">
+                <option>Select Make</option>
+              </select>
+              <select className="srp-dropdown">
+                <option>Select Model</option>
+              </select>
+              <select className="srp-dropdown">
+                <option>Select Variant</option>
+              </select>
+              <select className="srp-dropdown">
+                <option>Select Fuel type</option>
+              </select>
+              <select className="srp-dropdown">
+                <option>Select Year</option>
+              </select>
+              <button className="srp-find-btn" onClick={() => setShowPopup(false)}>Find Auto Parts</button>
+            </div>
+          )}
         </div>
       </div>
-
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-card">
-            <h3>Edit Vehicle</h3>
-
-            <input className="plate-input" placeholder="Enter Vehicle Number" />
-
-            <div className="popup-divider">OR</div>
-
-            <select>
-              <option>Make</option>
-            </select>
-            <select>
-              <option>Model</option>
-            </select>
-            <select>
-              <option>Year</option>
-            </select>
-            <select>
-              <option>Variant</option>
-            </select>
-
-            <div className="popup-actions">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowPopup(false)}
-              >
-                Cancel
-              </button>
-              <button className="confirm-btn">Confirm</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <table className="srp-table">
         <thead>

@@ -180,21 +180,6 @@ const Product = () => {
         </div>
 
         <div className="product-top-right">
-          <div className="product-vehicle-row">
-            <span>
-              {vehicle 
-                ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
-                : 'Hyundai - Grand i10 - Petrol - 2021'
-              }
-            </span>
-            <img
-              src={Edit}
-              alt="Edit"
-              className="edit-icon"
-              onClick={() => setShowEditPopup(true)}
-            />
-          </div>
-
           <div className="product-filters-row">
             {["Brake System", "Price", "ETA", "Sort by"].map((f) => (
               <div className="filter-item" key={f}>
@@ -206,31 +191,44 @@ const Product = () => {
         </div>
       </div>
 
-      {/* ---------- EDIT VEHICLE POPUP ---------- */}
-      {showEditPopup && (
-        <div className="vehicle-popup-overlay">
-          <div className="vehicle-popup">
-            <h3>Edit Vehicle</h3>
-
-            <input
-              className="number-plate-input"
-              placeholder="KA 01 AB 1234"
-            />
-
-            <p className="or-text">OR</p>
-
-            <select><option>Make</option></select>
-            <select><option>Model</option></select>
-            <select><option>Year</option></select>
-            <select><option>Variant</option></select>
-
-            <div className="popup-actions">
-              <button onClick={() => setShowEditPopup(false)}>Cancel</button>
-              <button className="primary">Update</button>
-            </div>
-          </div>
+      {/* ---------- VEHICLE SECTION ---------- */}
+      <div className="product-vehicle-section">
+        <div className="product-vehicle-row">
+          <span>
+            {vehicle 
+              ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
+              : 'Hyundai - Grand i10 - Petrol - 2021'
+            }
+          </span>
+          <img
+            src={Edit}
+            alt="Edit"
+            className="edit-icon"
+            onClick={() => setShowEditPopup(!showEditPopup)}
+          />
         </div>
-      )}
+        
+        {showEditPopup && (
+          <div className="product-edit-dropdowns">
+            <select className="product-dropdown">
+              <option>Select Make</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Model</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Variant</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Fuel type</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Year</option>
+            </select>
+            <button className="product-find-btn" onClick={() => setShowEditPopup(false)}>Find Auto Parts</button>
+          </div>
+        )}
+      </div>
 
       {/* ---------- CONTENT ---------- */}
       <div className="product-content-wrapper">

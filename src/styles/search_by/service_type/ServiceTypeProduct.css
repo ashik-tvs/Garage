@@ -30,6 +30,13 @@ color: #3749A6;
   text-align: right;
 }
 /* ---------- VEHICLE INFO BAR ---------- */
+.srp-vehicle-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
 .srp-vehicle-bar {
   display: inline-flex;
   align-items: center;
@@ -38,7 +45,6 @@ color: #3749A6;
   border: 1px solid #e5e5e5;
   border-radius: 6px;
   background: #fff;
-  float: right;
 }
 
 .srp-vehicle-text {
@@ -54,6 +60,48 @@ color: #3749A6;
   padding: 6px;
   border-radius: 4px;
   cursor: pointer;
+}
+
+/* Edit Dropdowns */
+.srp-edit-dropdowns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.srp-dropdown {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.srp-dropdown:focus {
+  outline: none;
+  border-color: #f36f21;
+}
+
+.srp-find-btn {
+  height: 48px;
+  padding: 0 24px;
+  background-color: #f36f21;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.srp-find-btn:hover {
+  background-color: #d65e1a;
 }
 
 .srp-table {
