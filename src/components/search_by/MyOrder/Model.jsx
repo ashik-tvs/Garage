@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/search_by/MyOrder/Model.css';
 import noImage from '../../../assets/No Image.png';
+import LeftArrow from '../../../assets/Product/Left_Arrow.png';
 
 const Model = () => {
   const navigate = useNavigate();
@@ -25,29 +26,27 @@ const Model = () => {
   return (
     <div className="model-container">
       <div className="model-header">
-        <button className="back-button">
-          <div className="back-icon"></div>
+        <button className="back-button" onClick={() => navigate(-1)}>
+          <img src={LeftArrow} alt="Back" />
         </button>
         <h1 className="model-title">Model</h1>
       </div>
 
       <div className="model-grid-wrapper">
-        {[0, 1, 2, 3].map((rowIndex) => (
+        {[0, 1, 2].map((rowIndex) => (
           <div key={rowIndex} className="model-row">
-            <div className="model-row-inner">
-              {models.map((model) => (
-                <div 
-                  key={`${rowIndex}-${model.id}`} 
-                  className="model-card"
-                  onClick={() => handleModelClick(model)}
-                >
-                  <div className="model-card-content">
-                    <img src={noImage} alt={model.name} className="model-image" />
-                    <p className="model-name">{model.name}</p>
-                  </div>
+            {models.map((model) => (
+              <div 
+                key={`${rowIndex}-${model.id}`} 
+                className="model-card"
+                onClick={() => handleModelClick(model)}
+              >
+                <div className="model-card-content">
+                  <img src={noImage} alt={model.name} className="model-image" />
+                  <p className="model-name">{model.name}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         ))}
       </div>

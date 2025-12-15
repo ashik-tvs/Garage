@@ -1,149 +1,87 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/search_by/MyOrder/Category.css';
-import noImage from '../../../assets/No Image.png';
+import LeftArrow from '../../../assets/Product/Left_Arrow.png';
+
+// Category images - using No Image placeholder for now
+import NoImage from '../../../assets/No Image.png';
 
 const Category = () => {
   const navigate = useNavigate();
 
-  const firstRowCategories = [
-    { id: 1, name: 'Engine' },
-    { id: 2, name: 'Brakes' },
-    { id: 3, name: 'Battery' },
-    { id: 4, name: 'Steering' },
-    { id: 5, name: 'Tyres' },
-    { id: 6, name: 'Body Parts' },
-    { id: 7, name: 'Accessories' },
-    { id: 8, name: 'Electricals' },
-    { id: 9, name: 'Filters' },
+  const categories = [
+    { id: 1, name: 'Engine', image: NoImage },
+    { id: 2, name: 'Brakes', image: NoImage },
+    { id: 3, name: 'Battery', image: NoImage },
+    { id: 4, name: 'Steering', image: NoImage },
+    { id: 5, name: 'Tyres', image: NoImage },
+    { id: 6, name: 'Body Parts', image: NoImage },
+    { id: 7, name: 'Accessories', image: NoImage },
+    { id: 8, name: 'Electricals', image: NoImage },
+    { id: 9, name: 'Filters', image: NoImage },
+    { id: 10, name: 'Cables and Wires', image: NoImage },
+    { id: 11, name: 'Bearing', image: NoImage },
+    { id: 12, name: 'Horns', image: NoImage },
+    { id: 13, name: 'Lubes', image: NoImage },
+    { id: 14, name: 'FLUIDS AND GREASE', image: NoImage },
+    { id: 15, name: 'Glass', image: NoImage },
+    { id: 16, name: 'INTERIOR & COMFORTS', image: NoImage },
+    { id: 17, name: 'TRANSMISSION', image: NoImage },
+    { id: 18, name: 'Rubber and .....', image: NoImage },
+    { id: 19, name: 'Wiper System', image: NoImage },
+    { id: 20, name: 'CLUTCH SYSTEMS', image: NoImage },
+    { id: 21, name: 'ELECTRICALS AND ...', image: NoImage },
+    { id: 22, name: 'Suspension', image: NoImage },
+    { id: 23, name: 'Belt and Tensionor', image: NoImage },
+    { id: 24, name: 'HVAC and Thermal', image: NoImage },
+    { id: 25, name: 'Lighting', image: NoImage },
+    { id: 26, name: 'PAINTS AND CON....', image: NoImage },
+    { id: 27, name: 'Child Parts', image: NoImage },
+    { id: 28, name: 'Fuel Systems', image: NoImage },
   ];
 
-  const secondRowCategories = [
-    { id: 10, name: 'Cables and Wires' },
-    { id: 11, name: 'Bearing' },
-    { id: 12, name: 'Horns' },
-    { id: 13, name: 'Lubes' },
-    { id: 14, name: 'FLUIDS AND GREASE' },
-    { id: 15, name: 'Glass' },
-    { id: 16, name: 'INTERIOR & COMFORTS' },
-    { id: 17, name: 'TRANSMISSION' },
-    { id: 18, name: 'Rubber and .....' },
-  ];
-
-  const thirdRowCategories = [
-    { id: 19, name: 'Wiper System' },
-    { id: 20, name: 'CLUTCH SYSTEMS' },
-    { id: 21, name: 'ELECTRICALS AND ...' },
-    { id: 22, name: 'Suspension' },
-    { id: 23, name: 'Belt and Tensionor' },
-    { id: 24, name: 'HVAC and Thermal' },
-    { id: 25, name: 'Lighting' },
-    { id: 26, name: 'PAINTS AND CON....' },
-    { id: 27, name: 'Child Parts' },
-  ];
-
-  const fourthRowCategories = [
-    { id: 28, name: 'Fuel Systems' },
-  ];
-
-  const handleCategoryClick = (category) => {
-    // Navigate to the appropriate page based on category
-    console.log('Category clicked:', category.name);
+  const handleBack = () => {
+    navigate(-1);
   };
 
-  const handleBackClick = () => {
-    navigate(-1);
+  const handleCategoryClick = (category) => {
+    console.log('Selected category:', category);
+    // Navigate to Sub Category page
+    navigate('/sub_category');
   };
 
   return (
     <div className="category-container">
+      {/* Header */}
       <div className="category-header">
-        <button className="category-back-button" onClick={handleBackClick}>
-          <div className="category-back-icon"></div>
+        <button className="back-button" onClick={handleBack}>
+          <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="category-title">Category</h1>
+        <h1 className="category-title">Search by Category</h1>
       </div>
 
-      <div className="category-grid-wrapper">
-        {/* First Row */}
-        <div className="category-row">
-          <div className="category-row-inner">
-            {firstRowCategories.map((category) => (
-              <div
-                key={category.id}
-                className="category-card"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <div className="category-img-wrapper">
-                  <img src={noImage} alt={category.name} className="category-img" />
-                </div>
-                <div className="category-label-wrapper">
-                  <p className="category-label">{category.name}</p>
-                </div>
+      {/* Category Grid */}
+      <div className="category-content">
+        {categories.map((category) => (
+          <div
+            key={category.id}
+            className="category-item"
+            onClick={() => handleCategoryClick(category)}
+          >
+            <div className="category-card">
+              <div className="category-image-wrapper">
+                <img
+                  src={category.image}
+                  alt={category.name}
+                  className="category-image"
+                />
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Second Row */}
-        <div className="category-row">
-          <div className="category-row-inner">
-            {secondRowCategories.map((category) => (
-              <div
-                key={category.id}
-                className="category-card"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <div className="category-img-wrapper">
-                  <img src={noImage} alt={category.name} className="category-img" />
-                </div>
-                <div className="category-label-wrapper">
-                  <p className="category-label">{category.name}</p>
-                </div>
+              <div className="category-label">
+                <span>{category.name}</span>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-
-        {/* Third Row */}
-        <div className="category-row">
-          <div className="category-row-inner">
-            {thirdRowCategories.map((category) => (
-              <div
-                key={category.id}
-                className="category-card"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <div className="category-img-wrapper">
-                  <img src={noImage} alt={category.name} className="category-img" />
-                </div>
-                <div className="category-label-wrapper">
-                  <p className="category-label">{category.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Fourth Row */}
-        <div className="category-row">
-          <div className="category-row-inner">
-            {fourthRowCategories.map((category) => (
-              <div
-                key={category.id}
-                className="category-card"
-                onClick={() => handleCategoryClick(category)}
-              >
-                <div className="category-img-wrapper">
-                  <img src={noImage} alt={category.name} className="category-img" />
-                </div>
-                <div className="category-label-wrapper">
-                  <p className="category-label">{category.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
