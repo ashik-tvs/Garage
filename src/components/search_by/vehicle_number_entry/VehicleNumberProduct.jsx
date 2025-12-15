@@ -190,19 +190,6 @@ const Product = () => {
         </div>
 
         <div className="product-top-right">
-          <div className="srp-vehicle-bar">
-            <span className="srp-vehicle-text">
-              Hyundai - Grand - i10 - Petrol - 2021
-            </span>
-
-            <img
-              src={Edit}
-              alt="edit"
-              className="srp-edit-icon"
-              onClick={() => setShowPopup(true)}
-            />
-          </div>
-
           <div className="product-filters-row">
             {["Brake System", "Price", "ETA", "Sort by"].map((f) => (
               <div className="filter-item" key={f}>
@@ -214,44 +201,44 @@ const Product = () => {
         </div>
       </div>
 
-      {/* ---------- EDIT VEHICLE POPUP ---------- */}
-      {showPopup && (
-        <div className="Vne-popup-overlay">
-          <div className="Vne-popup-card">
-            <h3>Edit Vehicle</h3>
-
-            <input
-              className="Vne-plate-input"
-              placeholder="Enter Vehicle Number"
-            />
-
-            <div className="Vne-popup-divider">OR</div>
-
-            <select>
-              <option>Make</option>
-            </select>
-            <select>
-              <option>Model</option>
-            </select>
-            <select>
-              <option>Year</option>
-            </select>
-            <select>
-              <option>Variant</option>
-            </select>
-
-            <div className="Vne-popup-actions">
-              <button
-                className="Vne-cancel-btn"
-                onClick={() => setShowPopup(false)}
-              >
-                Cancel
-              </button>
-              <button className="Vne-confirm-btn">Confirm</button>
-            </div>
-          </div>
+      {/* ---------- VEHICLE SECTION ---------- */}
+      <div className="product-vehicle-section">
+        <div className="product-vehicle-row">
+          <span>
+            {vehicle 
+              ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
+              : 'Hyundai - Grand i10 - Petrol - 2021'
+            }
+          </span>
+          <img
+            src={Edit}
+            alt="Edit"
+            className="edit-icon"
+            onClick={() => setShowEditPopup(!showEditPopup)}
+          />
         </div>
-      )}
+        
+        {showEditPopup && (
+          <div className="product-edit-dropdowns">
+            <select className="product-dropdown">
+              <option>Select Make</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Model</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Variant</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Fuel type</option>
+            </select>
+            <select className="product-dropdown">
+              <option>Select Year</option>
+            </select>
+            <button className="product-find-btn" onClick={() => setShowEditPopup(false)}>Find Auto Parts</button>
+          </div>
+        )}
+      </div>
 
       {/* ---------- CONTENT ---------- */}
       <div className="product-content-wrapper">

@@ -152,52 +152,49 @@ const ServiceTypeProduct = () => {
               Hyundai - Grand - i10 - Petrol - 2021
             </span>
 
-            <img
-              src={EditIcon}
-              alt="edit"
-              className="srp-edit-icon"
-              onClick={() => setShowPopup(true)}
-            />
-          </div>
+          <img
+            src={EditIcon}
+            alt="edit"
+            className="srp-edit-icon"
+            onClick={() => setShowPopup(true)}
+          />
         </div>
+      </div>
 
-        {showPopup && (
-          <div className="Vne-popup-overlay">
-            <div className="Vne-popup-card">
-              <h3>Edit Vehicle</h3>
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-card">
+            <h3>Edit Vehicle</h3>
 
-              <input
-                className="Vne-plate-input"
-                placeholder="Enter Vehicle Number"
-              />
+            <input className="plate-input" placeholder="Enter Vehicle Number" />
 
-              <div className="Vne-popup-divider">OR</div>
+            <div className="popup-divider">OR</div>
 
-              <select>
-                <option>Make</option>
-              </select>
-              <select>
-                <option>Model</option>
-              </select>
-              <select>
-                <option>Year</option>
-              </select>
-              <select>
-                <option>Variant</option>
-              </select>
+            <select>
+              <option>Make</option>
+            </select>
+            <select>
+              <option>Model</option>
+            </select>
+            <select>
+              <option>Year</option>
+            </select>
+            <select>
+              <option>Variant</option>
+            </select>
 
-              <div className="Vne-popup-actions">
-                <button
-                  className="Vne-cancel-btn"
-                  onClick={() => setShowPopup(false)}
-                >
-                  Cancel
-                </button>
-                <button className="Vne-confirm-btn">Confirm</button>
-              </div>
+            <div className="popup-actions">
+              <button
+                className="cancel-btn"
+                onClick={() => setShowPopup(false)}
+              >
+                Cancel
+              </button>
+              <button className="confirm-btn">Confirm</button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
         <table className="srp-table">
           <thead>
