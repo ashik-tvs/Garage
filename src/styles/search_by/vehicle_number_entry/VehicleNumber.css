@@ -4,6 +4,7 @@
   color: #333;
   background: #fff;
   width: 100%;
+  padding: 0px 0px 20px 0px;
 }
 .Vne-hero {
   background: #24243e;
@@ -183,7 +184,7 @@
 .Vne-service-panel ul {
     list-style-type: disc;
     padding-left: 32px;
-    margin: 10px 0;
+    margin:0;
     background-color: #F3F3F3;
 
 }

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Search from "../../home/Search";
 import "../../../styles/search_by/service_type/ServiceTypeProduct.css";
 import EditIcon from "../../../assets/vehicle_search_entry/edit.png";
+import MyTvs from "../../../assets/mytvs.png";
 import NoImage from "../../../assets/No Image.png";
 import Success from "../../cart/Success"; // Import the Success component
 
@@ -13,6 +14,7 @@ const mockData = [
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
+      img: MyTvs,
       image: NoImage,
     },
     valeo: {
@@ -20,6 +22,8 @@ const mockData = [
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
+      img: MyTvs,
+
       image: NoImage,
     },
     hyundai: {
@@ -27,6 +31,7 @@ const mockData = [
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
+      img: MyTvs,
       image: NoImage,
     },
   },
@@ -133,7 +138,7 @@ const ServiceTypeProduct = () => {
 
   return (
     <div className="srp-container">
-        <Search />
+      <Search />
       <div className="srp-row">
         <div className="srp-search-key">
           <span className="srp-search-key-title"> Search Key: </span>
@@ -168,10 +173,18 @@ const ServiceTypeProduct = () => {
 
             <div className="Vne-popup-divider">OR</div>
 
-            <select><option>Make</option></select>
-            <select><option>Model</option></select>
-            <select><option>Year</option></select>
-            <select><option>Variant</option></select>
+            <select>
+              <option>Make</option>
+            </select>
+            <select>
+              <option>Model</option>
+            </select>
+            <select>
+              <option>Year</option>
+            </select>
+            <select>
+              <option>Variant</option>
+            </select>
 
             <div className="Vne-popup-actions">
               <button
@@ -223,6 +236,7 @@ const ServiceTypeProduct = () => {
                           {row[brand].eta}
                         </span>
                       </div>
+                      <div className="srp-code">{row[brand].code}</div>
                       <div className="srp-price">
                         ₹ {row[brand].price} <del>₹ {row[brand].mrp}</del>
                       </div>

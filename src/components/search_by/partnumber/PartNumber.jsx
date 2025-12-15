@@ -15,7 +15,7 @@ const filters = [
 const recommendedProducts = [
   {
     brand: "Valeo",
-    code: "LF6079",
+    code: "LF60730",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -25,7 +25,7 @@ const recommendedProducts = [
   },
   {
     brand: "Bosch",
-    code: "LF6079",
+    code: "LF60718",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -35,7 +35,7 @@ const recommendedProducts = [
   },
   {
     brand: "Bosch",
-    code: "LF6079",
+    code: "LF607188",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,

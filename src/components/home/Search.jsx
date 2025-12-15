@@ -11,7 +11,7 @@ const Search = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
-  const [searchValue, setSearchValue] = useState("MH12AB1234");
+  const [searchValue, setSearchValue] = useState("");
 
   // Vehicle number validation
   const isVehicleNumber = (value) => {

@@ -145,6 +145,14 @@ const VehicleNumberEntry = () => {
                 "Battery Check",
                 "Oil Change",
                 "AC Service",
+                "Complete Brake System Inspection",
+                "Rear Brake Pad Replacement",
+                "Front Brake Pad Replacement",
+                "ABS Warning Light Check",
+                " Brake Fluid Replacement",
+                "Brake Shoe Replacement (Drum Brakes)",
+                "Brake Pad Cleaning & Adjustment",
+                "Brake Rotor (Disc) Replacement",
               ]}
             />
           </div>

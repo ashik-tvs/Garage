@@ -152,32 +152,33 @@ const Product = () => {
           <img
             src={LeftArrow}
             alt="Back"
-            width="24"
+            width="10"
+            height="10"
             style={{ cursor: "pointer" }}
             onClick={() => navigate(-1)}
           />
           {brand && (
             <>
               <span>{brand}</span>
-              <img src={RightArrow} alt="" width="16" />
+              <img src={RightArrow} alt="" width="12" height="10" />
             </>
           )}
           {make && (
             <>
               <span>{make}</span>
-              <img src={RightArrow} alt="" width="16" />
+              <img src={RightArrow} alt="" width="12" height="10" />
             </>
           )}
           {model && (
             <>
               <span>{model}</span>
-              <img src={RightArrow} alt="" width="16" />
+              <img src={RightArrow} alt="" width="12" height="10" />
             </>
           )}
           {category && (
             <>
               <span>{category}</span>
-              <img src={RightArrow} alt="" width="16" />
+              <img src={RightArrow} alt="" width="12" height="10" />
             </>
           )}
           {subCategory && <span>{subCategory.name || subCategory}</span>}
@@ -266,7 +267,7 @@ const Product = () => {
         </div>
 
         <div className="product-right-section">
-          <div className="product-section">
+          <div className="product-section-right">
             <h2 className="section-title">Aligned Products</h2>
 
             {alignedProducts.map((product) => (
