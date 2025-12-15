@@ -154,7 +154,12 @@ const Product = () => {
             alt="Back"
             width="10"
             height="10"
-            style={{ cursor: "pointer" }}
+            style={{
+              cursor: "pointer",
+              backgroundColor: "#F36F21",
+              padding: "4px",
+              borderRadius: "50px",
+            }}
             onClick={() => navigate(-1)}
           />
           {brand && (
