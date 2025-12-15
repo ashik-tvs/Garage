@@ -1,14 +1,19 @@
 .srp-container {
-  padding: 0px 20px 20px 20px;
+  padding: 0px 0px 20px 0px;
   background: #fff;
   border-radius: 8px;
   font-family: Arial, sans-serif;
+}
+.srp-content{
+      padding: 0px 20px 0px 20px;
+
 }
 .srp-row{
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+
 }
 
 .srp-search-key {
@@ -59,6 +64,7 @@ color: #3749A6;
 .srp-table {
   width: 100%;
   border-collapse: collapse;
+
 }
 
 .srp-table th {

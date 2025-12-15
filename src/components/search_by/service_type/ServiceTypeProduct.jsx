@@ -23,7 +23,6 @@ const mockData = [
       price: 425,
       mrp: 600,
       img: MyTvs,
-
       image: NoImage,
     },
     hyundai: {
@@ -139,146 +138,147 @@ const ServiceTypeProduct = () => {
   return (
     <div className="srp-container">
       <Search />
-      <div className="srp-row">
-        <div className="srp-search-key">
-          <span className="srp-search-key-title"> Search Key: </span>
-          <span className="srp-search-key-value">
-            {" "}
-            Rear Brake Pad Replacement
-          </span>
-        </div>
-        <div className="srp-vehicle-bar">
-          <span className="srp-vehicle-text">
-            Hyundai - Grand - i10 - Petrol - 2021
-          </span>
+      <div className="srp-content">
+        <div className="srp-row">
+          <div className="srp-search-key">
+            <span className="srp-search-key-title"> Search Key: </span>
+            <span className="srp-search-key-value">
+              {" "}
+              Rear Brake Pad Replacement
+            </span>
+          </div>
+          <div className="srp-vehicle-bar">
+            <span className="srp-vehicle-text">
+              Hyundai - Grand - i10 - Petrol - 2021
+            </span>
 
-          <img
-            src={EditIcon}
-            alt="edit"
-            className="srp-edit-icon"
-            onClick={() => setShowPopup(true)}
-          />
-        </div>
-      </div>
-
-      {showPopup && (
-        <div className="Vne-popup-overlay">
-          <div className="Vne-popup-card">
-            <h3>Edit Vehicle</h3>
-
-            <input
-              className="Vne-plate-input"
-              placeholder="Enter Vehicle Number"
+            <img
+              src={EditIcon}
+              alt="edit"
+              className="srp-edit-icon"
+              onClick={() => setShowPopup(true)}
             />
-
-            <div className="Vne-popup-divider">OR</div>
-
-            <select>
-              <option>Make</option>
-            </select>
-            <select>
-              <option>Model</option>
-            </select>
-            <select>
-              <option>Year</option>
-            </select>
-            <select>
-              <option>Variant</option>
-            </select>
-
-            <div className="Vne-popup-actions">
-              <button
-                className="Vne-cancel-btn"
-                onClick={() => setShowPopup(false)}
-              >
-                Cancel
-              </button>
-              <button className="Vne-confirm-btn">Confirm</button>
-            </div>
           </div>
         </div>
-      )}
 
-      <table className="srp-table">
-        <thead>
-          <tr>
-            <th>Part Number</th>
-            <th>myTVS Recommended</th>
-            <th>Other Options</th>
-            <th>OEM</th>
-          </tr>
-        </thead>
-        <tbody>
-          {mockData.map((row) => (
-            <tr key={row.part}>
-              <td>{row.part}</td>
-              {["myTVS", "valeo", "hyundai"].map((brand) => (
-                <td key={brand}>
-                  <div className="srp-card-container">
-                    <div className="srp-check-box">
-                      <input
-                        type="checkbox"
-                        checked={selected[row.part][brand]}
-                        onChange={() => handleCheckboxChange(row.part, brand)}
-                      />
-                    </div>
-                    <div className="srp-card-image">
-                      <img src={row[brand].image} alt={row.part} />
-                    </div>
-                    <div className="srp-product-card">
-                      <div className="srp-badges">
-                        <span
-                          className={`srp-badge srp-${brand.toLowerCase()}`}
-                        >
-                          {brand}
-                        </span>
-                        <span className="srp-badge srp-eta">
-                          {row[brand].eta}
-                        </span>
-                      </div>
-                      <div className="srp-code">{row[brand].code}</div>
-                      <div className="srp-price">
-                        ₹ {row[brand].price} <del>₹ {row[brand].mrp}</del>
-                      </div>
-                      <div className="srp-qty-box">
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(row.part, brand, -1)
-                          }
-                        >
-                          −
-                        </button>
-                        <span>{quantities[row.part][brand]}</span>
-                        <button
-                          onClick={() =>
-                            handleQuantityChange(row.part, brand, 1)
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-              ))}
+        {showPopup && (
+          <div className="Vne-popup-overlay">
+            <div className="Vne-popup-card">
+              <h3>Edit Vehicle</h3>
+
+              <input
+                className="Vne-plate-input"
+                placeholder="Enter Vehicle Number"
+              />
+
+              <div className="Vne-popup-divider">OR</div>
+
+              <select>
+                <option>Make</option>
+              </select>
+              <select>
+                <option>Model</option>
+              </select>
+              <select>
+                <option>Year</option>
+              </select>
+              <select>
+                <option>Variant</option>
+              </select>
+
+              <div className="Vne-popup-actions">
+                <button
+                  className="Vne-cancel-btn"
+                  onClick={() => setShowPopup(false)}
+                >
+                  Cancel
+                </button>
+                <button className="Vne-confirm-btn">Confirm</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <table className="srp-table">
+          <thead>
+            <tr>
+              <th>Part Number</th>
+              <th>myTVS Recommended</th>
+              <th>Other Options</th>
+              <th>OEM</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="srp-submit">
-        <div>
-          <button className="srp-submit-btn" onClick={handleSubmit}>
-            Submit
-          </button>
-        </div>
+          </thead>
+          <tbody>
+            {mockData.map((row) => (
+              <tr key={row.part}>
+                <td>{row.part}</td>
+                {["myTVS", "valeo", "hyundai"].map((brand) => (
+                  <td key={brand}>
+                    <div className="srp-card-container">
+                      <div className="srp-check-box">
+                        <input
+                          type="checkbox"
+                          checked={selected[row.part][brand]}
+                          onChange={() => handleCheckboxChange(row.part, brand)}
+                        />
+                      </div>
+                      <div className="srp-card-image">
+                        <img src={row[brand].image} alt={row.part} />
+                      </div>
+                      <div className="srp-product-card">
+                        <div className="srp-badges">
+                          <span
+                            className={`srp-badge srp-${brand.toLowerCase()}`}
+                          >
+                            {brand}
+                          </span>
+                          <span className="srp-badge srp-eta">
+                            {row[brand].eta}
+                          </span>
+                        </div>
+                        <div className="srp-code">{row[brand].code}</div>
+                        <div className="srp-price">
+                          ₹ {row[brand].price} <del>₹ {row[brand].mrp}</del>
+                        </div>
+                        <div className="srp-qty-box">
+                          <button
+                            onClick={() =>
+                              handleQuantityChange(row.part, brand, -1)
+                            }
+                          >
+                            −
+                          </button>
+                          <span>{quantities[row.part][brand]}</span>
+                          <button
+                            onClick={() =>
+                              handleQuantityChange(row.part, brand, 1)
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="srp-submit">
+          <div>
+            <button className="srp-submit-btn" onClick={handleSubmit}>
+              Submit
+            </button>
+          </div>
 
-        <div>
-          <p className="srp-note">
-            *Each item starts at Qty 1. Uptick or adjust quantities as needed.
-          </p>
+          <div>
+            <p className="srp-note">
+              *Each item starts at Qty 1. Uptick or adjust quantities as needed.
+            </p>
+          </div>
         </div>
       </div>
-
       {/* Loader + Success */}
       <Success loading={loading} showSuccess={showSuccess} />
     </div>
