@@ -12,22 +12,29 @@
 /* LEFT */
 .pn-left {
   background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 10px;
   padding: 16px;
   align-items: center;
+      height: 50%;
 }
 .pn-left-title {
   font-size: 16px;
   font-weight: 600;
+}
+.pn-car-image{
+  display: flex;
+  justify-content: center;
 }
 .pn-left-img {
   display: flex;
   justify-content: center;
 }
 .pn-left-title {
-  font-size: 14px;
-  color: #2563eb;
-  margin-bottom: 12px;
+  font-size: 16px;
+  color: #3749A6;
+      margin: 0;
+      font-weight: 400;
 }
 
 .pn-car-img {
@@ -154,7 +161,7 @@
 }
 
 .pn-add-btn {
-  background: #f7931e;
+  background: #F36F21;
   color: #fff;
   border: none;
   padding: 6px 14px;
@@ -164,7 +171,7 @@
 }
 
 .pn-add-btn.added {
-  background: #2e7d32;
+  background: #F36F21;
   cursor: pointer;
   opacity: 0.85;
 }

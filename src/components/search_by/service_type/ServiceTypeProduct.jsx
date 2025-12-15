@@ -157,35 +157,30 @@ const ServiceTypeProduct = () => {
       </div>
 
       {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-card">
+        <div className="Vne-popup-overlay">
+          <div className="Vne-popup-card">
             <h3>Edit Vehicle</h3>
 
-            <input className="plate-input" placeholder="Enter Vehicle Number" />
+            <input
+              className="Vne-plate-input"
+              placeholder="Enter Vehicle Number"
+            />
 
-            <div className="popup-divider">OR</div>
+            <div className="Vne-popup-divider">OR</div>
 
-            <select>
-              <option>Make</option>
-            </select>
-            <select>
-              <option>Model</option>
-            </select>
-            <select>
-              <option>Year</option>
-            </select>
-            <select>
-              <option>Variant</option>
-            </select>
+            <select><option>Make</option></select>
+            <select><option>Model</option></select>
+            <select><option>Year</option></select>
+            <select><option>Variant</option></select>
 
-            <div className="popup-actions">
+            <div className="Vne-popup-actions">
               <button
-                className="cancel-btn"
+                className="Vne-cancel-btn"
                 onClick={() => setShowPopup(false)}
               >
                 Cancel
               </button>
-              <button className="confirm-btn">Confirm</button>
+              <button className="Vne-confirm-btn">Confirm</button>
             </div>
           </div>
         </div>

@@ -88,22 +88,29 @@ const alignedProducts = [
 const Product = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useCart();
+  const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const isInCart = (partNumber) =>
+    cartItems.some((item) => item.partNumber === partNumber);
 
   // Get navigation flow data from state
-  const { vehicle, make, model, brand, category, subCategory } = location.state || {};
+  const { vehicle, make, model, brand, category, subCategory } =
+    location.state || {};
 
   // ✅ Normalize product before adding to cart
-  const handleAdd = (product) => {
-    addToCart({
-      partNumber: product.partNumber,
-      itemDescription: product.name,
-      listPrice: product.price,
-      stockQty: product.stockQty,
-      imageUrl: NoImage,
-    });
-
+  const handleToggleCart = (product) => {
+    if (isInCart(product.partNumber)) {
+      removeFromCart(product.partNumber); // REMOVE (Added → Add)
+    } else {
+      addToCart({
+        partNumber: product.partNumber,
+        itemDescription: product.name,
+        listPrice: product.price,
+        stockQty: product.stockQty,
+        imageUrl: NoImage,
+      });
+    }
   };
 
   const renderProductCard = (product) => (
@@ -127,10 +134,10 @@ const Product = () => {
           <span className="price-original">₹ {product.mrp}.00</span>
 
           <button
-            className="btn-add"
-            onClick={() => handleAdd(product)}
+            className={`btn-add ${isInCart(product.partNumber) ? "added" : ""}`}
+            onClick={() => handleToggleCart(product)}
           >
-            Add
+            {isInCart(product.partNumber) ? "Added" : "Add"}
           </button>
         </div>
       </div>
@@ -139,15 +146,14 @@ const Product = () => {
 
   return (
     <div className="product-container">
-
       {/* ---------- TOP SECTION ---------- */}
       <div className="product-top-row">
         <div className="product-breadcrumbs">
-          <img 
-            src={LeftArrow} 
-            alt="Back" 
-            width="24" 
-            style={{ cursor: 'pointer' }}
+          <img
+            src={LeftArrow}
+            alt="Back"
+            width="24"
+            style={{ cursor: "pointer" }}
             onClick={() => navigate(-1)}
           />
           {brand && (
@@ -174,24 +180,20 @@ const Product = () => {
               <img src={RightArrow} alt="" width="16" />
             </>
           )}
-          {subCategory && (
-            <span>{subCategory.name || subCategory}</span>
-          )}
+          {subCategory && <span>{subCategory.name || subCategory}</span>}
         </div>
 
         <div className="product-top-right">
-          <div className="product-vehicle-row">
-            <span>
-              {vehicle 
-                ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
-                : 'Hyundai - Grand i10 - Petrol - 2021'
-              }
+          <div className="srp-vehicle-bar">
+            <span className="srp-vehicle-text">
+              Hyundai - Grand - i10 - Petrol - 2021
             </span>
+
             <img
               src={Edit}
-              alt="Edit"
-              className="edit-icon"
-              onClick={() => setShowEditPopup(true)}
+              alt="edit"
+              className="srp-edit-icon"
+              onClick={() => setShowPopup(true)}
             />
           </div>
 
@@ -207,26 +209,39 @@ const Product = () => {
       </div>
 
       {/* ---------- EDIT VEHICLE POPUP ---------- */}
-      {showEditPopup && (
-        <div className="vehicle-popup-overlay">
-          <div className="vehicle-popup">
+      {showPopup && (
+        <div className="Vne-popup-overlay">
+          <div className="Vne-popup-card">
             <h3>Edit Vehicle</h3>
 
             <input
-              className="number-plate-input"
-              placeholder="KA 01 AB 1234"
+              className="Vne-plate-input"
+              placeholder="Enter Vehicle Number"
             />
 
-            <p className="or-text">OR</p>
+            <div className="Vne-popup-divider">OR</div>
 
-            <select><option>Make</option></select>
-            <select><option>Model</option></select>
-            <select><option>Year</option></select>
-            <select><option>Variant</option></select>
+            <select>
+              <option>Make</option>
+            </select>
+            <select>
+              <option>Model</option>
+            </select>
+            <select>
+              <option>Year</option>
+            </select>
+            <select>
+              <option>Variant</option>
+            </select>
 
-            <div className="popup-actions">
-              <button onClick={() => setShowEditPopup(false)}>Cancel</button>
-              <button className="primary">Update</button>
+            <div className="Vne-popup-actions">
+              <button
+                className="Vne-cancel-btn"
+                onClick={() => setShowPopup(false)}
+              >
+                Cancel
+              </button>
+              <button className="Vne-confirm-btn">Confirm</button>
             </div>
           </div>
         </div>
@@ -235,7 +250,6 @@ const Product = () => {
       {/* ---------- CONTENT ---------- */}
       <div className="product-content-wrapper">
         <div className="product-left-section">
-
           <div className="product-section">
             <h2 className="section-title">myTVS Recommended Products</h2>
             <div className="product-cards-grid">
@@ -249,7 +263,6 @@ const Product = () => {
               {otherProducts.map(renderProductCard)}
             </div>
           </div>
-
         </div>
 
         <div className="product-right-section">
@@ -262,9 +275,7 @@ const Product = () => {
 
                 <div className="aligned-product-details">
                   <div className="product-badges">
-                    <span className="badge badge-valeo">
-                      {product.brand}
-                    </span>
+                    <span className="badge badge-valeo">{product.brand}</span>
                     <span className="badge badge-stock">In stock</span>
                     <span className="badge badge-eta">{product.eta}</span>
                   </div>
@@ -273,24 +284,21 @@ const Product = () => {
                   <p className="product-name">{product.name}</p>
 
                   <div className="product-price-row">
-                    <span className="price-current">
-                      ₹ {product.price}.00
-                    </span>
-                    <span className="price-original">
-                      ₹ {product.mrp}.00
-                    </span>
+                    <span className="price-current">₹ {product.price}.00</span>
+                    <span className="price-original">₹ {product.mrp}.00</span>
 
                     <button
-                      className="btn-add"
-                      onClick={() => handleAdd(product)}
+                      className={`btn-add ${
+                        isInCart(product.partNumber) ? "added" : ""
+                      }`}
+                      onClick={() => handleToggleCart(product)}
                     >
-                      Add
+                      {isInCart(product.partNumber) ? "Added" : "Add"}
                     </button>
                   </div>
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       </div>
