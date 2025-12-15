@@ -38,33 +38,33 @@ const SUB_CATEGORIES = [
 
 // -------------------- SMALL COMPONENTS --------------------
 const VehicleSelection = ({ vehicle, onEdit }) => (
-  <div className="v-selection">
-    <div className="v-selection-tags">
+  <div className="Vne-selection">
+    <div className="Vne-selection-tags">
       {[vehicle.make, vehicle.model, vehicle.variant, vehicle.fuel, vehicle.year].map(
         (v, i) => (
-          <span key={i} className="v-tag">
+          <span key={i} className="Vne-tag">
             {v}
           </span>
         )
       )}
-      <img src={EditIcon} className="edit-icon" alt="edit" onClick={onEdit} />
+      <img src={EditIcon} className="Vne-edit-icon" alt="edit" onClick={onEdit} />
     </div>
-    <div className="v-selection-hint">You can change your vehicle details</div>
+    <div className="Vne-selection-hint">You can change your vehicle details</div>
   </div>
 );
 
 const CategoryGrid = ({ title, items, onSelect }) => (
-  <div className="category-section">
-    <h3 className="category-title">{title}</h3>
-    <div className="category-grid">
+  <div className="Vne-category-section">
+    <h3 className="Vne-category-title">{title}</h3>
+    <div className="Vne-category-grid">
       {items.map((item, i) => (
         <div
           key={i}
-          className="category-card"
+          className="Vne-category-card"
           onClick={() => onSelect(item)}
         >
           <img src={item.icon} alt={item.name} />
-          <span className="category-name">{item.name}</span>
+          <span className="Vne-category-name">{item.name}</span>
         </div>
       ))}
     </div>
@@ -73,15 +73,15 @@ const CategoryGrid = ({ title, items, onSelect }) => (
 
 const ServicePanel = ({ services }) => {
   return (
-    <div className="service-panel">
-      <div className="service-header">
+    <div className="Vne-service-panel">
+      <div className="Vne-service-header">
         <h4>Service Type</h4>
         <img src={ServiceTypeIcon} alt="service" />
       </div>
 
-      <ul className="service-list">
+      <ul className="Vne-service-list">
         {services.map((service, i) => (
-          <li key={i} className="service-item">
+          <li key={i} className="Vne-service-item">
             {service}
           </li>
         ))}
@@ -115,14 +115,14 @@ const VehicleNumberEntry = () => {
   };
 
   return (
-    <div className="vehicle-page">
+    <div className="Vne-vehicle-page">
       <Search />
 
-      <div className="vehicle-content">
+      <div className="Vne-vehicle-content">
         <VehicleSelection vehicle={vehicle} onEdit={() => setShowPopup(true)} />
 
-        <div className="main-content">
-          <div className="left-section">
+        <div className="Vne-main-content">
+          <div className="Vne-left-section">
             <CategoryGrid
               title="Category wise this Vehicle"
               items={MAIN_CATEGORIES}
@@ -138,7 +138,7 @@ const VehicleNumberEntry = () => {
             )}
           </div>
 
-          <div className="right-section">
+          <div className="Vne-right-section">
             <ServicePanel
               services={[
                 "Brake Service",
@@ -153,30 +153,30 @@ const VehicleNumberEntry = () => {
 
       {/* ---------------- POPUP ---------------- */}
       {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-card">
+        <div className="Vne-popup-overlay">
+          <div className="Vne-popup-card">
             <h3>Edit Vehicle</h3>
 
             <input
-              className="plate-input"
+              className="Vne-plate-input"
               placeholder="Enter Vehicle Number"
             />
 
-            <div className="popup-divider">OR</div>
+            <div className="Vne-popup-divider">OR</div>
 
             <select><option>Make</option></select>
             <select><option>Model</option></select>
             <select><option>Year</option></select>
             <select><option>Variant</option></select>
 
-            <div className="popup-actions">
+            <div className="Vne-popup-actions">
               <button
-                className="cancel-btn"
+                className="Vne-cancel-btn"
                 onClick={() => setShowPopup(false)}
               >
                 Cancel
               </button>
-              <button className="confirm-btn">Confirm</button>
+              <button className="Vne-confirm-btn">Confirm</button>
             </div>
           </div>
         </div>

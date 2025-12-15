@@ -49,7 +49,7 @@ const MakeNew = () => {
   ];
 
   const handleMakeClick = (make) => {
-    navigate('/Model');
+    navigate('/Model', { state: { make: make.name } });
   };
 
   return (
