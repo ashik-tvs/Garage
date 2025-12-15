@@ -71,12 +71,12 @@ const Search = () => {
           </h2>
 
           <div className="search-box">
-            <img src={SearchIcon} className="search-icon" alt="search" />
+            <img src={SearchIcon} className="search-s-icon" alt="search" />
 
             <input
               type="text"
               placeholder="Vehicle number / Part number / Service type"
-              className="search-input"
+              className="search-s-input"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={handleSearch}

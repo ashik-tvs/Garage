@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useCart } from "../../../context/CartContext";
 import { useLocation } from "react-router-dom";
 import Search from "../../home/Search";
 import NoImage from "../../../assets/No Image.png";
@@ -45,6 +46,11 @@ const mockProducts = [
 
 const ImageSearch = () => {
   const location = useLocation();
+  const { cartItems, addToCart, removeFromCart } = useCart();
+
+const isInCart = (partNumber) =>
+  cartItems.some((item) => item.partNumber === partNumber);
+
   const [previewUrl, setPreviewUrl] = useState(NoImage);
   useEffect(() => {
     return () => {
@@ -195,7 +201,25 @@ const ImageSearch = () => {
                   <div className="img-price-row">
                     <span className="price">₹ {p.price}</span>
                     <del>₹ {p.mrp}</del>
-                    <button className="img-add">Add</button>
+<button
+  className={`img-add ${isInCart("LF6079") ? "added" : ""}`}
+  onClick={() => {
+    if (isInCart("LF6079")) {
+      removeFromCart("LF6079");   // UNDO
+    } else {
+      addToCart({
+        partNumber: "LF6079",
+        title: p.title,
+        brand: p.brand,
+        listPrice: p.price,
+        mrp: p.mrp,
+        image: NoImage,
+      });
+    }
+  }}
+>
+  {isInCart("LF6079") ? "Added" : "Add"}
+</button>
                   </div>
 
                   {/* Meta */}
@@ -247,24 +271,27 @@ const ImageSearch = () => {
         </div>
 
         {/* RIGHT SIDEBAR */}
-        <div className="img-sidebar">
-          <div className="img-sidebar-header">Service Type for Brake</div>
+<div className="img-sidebar">
+  <div className="img-sidebar-header">
+    Service Type for Brake
+  </div>
 
-          <ul>
-            <li>Complete Brake System Inspection</li>
-            <li>Brake Noise / Vibration Diagnosis</li>
-            <li>Brake Fluid Level Check</li>
-            <li>ABS Warning Light Check</li>
-            <li>Front Brake Pad Replacement</li>
-            <li>Rear Brake Pad Replacement</li>
-            <li>Brake Shoe Replacement (Drum Brakes)</li>
-            <li>Brake Pad Cleaning & Adjustment</li>
-            <li>Brake Rotor (Disc) Replacement</li>
-            <li>Brake Rotor Resurfacing</li>
-            <li>Brake Drum Replacement</li>
-            <li>Brake Drum Turning / Resurfacing</li>
-          </ul>
-        </div>
+  <ul className="img-sidebar-list">
+    <li>Complete Brake System Inspection</li>
+    <li>Brake Noise / Vibration Diagnosis</li>
+    <li>Brake Fluid Level Check</li>
+    <li>ABS Warning Light Check</li>
+    <li>Front Brake Pad Replacement</li>
+    <li>Rear Brake Pad Replacement</li>
+    <li>Brake Shoe Replacement (Drum Brakes)</li>
+    <li>Brake Pad Cleaning & Adjustment</li>
+    <li>Brake Rotor (Disc) Replacement</li>
+    <li>Brake Rotor Resurfacing</li>
+    <li>Brake Drum Replacement</li>
+    <li>Brake Drum Turning / Resurfacing</li>
+  </ul>
+</div>
+
       </div>
     </div>
   );

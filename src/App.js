@@ -15,7 +15,11 @@ import Brand from "./components/search_by/MyOrder/Brand.jsx";
 import MakeNew from "./components/search_by/MyOrder/MakeNew.jsx";
 import Model from "./components/search_by/MyOrder/Model.jsx";
 import Category from "./components/search_by/MyOrder/Category.jsx";
-// import Make1 from "./components/search_by/MyOrder/Make1.jsx";
+import Sub_Category from "./components/search_by/MyOrder/SubCategory.jsx";
+import SeviceTypeModel from "./components/search_by/service_type/ServiceTypeModel.jsx";
+import SeviceTypeCategory from "./components/search_by/service_type/ServiceTypeCategory.jsx";
+import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTypeSubCategory.jsx";
+
 import { CartProvider } from "./context/CartContext.js";
 // import Login from "./components/login/Login.jsx";
 
@@ -44,6 +48,9 @@ function App() {
               path="/service-type-products"
               element={<ServiceTypeProduct />}
             />
+            <Route path="/service-type-category" element={<SeviceTypeCategory />} />
+            <Route path="/service-type-sub-category" element={<SeviceTypeSubCategory />} />
+            <Route path="/service-type-model" element={<SeviceTypeModel />} />
             <Route path="/search-by-part-number" element={<PartNumber />} />
             <Route path="/search-by-image" element={<Image />} />
             <Route path="/my-orders" element={<MyOrder />} />
@@ -51,6 +58,7 @@ function App() {
             <Route path="/MakeNew" element={<MakeNew />} />
             <Route path="/Model" element={<Model />} />
             <Route path="/Category" element={<Category />} />
+            <Route path="/sub_category" element={<Sub_Category />} />
             {/* <Route path="/make1" element={<Make1 />} /> */}
             <Route path="/cart" element={<Cart />} />
           </Route>

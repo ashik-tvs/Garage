@@ -1,9 +1,17 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
+import { useNavigate } from "react-router-dom";
 import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
 
 const Category = () => {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
+  
+  const handleCategoryClick = (category) => {
+    console.log('Selected category:', category);
+    // Navigate to Sub Category page
+    navigate('/sub_category');
+  };
 
   const categories = [
     { id: 1, label: "Engine", icon: NoImage },
@@ -30,7 +38,7 @@ const Category = () => {
 
       <div className="grid-container">
         {visibleCategories.map((cat) => (
-          <div key={cat.id} className="cat-card">
+          <div key={cat.id} className="cat-card" onClick={() => handleCategoryClick(cat)}>
             <div className="cat-img-box">
               <img src={cat.icon} alt={cat.label} className="cat-img" />
             </div>

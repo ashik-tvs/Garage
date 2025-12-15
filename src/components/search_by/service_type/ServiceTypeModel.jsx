@@ -20,7 +20,7 @@ const Model = () => {
   ];
 
   const handleModelClick = (model) => {
-    navigate('/Category');
+    navigate('/service-type-category');
   };
 
   return (

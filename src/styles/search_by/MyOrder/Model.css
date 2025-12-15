@@ -5,7 +5,7 @@
   max-width: 1365px;
   min-height: 760px;
   background: #FFFFFF;
-  padding: 20px;
+  padding: 10px 20px;
 }
 
 /* Model Header */
@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
 }
 
 /* Back Button */
@@ -24,20 +24,21 @@
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: #F36F21;
-  border: 1px solid rgba(233, 233, 233, 0.08);
-  border-radius: 70px;
+  background: transparent;
+  border: none;
   cursor: pointer;
   padding: 0;
-  /* transform: matrix(-1, 0, 0, 1, 0, 0); */
+  transition: all 0.3s ease;
 }
 
-.back-icon {
-  width: 7px;
-  height: 10px;
-  border-left: 1.5px solid #FFFFFF;
-  border-bottom: 1.5px solid #FFFFFF;
-  transform: rotate(45deg);
+.back-button:hover {
+  opacity: 0.8;
+}
+
+.back-button img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 /* Model Title */
@@ -67,29 +68,13 @@
 /* Model Row */
 .model-row {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-}
-
-.model-row-inner {
-  display: flex;
   flex-direction: row;
-  align-items: center;
-  gap: 27px;
+  align-items: flex-start;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  /* margin-bottom: 32px; */
   width: 100%;
-  overflow-x: hidden;
-}
-
-/* Hide scrollbar */
-.model-row-inner::-webkit-scrollbar {
-  display: none;
-}
-
-.model-row-inner {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* Model Card */
@@ -100,13 +85,11 @@
   align-items: flex-start;
   padding: 0px;
   isolation: isolate;
-  min-width: 120px;
-  width: 120px;
+  width: 127px;
   height: 119.05px;
   background: #FFFFFF;
   border: 1px solid #EEEEEE;
   border-radius: 4px;
-  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -124,14 +107,14 @@
   justify-content: center;
   padding: 20px 10px;
   gap: 10px;
-  width: 100%;
+  width: 84%;
   height: 100%;
 }
 
 /* Model Image */
 .model-image {
   width: 70px;
-  height: 35px;
+  height: 50px;
   object-fit: contain;
 }
 

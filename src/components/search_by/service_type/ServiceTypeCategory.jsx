@@ -47,7 +47,7 @@ const Category = () => {
   const handleCategoryClick = (category) => {
     console.log('Selected category:', category);
     // Navigate to Sub Category page
-    navigate('/sub_category');
+    navigate('/service-type-sub-category');
   };
 
   return (

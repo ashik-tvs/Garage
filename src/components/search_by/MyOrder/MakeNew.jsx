@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/search_by/MyOrder/MakeNew.css';
 import noImage from '../../../assets/No Image.png';
+import LeftArrow from '../../../assets/Product/Left_Arrow.png';
 
 const MakeNew = () => {
   const navigate = useNavigate();
@@ -54,8 +55,8 @@ const MakeNew = () => {
   return (
     <div className="make-container">
       <div className="make-header">
-        <button className="make-back-button">
-          <div className="make-back-icon"></div>
+        <button className="make-back-button" onClick={() => navigate(-1)}>
+          <img src={LeftArrow} alt="Back" />
         </button>
         <h1 className="make-title">Make</h1>
       </div>
