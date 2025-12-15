@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
 
@@ -87,8 +87,12 @@ const alignedProducts = [
 
 const Product = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { addToCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
+
+  // Get navigation flow data from state
+  const { vehicle, make, model, brand, category, subCategory } = location.state || {};
 
   // ✅ Normalize product before adding to cart
   const handleAdd = (product) => {
@@ -139,17 +143,50 @@ const Product = () => {
       {/* ---------- TOP SECTION ---------- */}
       <div className="product-top-row">
         <div className="product-breadcrumbs">
-          <img src={LeftArrow} alt="" width="24" />
-          <span>Hyundai</span>
-          <img src={RightArrow} alt="" width="16" />
-          <span>Brake</span>
-          <img src={RightArrow} alt="" width="16" />
-          <span>Brake Pad</span>
+          <img 
+            src={LeftArrow} 
+            alt="Back" 
+            width="24" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => navigate(-1)}
+          />
+          {brand && (
+            <>
+              <span>{brand}</span>
+              <img src={RightArrow} alt="" width="16" />
+            </>
+          )}
+          {make && (
+            <>
+              <span>{make}</span>
+              <img src={RightArrow} alt="" width="16" />
+            </>
+          )}
+          {model && (
+            <>
+              <span>{model}</span>
+              <img src={RightArrow} alt="" width="16" />
+            </>
+          )}
+          {category && (
+            <>
+              <span>{category}</span>
+              <img src={RightArrow} alt="" width="16" />
+            </>
+          )}
+          {subCategory && (
+            <span>{subCategory.name || subCategory}</span>
+          )}
         </div>
 
         <div className="product-top-right">
           <div className="product-vehicle-row">
-            <span>Hyundai - Grand i10 - Petrol - 2021</span>
+            <span>
+              {vehicle 
+                ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
+                : 'Hyundai - Grand i10 - Petrol - 2021'
+              }
+            </span>
             <img
               src={Edit}
               alt="Edit"

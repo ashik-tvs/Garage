@@ -1,16 +1,16 @@
 /* Vehicle Number Entry CSS */
-.vehicle-page {
+.Vne-vehicle-page {
   font-family: Arial, sans-serif;
   color: #333;
   background: #fff;
   width: 100%;
 }
-.v-hero {
+.Vne-hero {
   background: #24243e;
   color: #fff;
   padding: 28px 0;
 }
-.v-hero-inner {
+.Vne-hero-inner {
   display: flex;
   max-width: 1200px;
   margin: 0 auto;
@@ -18,31 +18,31 @@
   align-items: center;
   padding: 0 20px;
 }
-.v-hero-left {
+.Vne-hero-left {
   width: 180px;
   display: flex;
   justify-content: center;
 }
-.v-hero-image {
+.Vne-hero-image {
   width: 140px;
   height: 90px;
   background: #333;
   border-radius: 8px;
 }
-.v-hero-right {
+.Vne-hero-right {
   flex: 1;
 }
-.v-hero-title {
+.Vne-hero-title {
   font-size: 20px;
   font-weight: 400;
   margin-bottom: 12px;
 }
-.v-hero-search {
+.Vne-hero-search {
   max-width: 720px;
 }
 
 /* Vehicle selection */
-.v-selection {
+.Vne-selection {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -51,7 +51,7 @@
 
   gap: 15px;
 }
-.v-selection-tags {
+.Vne-selection-tags {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -61,7 +61,7 @@
   border-radius: 6px;
   flex-wrap: wrap;
 }
-.v-tag {
+.Vne-tag {
   background: #fff;
   border: 1px solid #e6e6e6;
   padding: 6px 10px;
@@ -69,7 +69,7 @@
   font-weight: 500;
 }
 
-.edit-icon {
+.Vne-edit-icon {
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -78,45 +78,45 @@
   padding: 6px 20px;
   border-radius: 4px;
 }
-.v-selection-hint {
+.Vne-selection-hint {
   color: #666;
   font-size: 14px;
   margin-top: 6px;
 }
 
 /* Category */
-.category-section {
+.Vne-category-section {
   margin-bottom: 30px;
 }
-.category-title {
+.Vne-category-title {
   font-weight: 400;
   font-size: 18px;
   margin-bottom: 12px;
 }
-.category-grid {
+.Vne-category-grid {
   display: flex;
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 10px;
 }
 
-.category-grid::-webkit-scrollbar {
+.Vne-category-grid::-webkit-scrollbar {
   height: 6px;
 }
 
-.category-grid::-webkit-scrollbar-thumb {
+.Vne-category-grid::-webkit-scrollbar-thumb {
   background: #ccc;
   border-radius: 4px;
 }
 
-.category-card {
+.Vne-category-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   text-align: center;
 }
-.category-name {
+.Vne-category-name {
   font-size: 12px;
   font-weight: 100;
   color: #333;
@@ -124,7 +124,7 @@
   background-color: #f2f2f2;
   padding: 4px;
 }
-.category-card img {
+.Vne-category-card img {
   width: 72px;
   height: 72px;
   border-radius: 4px;
@@ -135,12 +135,12 @@
   justify-content: center;
   margin-bottom: 8px;
 }
-.see-more-container {
+.Vne-see-more-container {
   display: flex;
   justify-content: flex-end;
 }
 
-.see-more {
+.Vne-see-more {
   background: none;
   border: none;
   color: #f7931e;
@@ -152,13 +152,13 @@
 }
 
 /* Service Panel */
-.service-panel {
+.Vne-service-panel {
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fff;
 }
 
-.service-header {
+.Vne-service-header {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -168,19 +168,19 @@
   justify-content: space-between;
 }
 
-.service-header img {
+.Vne-service-header img {
   width: 20px;
   height: 20px;
 }
 
-.service-header h4 {
+.Vne-service-header h4 {
   margin: 0;
   font-size: 15px;
   font-weight: 700;
 }
 
 /* 🔹 Bullet list */
-.service-panel ul {
+.Vne-service-panel ul {
     list-style-type: disc;
     padding-left: 32px;
     margin: 10px 0;
@@ -189,7 +189,7 @@
 }
 
 /* 🔹 Bullet items */
-.service-panel li {
+.Vne-service-panel li {
   padding: 6px 0;            /* Remove box feel */
   border-bottom: none;       /* Remove divider */
   cursor: default;           /* Not clickable */
@@ -198,11 +198,11 @@
 }
 
 /* ❌ Remove select behavior */
-.service-panel li:hover {
+.Vne-service-panel li:hover {
   background: transparent;
 }
 
-.service-panel li.selected {
+.Vne-service-panel li.selected {
   background: transparent;
   color: #444;
   font-weight: 400;
@@ -210,24 +210,24 @@
 
 
 /* Layout */
-.vehicle-content {
+.Vne-vehicle-content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
 }
-.main-content {
+.Vne-main-content {
   display: flex;
   gap: 26px;
 }
-.left-section {
+.Vne-left-section {
   flex: 3;
 }
-.right-section {
+.Vne-right-section {
   flex: 1;
   min-width: 280px;
 }
 /* ---------- POPUP ---------- */
-.popup-overlay {
+.Vne-popup-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.55);
@@ -237,7 +237,7 @@
   z-index: 999;
 }
 
-.popup-card {
+.Vne-popup-card {
   width: 420px;
   background: #fff;
   border-radius: 8px;
@@ -247,13 +247,13 @@
   gap: 14px;
 }
 
-.popup-card h3 {
+.Vne-popup-card h3 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
 }
 
-.plate-input {
+.Vne-plate-input {
   height: 44px;
   border: 2px solid #000;
   font-size: 16px;
@@ -263,32 +263,32 @@
   text-transform: uppercase;
 }
 
-.popup-divider {
+.Vne-popup-divider {
   text-align: center;
   font-size: 13px;
   color: #777;
 }
 
-.popup-card select {
+.Vne-popup-card select {
   height: 40px;
   border: 1px solid #ccc;
   padding: 0 10px;
 }
 
-.popup-actions {
+.Vne-popup-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-.cancel-btn {
+.Vne-cancel-btn {
   background: #ddd;
   border: none;
   padding: 8px 16px;
   cursor: pointer;
 }
 
-.confirm-btn {
+.Vne-confirm-btn {
   background: #f36f21;
   color: #fff;
   border: none;
@@ -299,25 +299,25 @@
 
 /* Responsive */
 @media (max-width: 1024px) {
-  .main-content {
+  .Vne-main-content {
     flex-direction: column;
   }
-  .right-section {
+  .Vne-right-section {
     min-width: 0;
   }
-  .category-grid {
+  .Vne-category-grid {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
 }
 @media (max-width: 680px) {
-  .v-hero-inner {
+  .Vne-hero-inner {
     flex-direction: column;
     gap: 12px;
   }
-  .v-hero-left {
+  .Vne-hero-left {
     display: none;
   }
-  .category-grid {
+  .Vne-category-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
