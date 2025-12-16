@@ -45,26 +45,57 @@ const VehicleSelection = ({
   onConfirm,
 }) => (
   <div className="Vne-selection">
-    <div className="Vne-selection-tags">
-      {[
-        vehicle.make,
-        vehicle.model,
-        vehicle.variant,
-        vehicle.fuel,
-        vehicle.year,
-      ].map((v, i) => (
-        <span key={i} className="Vne-tag">
-          {v}
-        </span>
-      ))}
-      <img
-        src={EditIcon}
-        className="Vne-edit-icon"
-        alt="edit"
-        onClick={onEdit}
-      />
+    {/* Group 1000006943 */}
+    <div className="Vne-edit-filter">
+      {/* Group 480960940 */}
+      <div className="Vne-filter-frame">
+        {/* Rectangle 1769 */}
+        <div className="Vne-filter-rect" />
+
+        {/* Number group */}
+        <div className="Vne-filter-number">
+          {/* Hyundai */}
+          <div className="Vne-num-part">{vehicle.make}</div>
+          
+          {/* Separator */}
+          <div className="Vne-sep">-</div>
+          
+          {/* Grand */}
+          <div className="Vne-num-part">{vehicle.model}</div>
+          
+          {/* Separator */}
+          <div className="Vne-sep">-</div>
+          
+          {/* i10 */}
+          <div className="Vne-num-part">{vehicle.variant}</div>
+          
+          {/* Separator */}
+          <div className="Vne-sep">-</div>
+          
+          {/* Petrol */}
+          <div className="Vne-num-part">{vehicle.fuel}</div>
+          
+          {/* Separator */}
+          <div className="Vne-sep">-</div>
+          
+          {/* 2021 */}
+          <div className="Vne-num-part">{vehicle.year}</div>
+        </div>
+
+        {/* Hidden indicator group */}
+        <div className="Vne-indicator">
+          <div className="Vne-indicator-text">IND</div>
+          <div className="Vne-line-vertical" />
+        </div>
+      </div>
+
+      {/* Frame 15 - Edit button */}
+      <button className="Vne-edit-btn" onClick={onEdit} aria-label="Edit vehicle">
+        <img src={EditIcon} alt="edit" className="Vne-edit-icon-img" />
+      </button>
     </div>
 
+    {/* Inline dropdowns */}
     {showEdit && (
       <div className="Vne-edit-dropdowns">
         <select className="Vne-dropdown">
@@ -141,7 +172,7 @@ const VehicleNumberEntry = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  const [vehicle, setVehicle] = useState({
+  const [vehicle] = useState({
     ...MOCK_VEHICLE,
     number: state?.vehicleNumber,
   });

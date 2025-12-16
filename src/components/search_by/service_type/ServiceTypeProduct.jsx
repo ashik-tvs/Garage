@@ -92,7 +92,7 @@ const ServiceTypeProduct = () => {
       return acc;
     }, {})
   );
-  const [vehicle, setVehicle] = useState({
+  const [vehicle] = useState({
   make: "Hyundai",
   model: "Grand i10",
   variant: "Sportz",
@@ -156,49 +156,84 @@ const onConfirm = () => {
       <Search />
       <div className="srp-content">
         <div className="srp-row">
-          <div className="srp-search-key">
-            <span className="srp-search-key-title"> Search Key: </span>
-            <span className="srp-search-key-value">
-              {" "}
-              Rear Brake Pad Replacement
-            </span>
+          {/* Search Key Text */}
+          <div className="srp-search-key-text">
+            <span className="srp-search-key-label">Search Key : </span>
+            <span className="srp-search-key-value">Rear Brake Pad Replacement</span>
           </div>
-  <div className="Vne-selection">
-    <div className="Vne-selection-tags">
-      {[vehicle.make, vehicle.model, vehicle.variant, vehicle.fuel, vehicle.year].map(
-        (v, i) => (
-          <span key={i} className="Vne-tag">
-            {v}
-          </span>
-        )
-      )}
-      <img src={EditIcon} className="Vne-edit-icon" alt="edit" onClick={onEdit} />
-    </div>
-    
-    {showEdit && (
-      <div className="Vne-edit-dropdowns">
-        <select className="Vne-dropdown">
-          <option>Select Make</option>
-        </select>
-        <select className="Vne-dropdown">
-          <option>Select Model</option>
-        </select>
-        <select className="Vne-dropdown">
-          <option>Select Variant</option>
-        </select>
-        <select className="Vne-dropdown">
-          <option>Select Fuel type</option>
-        </select>
-        <select className="Vne-dropdown">
-          <option>Select Year</option>
-        </select>
-        <button className="Vne-find-btn" onClick={onConfirm}>Find Auto Parts</button>
-      </div>
-    )}
-    
-    <div className="Vne-selection-hint">You can change your vehicle details</div>
-  </div>
-      </div>
+
+          {/* Vehicle Selection Group 480960940 */}
+          <div className="srp-vehicle-group">
+            {/* Group 1000006927 */}
+            <div className="srp-filter-frame">
+              {/* Rectangle 1769 */}
+              <div className="srp-filter-rect" />
+
+              {/* Number group */}
+              <div className="srp-filter-number">
+                {/* Hyundai */}
+                <div className="srp-num-part">{vehicle.make}</div>
+                
+                {/* Separator */}
+                <div className="srp-sep">-</div>
+                
+                {/* Grand */}
+                <div className="srp-num-part">{vehicle.model}</div>
+                
+                {/* Separator */}
+                <div className="srp-sep">-</div>
+                
+                {/* i10 */}
+                <div className="srp-num-part">{vehicle.variant}</div>
+                
+                {/* Separator */}
+                <div className="srp-sep">-</div>
+                
+                {/* Petrol */}
+                <div className="srp-num-part">{vehicle.fuel}</div>
+                
+                {/* Separator */}
+                <div className="srp-sep">-</div>
+                
+                {/* 2021 */}
+                <div className="srp-num-part">{vehicle.year}</div>
+              </div>
+
+              {/* Hidden indicator */}
+              <div className="srp-indicator">
+                <div className="srp-indicator-text">IND</div>
+                <div className="srp-line-vertical" />
+              </div>
+            </div>
+
+            {/* Frame 15 - Edit button */}
+            <button className="srp-edit-btn" onClick={onEdit} aria-label="Edit vehicle">
+              <img src={EditIcon} alt="edit" className="srp-edit-icon-img" />
+            </button>
+          </div>
+        </div>
+
+        {/* Inline dropdowns below the row */}
+        {showEdit && (
+          <div className="srp-edit-dropdowns">
+            <select className="srp-dropdown">
+              <option>Select Make</option>
+            </select>
+            <select className="srp-dropdown">
+              <option>Select Model</option>
+            </select>
+            <select className="srp-dropdown">
+              <option>Select Variant</option>
+            </select>
+            <select className="srp-dropdown">
+              <option>Select Fuel type</option>
+            </select>
+            <select className="srp-dropdown">
+              <option>Select Year</option>
+            </select>
+            <button className="srp-find-btn" onClick={onConfirm}>Find Auto Parts</button>
+          </div>
+        )}
 
       {showPopup && (
         <div className="popup-overlay">

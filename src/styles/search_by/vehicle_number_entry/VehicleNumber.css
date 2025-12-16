@@ -44,14 +44,164 @@
 
 /* Vehicle selection */
 .Vne-selection {
+  /* Auto layout */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-
-  gap: 15px;
+  padding: 10px 0px;
+  gap: 25px;
+  width: 947px;
+  height: auto;
+  margin: 0 auto;
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
 }
+
+/* Group 1000006943 */
+.Vne-edit-filter {
+  position: relative;
+  width: 947px;
+  height: 58px;
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+/* Group 480960940 */
+.Vne-filter-frame {
+  position: absolute;
+  width: 509px;
+  height: 38px;
+  left: calc(50% - 509px/2);
+  top: 10px;
+}
+
+/* Rectangle 1769 */
+.Vne-filter-rect {
+  box-sizing: border-box;
+  position: absolute;
+  width: 509px;
+  height: 38px;
+  left: 0;
+  top: 0;
+  background: #FFFFFF;
+  border: 0.836283px solid rgba(188, 188, 188, 0.73);
+  border-radius: 6px 2px 2px 6px;
+}
+
+/* Number group */
+.Vne-filter-number {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 13px;
+  position: absolute;
+  width: 314.89px;
+  height: 18px;
+  left: 50px;
+  top: calc(50% - 18px/2);
+}
+
+.Vne-num-part {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #454545;
+  /* Inside auto layout */
+  flex: none;
+  flex-grow: 0;
+}
+
+.Vne-sep {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #454545;
+  /* Inside auto layout */
+  flex: none;
+  flex-grow: 0;
+}
+
+/* Hidden indicator group */
+.Vne-indicator {
+  position: absolute;
+  visibility: hidden;
+  width: 77.63px;
+  height: 20.09px;
+  left: 285.2px;
+  top: 21.64px;
+}
+
+.Vne-indicator-text {
+  position: absolute;
+  width: 67.24px;
+  height: 18.96px;
+  left: 0;
+  top: 0;
+  font-family: 'Metropolis', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 11.708px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  color: #1E1E1E;
+}
+
+.Vne-line-vertical {
+  position: absolute;
+  width: 20.09px;
+  height: 0px;
+  left: 77.64px;
+  top: 0;
+  border: 0.836283px solid #D0D2D3;
+  transform: rotate(90deg);
+}
+
+/* Frame 15 - Edit button */
+.Vne-edit-btn {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 32px;
+  gap: 10px;
+  position: absolute;
+  width: 88px;
+  height: 38px;
+  left: 639.8px;
+  top: calc(50% - 38px/2);
+  background: #F36F21;
+  border-radius: 2px 6px 6px 2px;
+  border: none;
+  cursor: pointer;
+}
+
+.Vne-edit-icon-img {
+  width: 24px;
+  height: 24px;
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
 .Vne-selection-tags {
   display: flex;
   align-items: center;
@@ -92,15 +242,6 @@
   font-weight: 600;
 }
 
-.Vne-edit-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-  margin-left: 8px;
-  background-color: #f36f21;
-  padding: 6px 20px;
-  border-radius: 4px;
-}
 .Vne-selection-hint {
   color: #666;
   font-size: 14px;

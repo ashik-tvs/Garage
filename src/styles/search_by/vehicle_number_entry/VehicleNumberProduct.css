@@ -32,6 +32,152 @@
   gap: 16px;
 }
 
+/* Group 480960940 - Vehicle Group */
+.product-vehicle-group {
+  position: relative;
+  width: 615px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  /* Inside auto layout */
+  flex: none;
+  /* order: 1; */
+  left: 162px;
+  flex-grow: 0;
+}
+
+/* Group 1000006927 - Filter Frame */
+.product-filter-frame {
+  position: relative;
+  width: 449px;
+  height: 38px;
+}
+
+/* Rectangle 1769 */
+.product-filter-rect {
+  box-sizing: border-box;
+  position: absolute;
+  width: 449px;
+  height: 38px;
+  left: 0;
+  top: 0;
+  background: #FFFFFF;
+  border: 0.836283px solid rgba(188, 188, 188, 0.73);
+  border-radius: 6px 2px 2px 6px;
+}
+
+/* Group 1000006926 - Number group */
+.product-filter-number {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 13px;
+  position: absolute;
+  width: 317.77px;
+  height: 18px;
+  left: 26.63px;
+  top: calc(50% - 18px/2 + 1px);
+  border-radius: 6px 2px 2px 6px;
+}
+
+.product-num-part {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #454545;
+  /* Inside auto layout */
+  flex: none;
+  flex-grow: 0;
+}
+
+.product-sep {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #454545;
+  /* Inside auto layout */
+  flex: none;
+  flex-grow: 1;
+}
+
+/* Group 480961118 - Hidden indicator */
+.product-indicator {
+  position: absolute;
+  visibility: hidden;
+  width: 77.63px;
+  height: 20.09px;
+  left: 6.2px;
+  top: 11.64px;
+}
+
+.product-indicator-text {
+  position: absolute;
+  width: 67.24px;
+  height: 18.96px;
+  left: 0;
+  top: 0;
+  font-family: 'Metropolis', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 11.708px;
+  line-height: 128.91%;
+  display: flex;
+  align-items: center;
+  color: #1E1E1E;
+}
+
+/* Line 1 */
+.product-line-vertical {
+  position: absolute;
+  width: 20.09px;
+  height: 0px;
+  left: 77.64px;
+  top: 0;
+  border: 0.836283px solid #D0D2D3;
+  transform: rotate(90deg);
+}
+
+/* Frame 15 - Edit button */
+.product-edit-btn {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 32px;
+  gap: 10px;
+  position: absolute;
+  width: 54px;
+  height: 38px;
+  left: 395px;
+  top: calc(50% - 38px/2);
+  background: #F36F21;
+  border-radius: 2px 6px 6px 2px;
+  border: none;
+  cursor: pointer;
+}
+
+.product-edit-icon-img {
+  width: 24px;
+  height: 24px;
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
 /* Vehicle Section with Dropdowns */
 .product-vehicle-section {
   display: flex;
@@ -158,6 +304,8 @@ padding: 6px 12px;
   font-size: 14px;
   font-weight: 400;
   color: #444;
+  min-width: fit-content;
+  white-space: nowrap;
 }
 
 .expand-icon {

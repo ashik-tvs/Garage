@@ -165,44 +165,83 @@ const Product = () => {
           {brand && (
             <>
               <span>{brand}</span>
-              <img src={RightArrow} alt="" width="12" height="10" />
+              <img src={RightArrow} alt="" width="15" height="15" />
             </>
           )}
           {make && (
             <>
               <span>{make}</span>
-              <img src={RightArrow} alt="" width="12" height="10" />
+              <img src={RightArrow} alt="" width="15" height="15" />
             </>
           )}
           {model && (
             <>
               <span>{model}</span>
-              <img src={RightArrow} alt="" width="12" height="10" />
+              <img src={RightArrow} alt="" width="10" height="10" />
             </>
           )}
           {category && (
             <>
               <span>{category}</span>
-              <img src={RightArrow} alt="" width="12" height="10" />
+              <img src={RightArrow} alt="" width="15" height="15" />
             </>
           )}
           {subCategory && <span>{subCategory.name || subCategory}</span>}
         </div>
 
         <div className="product-top-right">
-          <div className="product-vehicle-row">
-            <span>
-              {vehicle 
-                ? `${vehicle.make || 'Hyundai'} - ${vehicle.model || 'Grand i10'} - ${vehicle.variant || ''} ${vehicle.fuel || 'Petrol'} - ${vehicle.year || '2021'}`.replace(/  +/g, ' ').trim()
-                : 'Hyundai - Grand i10 - Petrol - 2021'
-              }
-            </span>
-            <img
-              src={Edit}
-              alt="Edit"
-              className="edit-icon"
+          {/* Group 480960940 - Vehicle Group */}
+          <div className="product-vehicle-group">
+            {/* Group 1000006927 */}
+            <div className="product-filter-frame">
+              {/* Rectangle 1769 */}
+              <div className="product-filter-rect" />
+
+              {/* Number group */}
+              <div className="product-filter-number">
+                {/* Hyundai */}
+                <div className="product-num-part">{vehicle?.make || 'Hyundai'}</div>
+                
+                {/* Separator */}
+                <div className="product-sep">-</div>
+                
+                {/* Grand */}
+                <div className="product-num-part">{vehicle?.model || 'Grand'}</div>
+                
+                {/* Separator */}
+                <div className="product-sep">-</div>
+                
+                {/* i10 */}
+                <div className="product-num-part">{vehicle?.variant || 'i10'}</div>
+                
+                {/* Separator */}
+                <div className="product-sep">-</div>
+                
+                {/* Petrol */}
+                <div className="product-num-part">{vehicle?.fuel || 'Petrol'}</div>
+                
+                {/* Separator */}
+                <div className="product-sep">-</div>
+                
+                {/* 2021 */}
+                <div className="product-num-part">{vehicle?.year || '2021'}</div>
+              </div>
+
+              {/* Hidden indicator */}
+              <div className="product-indicator">
+                <div className="product-indicator-text">IND</div>
+                <div className="product-line-vertical" />
+              </div>
+            </div>
+
+            {/* Frame 15 - Edit button */}
+            <button 
+              className="product-edit-btn" 
               onClick={() => setShowEditPopup(!showEditPopup)}
-            />
+              aria-label="Edit vehicle"
+            >
+              <img src={Edit} alt="edit" className="product-edit-icon-img" />
+            </button>
           </div>
 
           <div className="product-filters-row">
