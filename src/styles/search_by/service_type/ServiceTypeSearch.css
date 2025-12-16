@@ -1,5 +1,5 @@
 .st-s-service-type-search {
-  padding: 0px 20px 20px 20px;
+  padding:0px 0px 20px 0px;
 }
 
 /* Row for vehicle search + filters */
@@ -70,6 +70,8 @@
 /* Make Grid */
 .st-s-make-grid-container {
   margin-top: 30px;
+    padding:0px 20px 0px 20px;
+
 }
 
 .st-s-make-title {

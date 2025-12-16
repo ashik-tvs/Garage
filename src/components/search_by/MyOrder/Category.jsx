@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../../../styles/search_by/MyOrder/Category.css';
 import LeftArrow from '../../../assets/Product/Left_Arrow.png';
 
@@ -8,6 +8,8 @@ import NoImage from '../../../assets/No Image.png';
 
 const Category = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { make, model, brand } = location.state || {};
 
   const categories = [
     { id: 1, name: 'Engine', image: NoImage },
@@ -47,7 +49,14 @@ const Category = () => {
   const handleCategoryClick = (category) => {
     console.log('Selected category:', category);
     // Navigate to Sub Category page
-    navigate('/sub_category');
+    navigate('/sub_category', {
+      state: {
+        make: make,
+        model: model,
+        brand: brand,
+        category: category.name
+      }
+    });
   };
 
   return (

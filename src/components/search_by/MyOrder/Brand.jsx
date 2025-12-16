@@ -46,6 +46,10 @@ const Brand = () => {
     { id: 36, name: 'GOODYEAR', image: NoImage }
   ];
 
+  const handleBrandClick = (brand) => {
+    navigate('/Category', { state: { brand: brand.name } });
+  };
+
   return (
     <div className="brand-container">
       {/* Top Section with Back Button and Title */}
@@ -59,7 +63,12 @@ const Brand = () => {
       {/* Brands Grid */}
       <div className="brands-grid">
         {brands.map((brand) => (
-          <div key={brand.id} className="brand-card">
+          <div 
+            key={brand.id} 
+            className="brand-card"
+            onClick={() => handleBrandClick(brand)}
+            style={{ cursor: 'pointer' }}
+          >
             <div className="brand-image-wrapper">
               <img src={brand.image} alt={brand.name} className="brand-image" />
             </div>

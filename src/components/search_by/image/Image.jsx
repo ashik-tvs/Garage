@@ -48,8 +48,8 @@ const ImageSearch = () => {
   const location = useLocation();
   const { cartItems, addToCart, removeFromCart } = useCart();
 
-const isInCart = (partNumber) =>
-  cartItems.some((item) => item.partNumber === partNumber);
+  const isInCart = (partNumber) =>
+    cartItems.some((item) => item.partNumber === partNumber);
 
   const [previewUrl, setPreviewUrl] = useState(NoImage);
   useEffect(() => {
@@ -71,12 +71,33 @@ const isInCart = (partNumber) =>
 
     setPreviewUrl(URL.createObjectURL(file));
   };
+  const [value, setValue] = useState("");
+
+  const formatVehicleNumber = (input) => {
+    // Remove invalid chars
+    let v = input.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+    // TN59CS3866 → TN - 59 - CS - 3866
+    let formatted = "";
+    if (v.length > 0) formatted += v.slice(0, 2);
+    if (v.length > 2) formatted += " - " + v.slice(2, 4);
+    if (v.length > 4) formatted += " - " + v.slice(4, 6);
+    if (v.length > 6) formatted += " - " + v.slice(6, 10);
+
+    return formatted;
+  };
+
+  const handleChange = (e) => {
+    const raw = e.target.value.replace(/ - /g, "");
+    setValue(formatVehicleNumber(raw));
+  };
 
   return (
     <div className="img-page">
       <Search />
-
-      <p className="img-upload-title">Thank you for uploading the image.</p>
+      <div className="img-upload-header">
+        <p className="img-upload-title">Thank you for uploading the image.</p>
+      </div>
 
       {/* Upload Card */}
       <div className="img-upload-card">
@@ -101,8 +122,16 @@ const isInCart = (partNumber) =>
         {/* RIGHT FORM */}
         <div className="img-right">
           <div className="img-vehicle-row">
-            <input value="TN 59 CS 3866" readOnly />
-            <button>Search</button>
+            <div className="vehicle-search-box">
+              <input
+                type="text"
+                value={value}
+                onChange={handleChange}
+                maxLength={19}
+                placeholder="TN - 59 - CS - 3866"
+              />
+              <button>Search</button>
+            </div>
           </div>
 
           <div className="img-or">(OR)</div>
@@ -201,25 +230,25 @@ const isInCart = (partNumber) =>
                   <div className="img-price-row">
                     <span className="price">₹ {p.price}</span>
                     <del>₹ {p.mrp}</del>
-<button
-  className={`img-add ${isInCart("LF6079") ? "added" : ""}`}
-  onClick={() => {
-    if (isInCart("LF6079")) {
-      removeFromCart("LF6079");   // UNDO
-    } else {
-      addToCart({
-        partNumber: "LF6079",
-        title: p.title,
-        brand: p.brand,
-        listPrice: p.price,
-        mrp: p.mrp,
-        image: NoImage,
-      });
-    }
-  }}
->
-  {isInCart("LF6079") ? "Added" : "Add"}
-</button>
+                    <button
+                      className={`img-add ${isInCart("LF6079") ? "added" : ""}`}
+                      onClick={() => {
+                        if (isInCart("LF6079")) {
+                          removeFromCart("LF6079"); // UNDO
+                        } else {
+                          addToCart({
+                            partNumber: "LF6079",
+                            title: p.title,
+                            brand: p.brand,
+                            listPrice: p.price,
+                            mrp: p.mrp,
+                            image: NoImage,
+                          });
+                        }
+                      }}
+                    >
+                      {isInCart("LF6079") ? "Added" : "Add"}
+                    </button>
                   </div>
 
                   {/* Meta */}
@@ -271,27 +300,24 @@ const isInCart = (partNumber) =>
         </div>
 
         {/* RIGHT SIDEBAR */}
-<div className="img-sidebar">
-  <div className="img-sidebar-header">
-    Service Type for Brake
-  </div>
+        <div className="img-sidebar">
+          <div className="img-sidebar-header">Service Type for Brake</div>
 
-  <ul className="img-sidebar-list">
-    <li>Complete Brake System Inspection</li>
-    <li>Brake Noise / Vibration Diagnosis</li>
-    <li>Brake Fluid Level Check</li>
-    <li>ABS Warning Light Check</li>
-    <li>Front Brake Pad Replacement</li>
-    <li>Rear Brake Pad Replacement</li>
-    <li>Brake Shoe Replacement (Drum Brakes)</li>
-    <li>Brake Pad Cleaning & Adjustment</li>
-    <li>Brake Rotor (Disc) Replacement</li>
-    <li>Brake Rotor Resurfacing</li>
-    <li>Brake Drum Replacement</li>
-    <li>Brake Drum Turning / Resurfacing</li>
-  </ul>
-</div>
-
+          <ul className="img-sidebar-list">
+            <li>Complete Brake System Inspection</li>
+            <li>Brake Noise / Vibration Diagnosis</li>
+            <li>Brake Fluid Level Check</li>
+            <li>ABS Warning Light Check</li>
+            <li>Front Brake Pad Replacement</li>
+            <li>Rear Brake Pad Replacement</li>
+            <li>Brake Shoe Replacement (Drum Brakes)</li>
+            <li>Brake Pad Cleaning & Adjustment</li>
+            <li>Brake Rotor (Disc) Replacement</li>
+            <li>Brake Rotor Resurfacing</li>
+            <li>Brake Drum Replacement</li>
+            <li>Brake Drum Turning / Resurfacing</li>
+          </ul>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
 
@@ -87,46 +87,57 @@ const alignedProducts = [
 
 const Product = () => {
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const location = useLocation();
+  const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const isInCart = (partNumber) =>
+    cartItems.some((item) => item.partNumber === partNumber);
+
+  // Get navigation flow data from state
+  const { vehicle, make, model, brand, category, subCategory } =
+    location.state || {};
 
   // ✅ Normalize product before adding to cart
-  const handleAdd = (product) => {
-    addToCart({
-      partNumber: product.partNumber,
-      itemDescription: product.name,
-      listPrice: product.price,
-      stockQty: product.stockQty,
-      imageUrl: NoImage,
-    });
-
+  const handleToggleCart = (product) => {
+    if (isInCart(product.partNumber)) {
+      removeFromCart(product.partNumber); // REMOVE (Added → Add)
+    } else {
+      addToCart({
+        partNumber: product.partNumber,
+        itemDescription: product.name,
+        listPrice: product.price,
+        stockQty: product.stockQty,
+        imageUrl: NoImage,
+      });
+    }
   };
 
   const renderProductCard = (product) => (
-    <div className="product-card" key={product.partNumber}>
-      <div className="product-image-placeholder">No Image</div>
+    <div className="vnp-card" key={product.partNumber}>
+      <div className="vnp-image-placeholder">No Image</div>
 
-      <div className="product-details">
-        <div className="product-badges">
-          <span className={`badge badge-${product.brand.toLowerCase()}`}>
+      <div className="vnp-details">
+        <div className="vnp-badges">
+          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}>
             {product.brand}
           </span>
-          <span className="badge badge-stock">In stock</span>
-          <span className="badge badge-eta">{product.eta}</span>
+          <span className="vnp-badge vnp-badge-stock">In stock</span>
+          <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
         </div>
 
-        <p className="product-code">{product.partNumber}</p>
-        <p className="product-name">{product.name}</p>
+        <p className="vnp-code">{product.partNumber}</p>
+        <p className="vnp-name">{product.name}</p>
 
-        <div className="product-price-row">
-          <span className="price-current">₹ {product.price}.00</span>
-          <span className="price-original">₹ {product.mrp}.00</span>
+        <div className="vnp-price-row">
+          <span className="vnp-price-current">₹ {product.price}.00</span>
+          <span className="vnp-price-original">₹ {product.mrp}.00</span>
 
           <button
-            className="btn-add"
-            onClick={() => handleAdd(product)}
+            className={`vnp-btn-add ${isInCart(product.partNumber) ? "added" : ""}`}
+            onClick={() => handleToggleCart(product)}
           >
-            Add
+            {isInCart(product.partNumber) ? "Added" : "Add"}
           </button>
         </div>
       </div>
@@ -134,33 +145,108 @@ const Product = () => {
   );
 
   return (
-    <div className="product-container">
-
+    <div className="vnp-container">
       {/* ---------- TOP SECTION ---------- */}
-      <div className="product-top-row">
-        <div className="product-breadcrumbs">
-          <img src={LeftArrow} alt="" width="24" />
-          <span>Hyundai</span>
-          <img src={RightArrow} alt="" width="16" />
-          <span>Brake</span>
-          <img src={RightArrow} alt="" width="16" />
-          <span>Brake Pad</span>
+      <div className="vnp-top-row">
+        <div className="vnp-breadcrumbs">
+          <img
+            src={LeftArrow}
+            alt="Back"
+            width="10"
+            height="10"
+            style={{
+              cursor: "pointer",
+              backgroundColor: "#F36F21",
+              padding: "4px",
+              borderRadius: "50px",
+            }}
+            onClick={() => navigate(-1)}
+          />
+          {brand && (
+            <>
+              <span>{brand}</span>
+              <img src={RightArrow} alt="" width="15" height="15" />
+            </>
+          )}
+          {make && (
+            <>
+              <span>{make}</span>
+              <img src={RightArrow} alt="" width="15" height="15" />
+            </>
+          )}
+          {model && (
+            <>
+              <span>{model}</span>
+              <img src={RightArrow} alt="" width="10" height="10" />
+            </>
+          )}
+          {category && (
+            <>
+              <span>{category}</span>
+              <img src={RightArrow} alt="" width="15" height="15" />
+            </>
+          )}
+          {subCategory && <span>{subCategory.name || subCategory}</span>}
         </div>
 
-        <div className="product-top-right">
-          <div className="product-vehicle-row">
-            <span>Hyundai - Grand i10 - Petrol - 2021</span>
-            <img
-              src={Edit}
-              alt="Edit"
-              className="edit-icon"
-              onClick={() => setShowEditPopup(true)}
-            />
+        <div className="vnp-top-right">
+          {/* Group 480960940 - Vehicle Group */}
+          <div className="vnp-vehicle-group">
+            {/* Group 1000006927 */}
+            <div className="vnp-filter-frame">
+              {/* Rectangle 1769 */}
+              <div className="vnp-filter-rect" />
+
+              {/* Number group */}
+              <div className="vnp-filter-number">
+                {/* Hyundai */}
+                <div className="vnp-num-part">{vehicle?.make || 'Hyundai'}</div>
+                
+                {/* Separator */}
+                <div className="vnp-sep">-</div>
+                
+                {/* Grand */}
+                <div className="vnp-num-part">{vehicle?.model || 'Grand'}</div>
+                
+                {/* Separator */}
+                <div className="vnp-sep">-</div>
+                
+                {/* i10 */}
+                <div className="vnp-num-part">{vehicle?.variant || 'i10'}</div>
+                
+                {/* Separator */}
+                <div className="vnp-sep">-</div>
+                
+                {/* Petrol */}
+                <div className="vnp-num-part">{vehicle?.fuel || 'Petrol'}</div>
+                
+                {/* Separator */}
+                <div className="vnp-sep">-</div>
+                
+                {/* 2021 */}
+                <div className="vnp-num-part">{vehicle?.year || '2021'}</div>
+              </div>
+
+              {/* Hidden indicator */}
+              <div className="vnp-indicator">
+                <div className="vnp-indicator-text">IND</div>
+                <div className="vnp-line-vertical" />
+              </div>
+            </div>
+
+            {/* Frame 15 - Edit button */}
+            <button 
+              className="vnp-edit-btn" 
+              onClick={() => setShowEditPopup(!showEditPopup)}
+              aria-label="Edit vehicle"
+            >
+              <img src={Edit} alt="edit" className="vnp-edit-icon-img" />
+            </button>
           </div>
 
-          <div className="product-filters-row">
+          <div className="vnp-filters-row">
             {["Brake System", "Price", "ETA", "Sort by"].map((f) => (
-              <div className="filter-item" key={f}>
+              <div className="vnp-filter-item" key={f}>
                 <span>{f}</span>
                 <img src={ExpandDown} alt="" width="24" />
               </div>
@@ -169,91 +255,80 @@ const Product = () => {
         </div>
       </div>
 
-      {/* ---------- EDIT VEHICLE POPUP ---------- */}
+      {/* ---------- EDIT DROPDOWNS ---------- */}
       {showEditPopup && (
-        <div className="vehicle-popup-overlay">
-          <div className="vehicle-popup">
-            <h3>Edit Vehicle</h3>
-
-            <input
-              className="number-plate-input"
-              placeholder="KA 01 AB 1234"
-            />
-
-            <p className="or-text">OR</p>
-
-            <select><option>Make</option></select>
-            <select><option>Model</option></select>
-            <select><option>Year</option></select>
-            <select><option>Variant</option></select>
-
-            <div className="popup-actions">
-              <button onClick={() => setShowEditPopup(false)}>Cancel</button>
-              <button className="primary">Update</button>
-            </div>
-          </div>
+        <div className="vnp-edit-dropdowns">
+          <select className="vnp-dropdown">
+            <option>Select Make</option>
+          </select>
+          <select className="vnp-dropdown">
+            <option>Select Model</option>
+          </select>
+          <select className="vnp-dropdown">
+            <option>Select Variant</option>
+          </select>
+          <select className="vnp-dropdown">
+            <option>Select Fuel type</option>
+          </select>
+          <select className="vnp-dropdown">
+            <option>Select Year</option>
+          </select>
+          <button className="vnp-find-btn" onClick={() => setShowEditPopup(false)}>Find Auto Parts</button>
         </div>
       )}
 
       {/* ---------- CONTENT ---------- */}
-      <div className="product-content-wrapper">
-        <div className="product-left-section">
-
-          <div className="product-section">
-            <h2 className="section-title">myTVS Recommended Products</h2>
-            <div className="product-cards-grid">
+      <div className="vnp-content-wrapper">
+        <div className="vnp-left-section">
+          <div className="vnp-section">
+            <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+            <div className="vnp-cards-grid">
               {recommendedProducts.map(renderProductCard)}
             </div>
           </div>
 
-          <div className="product-section">
-            <h2 className="section-title">Other Products</h2>
-            <div className="product-cards-grid">
+          <div className="vnp-section">
+            <h2 className="vnp-section-title">Other Products</h2>
+            <div className="vnp-cards-grid">
               {otherProducts.map(renderProductCard)}
             </div>
           </div>
-
         </div>
 
-        <div className="product-right-section">
-          <div className="product-section">
-            <h2 className="section-title">Aligned Products</h2>
+        <div className="vnp-right-section">
+          <div className="vnp-section-right">
+            <h2 className="vnp-section-title">Aligned Products</h2>
 
             {alignedProducts.map((product) => (
-              <div className="aligned-product-card" key={product.partNumber}>
-                <div className="product-image-placeholder-small">No Image</div>
+              <div className="vnp-aligned-card" key={product.partNumber}>
+                <div className="vnp-image-placeholder-small">No Image</div>
 
-                <div className="aligned-product-details">
-                  <div className="product-badges">
-                    <span className="badge badge-valeo">
-                      {product.brand}
-                    </span>
-                    <span className="badge badge-stock">In stock</span>
-                    <span className="badge badge-eta">{product.eta}</span>
+                <div className="vnp-aligned-details">
+                  <div className="vnp-badges">
+                    <span className="vnp-badge vnp-badge-valeo">{product.brand}</span>
+                    <span className="vnp-badge vnp-badge-stock">In stock</span>
+                    <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
                   </div>
 
-                  <p className="product-code">{product.partNumber}</p>
-                  <p className="product-name">{product.name}</p>
+                  <p className="vnp-code">{product.partNumber}</p>
+                  <p className="vnp-name">{product.name}</p>
 
-                  <div className="product-price-row">
-                    <span className="price-current">
-                      ₹ {product.price}.00
-                    </span>
-                    <span className="price-original">
-                      ₹ {product.mrp}.00
-                    </span>
+                  <div className="vnp-price-row">
+                    <span className="vnp-price-current">₹ {product.price}.00</span>
+                    <span className="vnp-price-original">₹ {product.mrp}.00</span>
 
                     <button
-                      className="btn-add"
-                      onClick={() => handleAdd(product)}
+                      className={`vnp-btn-add ${
+                        isInCart(product.partNumber) ? "added" : ""
+                      }`}
+                      onClick={() => handleToggleCart(product)}
                     >
-                      Add
+                      {isInCart(product.partNumber) ? "Added" : "Add"}
                     </button>
                   </div>
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       </div>

@@ -15,7 +15,7 @@ const filters = [
 const recommendedProducts = [
   {
     brand: "Valeo",
-    code: "LF6079",
+    code: "LF60730",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -25,7 +25,7 @@ const recommendedProducts = [
   },
   {
     brand: "Bosch",
-    code: "LF6079",
+    code: "LF60718",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -35,7 +35,7 @@ const recommendedProducts = [
   },
   {
     brand: "Bosch",
-    code: "LF6079",
+    code: "LF607188",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -49,7 +49,7 @@ const otherProducts = [...recommendedProducts];
 
 /* ---------------- PRODUCT CARD ---------------- */
 const ProductCard = ({ item }) => {
-  const { cartItems, addToCart,removeFromCart } = useCart();
+  const { cartItems, addToCart, removeFromCart } = useCart();
 
   const isAdded = cartItems.some(
     (cartItem) => cartItem.partNumber === item.code
@@ -113,7 +113,9 @@ const PartNumber = () => {
         {/* LEFT PANEL */}
         <div className="pn-left">
           <h4 className="pn-left-title">Part Number Details</h4>
-          <img src={NoImage} alt="vehicle" className="pn-car-img" />
+          <div className="pn-car-image">
+            <img src={NoImage} alt="vehicle" className="pn-car-img" />
+          </div>
 
           <div className="pn-info">
             <div>

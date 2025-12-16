@@ -1,11 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../../../styles/search_by/MyOrder/Model.css';
 import noImage from '../../../assets/No Image.png';
 import LeftArrow from '../../../assets/Product/Left_Arrow.png';
 
 const Model = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { make } = location.state || {};
 
   const models = [
     { id: 1, name: '1 Series' },
@@ -20,7 +22,12 @@ const Model = () => {
   ];
 
   const handleModelClick = (model) => {
-    navigate('/Category');
+    navigate('/Category', { 
+      state: { 
+        make: make,
+        model: model.name 
+      } 
+    });
   };
 
   return (

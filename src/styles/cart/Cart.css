@@ -21,7 +21,7 @@
   width: 340px;
   flex-shrink: 0;
     position: sticky;
-  top: 120px;
+  /* top: 120px; */
 }
 @media (max-width: 1024px) {
   .cart-page {

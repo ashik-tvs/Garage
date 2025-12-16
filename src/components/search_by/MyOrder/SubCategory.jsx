@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../../../styles/home/SubCategory.css';
 import LeftArrow from '../../../assets/Product/Left_Arrow.png';
 import NoImage from '../../../assets/No Image.png';
@@ -7,6 +7,8 @@ import ServiceTypeIcon from '../../../assets/vehicle_search_entry/servicetype.pn
 
 const Sub_Category = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { make, model, brand, category } = location.state || {};
 
   const subCategories = [
     // Row 1
@@ -54,13 +56,29 @@ const Sub_Category = () => {
   const handleSubCategoryClick = (subCategory) => {
     console.log('Selected sub-category:', subCategory);
     // Navigate to products page
-    navigate('/vehicle-number-products');
+    navigate('/vehicle-number-products', {
+      state: {
+        make: make,
+        model: model,
+        brand: brand,
+        category: category,
+        subCategory: subCategory.name
+      }
+    });
   };
 
   const handleServiceTypeClick = (serviceType) => {
     console.log('Selected service type:', serviceType);
     // Navigate to products page
-    navigate('/vehicle-number-products');
+    navigate('/vehicle-number-products', {
+      state: {
+        make: make,
+        model: model,
+        brand: brand,
+        category: category,
+        subCategory: serviceType
+      }
+    });
   };
 
   return (
@@ -108,17 +126,18 @@ const Sub_Category = () => {
               <img src={ServiceTypeIcon} alt="Service Type" />
             </div>
           </div>
-          <div className="service-type-list">
-            {serviceTypes.map((service, index) => (
-              <div
-                key={index}
-                className="service-type-item"
-                onClick={() => handleServiceTypeClick(service)}
-              >
-                {service}
-              </div>
-            ))}
-          </div>
+<ul className="service-type-list">
+  {serviceTypes.map((service, index) => (
+    <li
+      key={index}
+      className="service-type-item"
+      onClick={() => handleServiceTypeClick(service)}
+    >
+      {service}
+    </li>
+  ))}
+</ul>
+
         </div>
       </div>
     </div>
