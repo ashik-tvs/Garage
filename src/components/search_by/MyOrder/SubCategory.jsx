@@ -126,17 +126,18 @@ const Sub_Category = () => {
               <img src={ServiceTypeIcon} alt="Service Type" />
             </div>
           </div>
-          <div className="service-type-list">
-            {serviceTypes.map((service, index) => (
-              <div
-                key={index}
-                className="service-type-item"
-                onClick={() => handleServiceTypeClick(service)}
-              >
-                {service}
-              </div>
-            ))}
-          </div>
+<ul className="service-type-list">
+  {serviceTypes.map((service, index) => (
+    <li
+      key={index}
+      className="service-type-item"
+      onClick={() => handleServiceTypeClick(service)}
+    >
+      {service}
+    </li>
+  ))}
+</ul>
+
         </div>
       </div>
     </div>

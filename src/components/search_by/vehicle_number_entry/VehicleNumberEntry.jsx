@@ -37,19 +37,34 @@ const SUB_CATEGORIES = [
 ];
 
 // -------------------- SMALL COMPONENTS --------------------
-const VehicleSelection = ({ vehicle, onEdit, showEdit, onCancel, onConfirm }) => (
+const VehicleSelection = ({
+  vehicle,
+  onEdit,
+  showEdit,
+  onCancel,
+  onConfirm,
+}) => (
   <div className="Vne-selection">
     <div className="Vne-selection-tags">
-      {[vehicle.make, vehicle.model, vehicle.variant, vehicle.fuel, vehicle.year].map(
-        (v, i) => (
-          <span key={i} className="Vne-tag">
-            {v}
-          </span>
-        )
-      )}
-      <img src={EditIcon} className="Vne-edit-icon" alt="edit" onClick={onEdit} />
+      {[
+        vehicle.make,
+        vehicle.model,
+        vehicle.variant,
+        vehicle.fuel,
+        vehicle.year,
+      ].map((v, i) => (
+        <span key={i} className="Vne-tag">
+          {v}
+        </span>
+      ))}
+      <img
+        src={EditIcon}
+        className="Vne-edit-icon"
+        alt="edit"
+        onClick={onEdit}
+      />
     </div>
-    
+
     {showEdit && (
       <div className="Vne-edit-dropdowns">
         <select className="Vne-dropdown">
@@ -67,28 +82,37 @@ const VehicleSelection = ({ vehicle, onEdit, showEdit, onCancel, onConfirm }) =>
         <select className="Vne-dropdown">
           <option>Select Year</option>
         </select>
-        <button className="Vne-find-btn" onClick={onConfirm}>Find Auto Parts</button>
+        <button className="Vne-find-btn" onClick={onConfirm}>
+          Find Auto Parts
+        </button>
       </div>
     )}
-    
-    <div className="Vne-selection-hint">You can change your vehicle details</div>
+
+    <div className="Vne-selection-hint">
+      You can change your vehicle details
+    </div>
   </div>
 );
 
-const CategoryGrid = ({ title, items, onSelect }) => (
+const CategoryGrid = ({ title, items, onSelect, activeItem }) => (
   <div className="Vne-category-section">
     <h3 className="Vne-category-title">{title}</h3>
+
     <div className="Vne-category-grid">
-      {items.map((item, i) => (
-        <div
-          key={i}
-          className="Vne-category-card"
-          onClick={() => onSelect(item)}
-        >
-          <img src={item.icon} alt={item.name} />
-          <span className="Vne-category-name">{item.name}</span>
-        </div>
-      ))}
+      {items.map((item, i) => {
+        const isActive = activeItem === item.name;
+
+        return (
+          <div
+            key={i}
+            className={`Vne-category-card ${isActive ? "active" : ""}`}
+            onClick={() => onSelect(item)}
+          >
+            <img src={item.icon} alt={item.name} />
+            <span className="Vne-category-name">{item.name}</span>
+          </div>
+        );
+      })}
     </div>
   </div>
 );
@@ -112,7 +136,6 @@ const ServicePanel = ({ services }) => {
   );
 };
 
-
 // -------------------- MAIN --------------------
 const VehicleNumberEntry = () => {
   const { state } = useLocation();
@@ -123,7 +146,11 @@ const VehicleNumberEntry = () => {
     number: state?.vehicleNumber,
   });
 
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(
+    MAIN_CATEGORIES[0].name
+  );
+  const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+
   const [showPopup, setShowPopup] = useState(false);
 
   const handleSubCategory = (sub) => {
@@ -146,8 +173,8 @@ const VehicleNumberEntry = () => {
       <Search />
 
       <div className="Vne-vehicle-content">
-        <VehicleSelection 
-          vehicle={vehicle} 
+        <VehicleSelection
+          vehicle={vehicle}
           onEdit={() => setShowPopup(!showPopup)}
           showEdit={showPopup}
           onCancel={() => setShowPopup(false)}
@@ -159,14 +186,22 @@ const VehicleNumberEntry = () => {
             <CategoryGrid
               title="Category wise this Vehicle"
               items={MAIN_CATEGORIES}
-              onSelect={(c) => setSelectedCategory(c.name)}
+              onSelect={(c) => {
+                setSelectedCategory(c.name);
+                setSelectedSubCategory(null); // reset sub category
+              }}
+              activeItem={selectedCategory}
             />
 
             {selectedCategory && (
               <CategoryGrid
                 title={`Sub Category - ${selectedCategory}`}
                 items={SUB_CATEGORIES}
-                onSelect={handleSubCategory}
+                onSelect={(sub) => {
+                  setSelectedSubCategory(sub.name);
+                  handleSubCategory(sub);
+                }}
+                activeItem={selectedSubCategory}
               />
             )}
           </div>

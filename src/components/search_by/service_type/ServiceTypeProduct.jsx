@@ -92,6 +92,22 @@ const ServiceTypeProduct = () => {
       return acc;
     }, {})
   );
+  const [vehicle, setVehicle] = useState({
+  make: "Hyundai",
+  model: "Grand i10",
+  variant: "Sportz",
+  fuel: "Petrol",
+  year: "2021",
+});
+const [showEdit, setShowEdit] = useState(false);
+const onEdit = () => {
+  setShowEdit((prev) => !prev);
+};
+
+const onConfirm = () => {
+  setShowEdit(false);
+};
+
   const [showPopup, setShowPopup] = useState(false);
 
   const [selected, setSelected] = useState(
@@ -147,18 +163,41 @@ const ServiceTypeProduct = () => {
               Rear Brake Pad Replacement
             </span>
           </div>
-          <div className="srp-vehicle-bar">
-            <span className="srp-vehicle-text">
-              Hyundai - Grand - i10 - Petrol - 2021
-            </span>
-
-          <img
-            src={EditIcon}
-            alt="edit"
-            className="srp-edit-icon"
-            onClick={() => setShowPopup(true)}
-          />
-        </div>
+  <div className="Vne-selection">
+    <div className="Vne-selection-tags">
+      {[vehicle.make, vehicle.model, vehicle.variant, vehicle.fuel, vehicle.year].map(
+        (v, i) => (
+          <span key={i} className="Vne-tag">
+            {v}
+          </span>
+        )
+      )}
+      <img src={EditIcon} className="Vne-edit-icon" alt="edit" onClick={onEdit} />
+    </div>
+    
+    {showEdit && (
+      <div className="Vne-edit-dropdowns">
+        <select className="Vne-dropdown">
+          <option>Select Make</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Model</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Variant</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Fuel type</option>
+        </select>
+        <select className="Vne-dropdown">
+          <option>Select Year</option>
+        </select>
+        <button className="Vne-find-btn" onClick={onConfirm}>Find Auto Parts</button>
+      </div>
+    )}
+    
+    <div className="Vne-selection-hint">You can change your vehicle details</div>
+  </div>
       </div>
 
       {showPopup && (

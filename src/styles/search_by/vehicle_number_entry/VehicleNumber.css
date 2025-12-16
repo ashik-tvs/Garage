@@ -56,7 +56,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fafafa;
   border: 1px solid #ddd;
   padding: 8px 10px;
   border-radius: 6px;
@@ -68,6 +67,29 @@
   padding: 6px 10px;
   border-radius: 4px;
   font-weight: 500;
+}
+.Vne-category-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  /* padding: 14px; */
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.Vne-category-card:hover {
+  border-color: #ff7f32;
+}
+
+.Vne-category-card.active {
+  border: 2px solid #ff7f32;
+  /* background: #fff7f2; */
+}
+
+.Vne-category-card.active .Vne-category-name {
+  color: #ff7f32;
+  font-weight: 600;
 }
 
 .Vne-edit-icon {
@@ -113,7 +135,7 @@
 
 .Vne-find-btn {
   height: 48px;
-  padding: 0 24px;
+  padding: 0 18px;
   background-color: #f36f21;
   color: #fff;
   border: none;
@@ -159,6 +181,7 @@
   align-items: center;
   cursor: pointer;
   text-align: center;
+  justify-content: space-between;
 }
 .Vne-category-name {
   font-size: 12px;
@@ -171,8 +194,6 @@
 .Vne-category-card img {
   width: 72px;
   height: 72px;
-  border-radius: 4px;
-  border: 1px solid #e6e6e6;
   background: #fff;
   display: flex;
   align-items: center;
@@ -196,12 +217,62 @@
 }
 
 /* Service Panel */
+/* Service Panel */
 .Vne-service-panel {
   border: 1px solid #eee;
   border-radius: 8px;
   background: #fff;
+  width: 210px;
 }
 
+/* Header */
+.Vne-service-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #444;
+  color: #fff;
+}
+
+.Vne-service-header h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.Vne-service-header img {
+  width: 20px;
+  height: 20px;
+}
+
+/* List */
+.Vne-service-list {
+  list-style: none;        /* ✅ remove native bullets */
+  padding: 10px 14px;
+  margin: 0;
+  background-color: #f3f3f3;
+}
+
+/* Item */
+.Vne-service-item {
+  position: relative;
+  padding-left: 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+/* Custom bullet */
+.Vne-service-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-size: 18px;
+  color: #444;
+}
 .Vne-service-header {
   display: flex;
   align-items: center;
@@ -223,23 +294,8 @@
   font-weight: 700;
 }
 
-/* 🔹 Bullet list */
-.Vne-service-panel ul {
-    list-style-type: disc;
-    padding-left: 32px;
-    margin:0;
-    background-color: #F3F3F3;
 
-}
 
-/* 🔹 Bullet items */
-.Vne-service-panel li {
-  padding: 6px 0;            /* Remove box feel */
-  border-bottom: none;       /* Remove divider */
-  cursor: default;           /* Not clickable */
-  font-size: 14px;
-  color: #444;
-}
 
 /* ❌ Remove select behavior */
 .Vne-service-panel li:hover {
@@ -251,7 +307,6 @@
   color: #444;
   font-weight: 400;
 }
-
 
 /* Layout */
 .Vne-vehicle-content {
@@ -267,8 +322,7 @@
   flex: 3;
 }
 .Vne-right-section {
-  flex: 1;
-  min-width: 280px;
+  /* min-width: 280px; */
 }
 /* Responsive */
 @media (max-width: 1024px) {

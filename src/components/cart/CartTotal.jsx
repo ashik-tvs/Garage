@@ -1,11 +1,20 @@
 import React, { useState } from "react";
+import { useCart } from "../../context/CartContext";
 import "../../styles/cart/CartTotal.css";
 import Success from "./Success";
 
 const CartTotal = () => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const { cartItems = [] } = useCart();
 
+  const basicPrice = cartItems.reduce(
+    (sum, item) => sum + item.quantity * item.listPrice,
+    0
+  );
+
+  const gst = basicPrice * 0.18;
+  const grandTotal = basicPrice + gst;
   const handleCheckout = () => {
     setLoading(true);
 
@@ -29,19 +38,17 @@ const CartTotal = () => {
 
           <div className="cardtotal-row">
             <span className="label">Basic Price</span>
-            <span className="value">₹0.00</span>
+            <span className="value">₹{basicPrice.toFixed(2)}</span>
           </div>
 
           <div className="cardtotal-row">
             <span className="label">GST (18%)</span>
-            <span className="value">₹0.00</span>
+            <span className="value">₹{gst.toFixed(2)}</span>
           </div>
-
-          <div className="cardtotal-sep"></div>
 
           <div className="cardtotal-row total">
             <span className="label">Grand Total</span>
-            <span className="value">₹0.00</span>
+            <span className="value">₹{grandTotal.toFixed(2)}</span>
           </div>
 
           <button className="cardtotal-cta" onClick={handleCheckout}>

@@ -209,6 +209,46 @@
   overflow-y: auto;
   box-sizing: border-box;
 }
+/* Service Type List */
+.service-type-list {
+  list-style: none;              /* remove default bullets */
+  padding: 10px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: calc(554px - 45px);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Service Type Item */
+.service-type-item {
+  position: relative;
+  padding-left: 16px;            /* space for bullet */
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 20px;
+  color: #454545;
+  cursor: pointer;
+}
+
+/* 🔸 Custom Bullet */
+.service-type-item::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  font-size: 18px;
+  color: #333333;                /* brand color */
+}
+
+/* Hover */
+.service-type-item:hover {
+  color: #F36F21;
+}
+
 
 /* Hide scrollbar but keep functionality */
 .service-type-list::-webkit-scrollbar {

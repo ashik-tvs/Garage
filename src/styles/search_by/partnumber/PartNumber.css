@@ -16,13 +16,13 @@
   border-radius: 10px;
   padding: 16px;
   align-items: center;
-      height: 50%;
+  height: 50%;
 }
 .pn-left-title {
   font-size: 16px;
   font-weight: 600;
 }
-.pn-car-image{
+.pn-car-image {
   display: flex;
   justify-content: center;
 }
@@ -32,16 +32,15 @@
 }
 .pn-left-title {
   font-size: 16px;
-  color: #3749A6;
-      margin: 0;
-      font-weight: 400;
+  color: #3749a6;
+  margin: 0;
+  font-weight: 400;
 }
 
 .pn-car-img {
   width: 50%;
   border-radius: 8px;
   margin-bottom: 16px;
-
 }
 
 .pn-info div {
@@ -161,7 +160,7 @@
 }
 
 .pn-add-btn {
-  background: #F36F21;
+  background: #f36f21;
   color: #fff;
   border: none;
   padding: 6px 14px;
@@ -171,7 +170,7 @@
 }
 
 .pn-add-btn.added {
-  background: #F36F21;
+  background: #f36f21;
   cursor: pointer;
   opacity: 0.85;
 }
@@ -182,4 +181,8 @@
   font-size: 11px;
   color: #475569;
   margin-top: 8px;
+  background-color: #eaeaea;
+  margin-top: 8px;
+  padding: 5px;
+  border-radius: 4px;
 }

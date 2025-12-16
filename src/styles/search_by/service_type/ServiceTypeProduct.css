@@ -126,7 +126,7 @@ color: #3749A6;
 }
 
 .srp-table td {
-  border: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
   padding: 10px;
   text-align: center;
   vertical-align: middle;
