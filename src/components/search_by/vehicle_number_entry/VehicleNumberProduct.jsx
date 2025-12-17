@@ -127,7 +127,7 @@ const Product = () => {
         </div>
 
         <p className="vnp-code">{product.partNumber}</p>
-        <p className="vnp-name">{product.name}</p>
+        <p className="vnp-name" title={product.name}>{product.name}</p>
 
         <div className="vnp-price-row">
           <span className="vnp-price-current">₹ {product.price}.00</span>
@@ -311,7 +311,7 @@ const Product = () => {
                   </div>
 
                   <p className="vnp-code">{product.partNumber}</p>
-                  <p className="vnp-name">{product.name}</p>
+                  <p className="vnp-name" title={product.name}>{product.name}</p>
 
                   <div className="vnp-price-row">
                     <span className="vnp-price-current">₹ {product.price}.00</span>
