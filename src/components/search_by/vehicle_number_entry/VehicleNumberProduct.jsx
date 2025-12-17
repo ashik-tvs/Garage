@@ -21,15 +21,15 @@ const recommendedProducts = [
     stockQty: 10,
     eta: "1-2 Days",
   },
-  {
-    partNumber: "207510",
-    name: "Front Brake Pad",
-    brand: "myTVS",
-    price: 480,
-    mrp: 650,
-    stockQty: 5,
-    eta: "1-2 Days",
-  },
+  // {
+  //   partNumber: "207510",
+  //   name: "Front Brake Pad",
+  //   brand: "myTVS",
+  //   price: 480,
+  //   mrp: 650,
+  //   stockQty: 5,
+  //   eta: "1-2 Days",
+  // },
 ];
 
 const otherProducts = [
