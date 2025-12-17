@@ -118,7 +118,7 @@ const ServiceTypeSearch = () => {
               onClick={() => handleMakeClick(name)}
             >
               <img src={NoImage} alt={name} className="st-s-make-logo" />
-              <p className="st-s-make-name">{name}</p>
+              <p className="st-s-make-name" title={name}>{name}</p>
             </div>
           ))}
         </div>

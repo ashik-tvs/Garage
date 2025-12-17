@@ -110,7 +110,7 @@ const Sub_Category = () => {
                     />
                   </div>
                   <div className="sub-category-label">
-                    <span>{subCategory.name}</span>
+                    <span title={subCategory.name}>{subCategory.name}</span>
                   </div>
                 </div>
               ))}

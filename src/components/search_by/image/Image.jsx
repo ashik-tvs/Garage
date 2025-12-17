@@ -224,7 +224,7 @@ const ImageSearch = () => {
                   <p className="img-code">LF6079</p>
 
                   {/* Title */}
-                  <p className="img-title">{p.title}</p>
+                  <p className="img-title"title={p.title}>{p.title}</p>
 
                   {/* Price row */}
                   <div className="img-price-row">

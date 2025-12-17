@@ -42,7 +42,7 @@ const Category = () => {
             <div className="cat-img-box">
               <img src={cat.icon} alt={cat.label} className="cat-img" />
             </div>
-            <p className="cat-label">{cat.label}</p>
+            <p className="cat-label" title={cat.label}>{cat.label}</p>
           </div>
         ))}
       </div>

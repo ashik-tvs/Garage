@@ -75,7 +75,7 @@ const MakeNew = () => {
                   <img src={noImage} alt={make.name} className="make-img" />
                 </div>
                 <div className="make-text">
-                  <p className="make-name">{make.name}</p>
+                  <p className="make-name" title={make.name}>{make.name}</p>
                 </div>
               </div>
             ))}
@@ -95,7 +95,7 @@ const MakeNew = () => {
                   <img src={noImage} alt={make.name} className="make-img" />
                 </div>
                 <div className="make-text">
-                  <p className="make-name">{make.name}</p>
+                  <p className="make-name" title={make.name}>{make.name}</p>
                 </div>
               </div>
             ))}
@@ -115,7 +115,7 @@ const MakeNew = () => {
                   <img src={noImage} alt={make.name} className="make-img" />
                 </div>
                 <div className="make-text">
-                  <p className="make-name">{make.name}</p>
+                  <p className="make-name" title={make.name}>{make.name}</p>
                 </div>
               </div>
             ))}

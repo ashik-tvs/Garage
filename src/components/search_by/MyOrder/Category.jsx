@@ -86,7 +86,7 @@ const Category = () => {
                 />
               </div>
               <div className="category-label">
-                <span>{category.name}</span>
+                <span title={category.name}>{category.name}</span>
               </div>
             </div>
           </div>

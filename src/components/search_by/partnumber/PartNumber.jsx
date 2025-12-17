@@ -106,7 +106,7 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
           </div>
 
           <p className="pn-part">{item.partNo}</p>
-          <p className="pn-name pn-truncate">{item.description}</p>
+          <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
 
           <div className="pn-price-row">
             <span className="pn-price">₹ {item.price}</span>
@@ -320,7 +320,7 @@ const PartNumber = () => {
                         <span className="pn-tag-eta">1-2 Days</span>
                       </div>
 
-                      <p className="pn-name pn-truncate">{item.description}</p>
+                      <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
 
                       <div className="pn-price-row">
                         <span className="pn-price">₹ {item.price}</span>
