@@ -16,11 +16,11 @@ import Jeep from "../../../assets/Make/JEEP.png";
 
 const carMakes = [
   { name: "MARUTHI", image: Maruti },
+  { name: "AUDI", image: Audi },
   { name: "HYUNDAI", image: Hyundai },
   { name: "TATA", image: Tata },
   { name: "MAHINDRA", image: Mahindra },
   { name: "ABARTH", image: Abarth },
-  { name: "AUDI", image: Audi },
   { name: "FORD", image: Ford },
   { name: "BENTLEY", image: Bently },
   { name: "BMW", image: Bmw },
@@ -46,10 +46,50 @@ const ServiceTypeSearch = () => {
 
   const [vehicleNumber, setVehicleNumber] = useState("");
   const navigate = useNavigate();
+  const formatVehicleNumber = (value) => {
+    // Remove everything except letters & numbers
+    const raw = value.replace(/[^A-Z0-9]/gi, "").toUpperCase();
+
+    let formatted = "";
+    let index = 0;
+
+    // State code (2 letters)
+    if (raw.length > index) {
+      formatted += raw.slice(index, index + 2);
+      index += 2;
+    }
+
+    // District number (2 digits)
+    if (raw.length > index) {
+      formatted += " - " + raw.slice(index, index + 2);
+      index += 2;
+    }
+
+    // Series (1–2 letters)
+    if (raw.length > index) {
+      formatted += " - " + raw.slice(index, index + 2);
+      index += 2;
+    }
+
+    // Vehicle number (up to 4 digits)
+    if (raw.length > index) {
+      formatted += " - " + raw.slice(index, index + 4);
+    }
+
+    return formatted.trim();
+  };
+  const handleVehicleChange = (e) => {
+    const input = e.target.value;
+    const formattedValue = formatVehicleNumber(input);
+    setVehicleNumber(formattedValue);
+  };
 
   const handleMakeClick = (make) => {
     navigate("/service-type-model", {
-      state: { make },
+      state: {
+        make,
+        serviceType: searchKey, // 👈 forward search key
+      },
     });
   };
 
@@ -73,10 +113,12 @@ const ServiceTypeSearch = () => {
     <div className="st-s-service-type-search">
       {/* Banner Search */}
       <Search />
-      <div className="vne-search-key-text">
-        <span className="srp-search-key-label">Search Key : </span>
-        <span className="srp-search-key-value">{searchKey}</span>
-      </div>
+      {searchKey && (
+        <div className="vne-search-key-text">
+          <span className="srp-search-key-label">Search Key : </span>
+          <span className="srp-search-key-value">{searchKey}</span>
+        </div>
+      )}
       {/* Vehicle Number & Filters */}
       <div className="st-s-filter-container">
         <div className="st-s-row-center">
@@ -87,8 +129,10 @@ const ServiceTypeSearch = () => {
               placeholder="TN - 59 - CS - 3866"
               className="st-s-vehicle-input"
               value={vehicleNumber}
-              onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+              onChange={handleVehicleChange}
+              maxLength={19}
             />
+
             <button className="st-s-search-btn" onClick={handleSearch}>
               Search
             </button>

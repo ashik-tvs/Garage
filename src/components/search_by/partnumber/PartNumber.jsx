@@ -16,6 +16,18 @@ const brakeImages = [Brake_1, Brake_2, Brake_3];
 const products = [
   {
     id: 1,
+    brand: "myTVS",
+    partNo: "LF16078",
+    description: "Rear Brake Pad Disc Set - F(EON)",
+    price: 425,
+    mrp: 600,
+    eta: "1-2 Days",
+    stock: "In stock",
+    vehicles: 12,
+    imageUrl: brakeImages[0],
+  },
+  {
+    id: 2,
     brand: "Valeo",
     partNo: "LF16078",
     description: "Rear Brake Pad Disc Set - F(EON)",
@@ -24,19 +36,19 @@ const products = [
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: brakeImages[0],
+    imageUrl: brakeImages[1],
   },
   {
     id: 2,
     brand: "Valeo",
-    partNo: "LF16079",
+    partNo: "LF16078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: brakeImages[1],
+    imageUrl: brakeImages[2],
   },
 ];
 const otherProducts = products.map((item) => ({
@@ -47,27 +59,32 @@ const otherProducts = products.map((item) => ({
 const alignedProducts = [
   {
     id: 3,
+    partNo: "LF2331",
     brand: "Valeo",
     description: "Brake Disc Pad",
     price: 425,
     mrp: 600,
-    image: brakeImages[2],
+    imageUrl: brakeImages[2],
   },
   {
     id: 4,
+    partNo: "LF2334",
+
     brand: "Mobil",
     description: "Brake Fluid",
     price: 425,
     mrp: 600,
-    image: brakeImages[0],
+    imageUrl: brakeImages[0],
   },
   {
     id: 5,
+    partNo: "LF2338",
+
     brand: "Valeo",
     description: "Brake Fitting Kit",
     price: 425,
     mrp: 600,
-    image: brakeImages[1],
+    imageUrl: brakeImages[1],
   },
 ];
 
@@ -84,21 +101,22 @@ const Filter = ({ label }) => (
 
 const ProductCard = ({ item, onOpenCompatibility }) => {
   const { cartItems, addToCart, removeFromCart } = useCart();
-
-  const partNumber = item.partNo; // ✅ MATCH CONTEXT
+  const localPartNumber =
+    item.localPartNumber || `${item.partNo}_${item.brand}`;
+  const cartKey = `${item.partNo}_${item.brand}`;
 
   const isAdded = cartItems.some(
-    (cartItem) => cartItem.partNumber === partNumber
+    (cartItem) => cartItem.partNumber === localPartNumber
   );
-
   const handleCart = () => {
     if (isAdded) {
-      removeFromCart(partNumber); // ✅ UNDO
+      removeFromCart(localPartNumber);
     } else {
       addToCart({
         ...item,
-        partNumber, // ✅ REQUIRED BY CONTEXT
-        listPrice: item.price, // ✅ REQUIRED FOR cartTotal
+        partNumber: localPartNumber,
+        listPrice: item.price,
+        image: item.imageUrl, // ✅ IMAGE PASSED TO CART
       });
     }
   };
@@ -106,7 +124,7 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
   return (
     <div className="pn-card">
       <div className="pn-card-row">
-        <img src={item.image} alt="" className="pn-product-img" />
+        <img src={item.imageUrl} alt="" className="pn-product-img" />
 
         <div className="pn-card-body">
           <div className="pn-tags">
@@ -253,10 +271,25 @@ const CompatibilityModal = ({ onClose }) => {
 
 const PartNumber = () => {
   const { state } = useLocation();
-  const searchKey = state?.partNumber || "";
+  const searchKey = (state?.partNumber || "").toUpperCase();
 
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showCompatibility, setShowCompatibility] = useState(false);
+
+  const filterByPartNumber = (list, key) => {
+    if (!key) return list;
+
+    return list.filter((item) => item.partNo.toUpperCase().includes(key));
+  };
+  const partMatchedProducts = filterByPartNumber(products, searchKey);
+
+  const recommendedProducts = partMatchedProducts.filter(
+    (item) => item.brand.toUpperCase() === "MYTVS"
+  );
+
+  const otherBrandProducts = partMatchedProducts.filter(
+    (item) => item.brand.toUpperCase() !== "MYTVS"
+  );
 
   return (
     <div className="pn-wrapper">
@@ -291,25 +324,39 @@ const PartNumber = () => {
           {/* LEFT */}
           <div className="pn-left">
             <h4 className="pn-section-title">myTVS Recommended Products</h4>
+
             <div className="pn-grid">
-              {products.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  item={item}
-                  onOpenCompatibility={() => setShowCompatibility(true)}
-                />
-              ))}
+              {recommendedProducts.length > 0 ? (
+                recommendedProducts.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    item={item}
+                    onOpenCompatibility={() => setShowCompatibility(true)}
+                  />
+                ))
+              ) : (
+                <div className="pn-no-results">
+                  No myTVS products found for <b>{searchKey}</b>
+                </div>
+              )}
             </div>
 
             <h4 className="pn-section-title">Other Products</h4>
+
             <div className="pn-grid">
-              {products.map((item) => (
-                <ProductCard
-                  key={`other-${item.id}`}
-                  item={item}
-                  onOpenCompatibility={() => setShowCompatibility(true)}
-                />
-              ))}
+              {otherBrandProducts.length > 0 ? (
+                otherBrandProducts.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    item={item}
+                    onOpenCompatibility={() => setShowCompatibility(true)}
+                  />
+                ))
+              ) : (
+                <div className="pn-no-results">
+                  No other brand products found for <b>{searchKey}</b>
+                </div>
+              )}
             </div>
           </div>
 
@@ -326,7 +373,7 @@ const PartNumber = () => {
 
                 return (
                   <div key={item.id} className="pn-aligned-card">
-                    <img src={item.image} alt="" />
+                    <img src={item.imageUrl} alt="" />
 
                     <div className="pn-aligned-card-content">
                       <div className="pn-b-s-e">
@@ -335,8 +382,11 @@ const PartNumber = () => {
                         <span className="pn-tag-eta">1-2 Days</span>
                       </div>
 
+                      {/* Display Part Number */}
+                      <p className="pn-align-part">{item.partNo}</p>
+
                       <p
-                        className="pn-name pn-truncate"
+                        className="pn-name-align pn-truncate"
                         title={item.description}
                       >
                         {item.description}
@@ -355,6 +405,7 @@ const PartNumber = () => {
                                   ...item,
                                   partNumber,
                                   listPrice: item.price,
+                                  image: item.imageUrl, // ✅ ADD IMAGE
                                 })
                           }
                         >

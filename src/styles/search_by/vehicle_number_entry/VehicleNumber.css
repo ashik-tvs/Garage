@@ -290,55 +290,96 @@
   background-color: #d65e1a;
 }
 
-/* Category */
+/* ================= CATEGORY & SUB-CATEGORY FIX ================= */
+
+/* Section */
 .Vne-category-section {
-  margin-bottom: 30px;
+  margin-bottom: 32px;
 }
+
+/* Title */
 .Vne-category-title {
-  font-weight: 400;
   font-size: 18px;
-  margin-bottom: 12px;
+  font-weight: 500;
+  margin-bottom: 14px;
 }
+
+/* Grid (used for BOTH category & sub-category) */
 .Vne-category-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   gap: 16px;
-  overflow-x: auto;
-  padding-bottom: 10px;
+      padding-top: 3px;
 }
 
-.Vne-category-grid::-webkit-scrollbar {
-  height: 6px;
-}
-
-.Vne-category-grid::-webkit-scrollbar-thumb {
-  background: #ccc;
-  border-radius: 4px;
-}
-
+/* Card */
 .Vne-category-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
-  text-align: center;
   justify-content: space-between;
+
+  height: auto;
+
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
-.Vne-category-name {
-  font-size: 12px;
-  font-weight: 100;
-  color: #333;
-  width: 100px;
-  background-color: #f2f2f2;
-  padding: 4px;
+
+.Vne-category-card:hover {
+  border-color: #ff7f32;
+  transform: translateY(-2px);
 }
+
+/* Active */
+.Vne-category-card.active {
+  border: 2px solid #ff7f32;
+}
+
+/* Image wrapper */
 .Vne-category-card img {
-  width: 72px;
-  height: 72px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 8px;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-top: 6px;
+}
+
+/* Name */
+.Vne-category-name {
+  margin-top: 8px;
+  width: 100%;
+
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+
+  color: #333;
+  background: #f2f2f2;
+  padding: 6px 4px;
+  border-radius: 4px;
+}
+
+/* Active text */
+.Vne-category-card.active .Vne-category-name {
+  color: #ff7f32;
+  font-weight: 600;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+  .Vne-category-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .Vne-category-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 .Vne-see-more-container {
   display: flex;
@@ -360,9 +401,8 @@
 /* Service Panel */
 .Vne-service-panel {
   border: 1px solid #eee;
-  border-radius: 8px;
   background: #fff;
-  width: 210px;
+  width: 235px;
 }
 
 /* Header */
@@ -395,24 +435,47 @@
 }
 
 /* Item */
+/* ================= SERVICE PANEL INTERACTION ================= */
+
 .Vne-service-item {
   position: relative;
-  padding-left: 16px;
-  margin-bottom: 8px;
+  padding: 8px 10px 8px 18px;
   font-size: 14px;
   color: #374151;
   line-height: 1.4;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
 }
 
-/* Custom bullet */
+/* Hover */
+.Vne-service-item:hover {
+  background-color: #eaeaea;
+  color: #f36f21;
+}
+
+/* Active (clicked) */
+.Vne-service-item.active {
+  background-color: #f36f21;
+  color: #fff;
+  font-weight: 500;
+}
+
+/* Bullet */
 .Vne-service-item::before {
   content: "•";
   position: absolute;
-  left: 0;
-  top: 2px;
+  left: 6px;
+  top: 6px;
   font-size: 18px;
-  color: #444;
+  color: inherit;
 }
+
+/* Prevent text selection */
+.Vne-service-item {
+  user-select: none;
+}
+
 .Vne-service-header {
   display: flex;
   align-items: center;

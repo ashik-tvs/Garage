@@ -205,14 +205,23 @@
   border: 1px solid #ddd;
   border-radius: 4px;
 }
-.pn-count-vehicle{
+.pn-count-vehicle {
   color: #16a34a;
 }
 
 .pn-arrow {
   font-size: 18px;
 }
-
+.pn-align-part {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+.pn-name-align{
+  font-size: 13px;
+  font-weight: 500;
+margin: 0;
+}
 /* ALIGNED */
 .pn-aligned {
   background: #fff;
@@ -295,12 +304,11 @@
 /* TABLE WRAPPER WIDTH */
 .pn-modal-table-header,
 .pn-modal-table-body {
-  width: 560px;          /* 👈 adjust as needed (520–600px ideal) */
-  margin: 0 auto;        /* center inside modal */
+  width: 560px; /* 👈 adjust as needed (520–600px ideal) */
+  margin: 0 auto; /* center inside modal */
 }
 /* ---------- TABLE HEADER ---------- */
-.pn-table-container{
-
+.pn-table-container {
 }
 .pn-modal-table-header {
   display: grid;

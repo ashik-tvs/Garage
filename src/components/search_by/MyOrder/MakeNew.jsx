@@ -17,12 +17,13 @@ import Jeep from "../../../assets/Make/JEEP.png";
 const MakeNew = () => {
   const navigate = useNavigate();
   const makes = [
+    { id: 6, name: "AUDI", image: Audi },
+
     { id: 1, name: "MARUTHI", image: Maruti },
     { id: 2, name: "HYUNDAI", image: Hyundai },
     { id: 3, name: "TATA", image: Tata },
     { id: 4, name: "MAHINDRA", image: Mahindra },
     { id: 5, name: "ABARTH", image: Abarth },
-    { id: 6, name: "AUDI", image: Audi },
     { id: 7, name: "FORD", image: Ford },
     { id: 8, name: "BENTLEY", image: Bently },
     { id: 9, name: "BMW", image: Bmw },

@@ -30,19 +30,19 @@
   font-family: 'Poppins', sans-serif;
   font-style: normal;
   font-weight: 500;
-  font-size: 20px;
-  line-height: 48px;
-  letter-spacing: 0.04em;
+  font-size: 14px;
   color: #424242;
 }
 
 .srp-search-key-label {
   font-weight: 500;
   color: #424242;
+  font-size: 14px;
 }
 
 .srp-search-key-value {
   color: #3749A6;
+  font-size: 14px;  
 }
 
 /* Vehicle Group - Group 480960940 */

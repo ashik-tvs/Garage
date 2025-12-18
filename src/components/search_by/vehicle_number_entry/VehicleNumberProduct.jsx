@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
@@ -24,6 +24,16 @@ const recommendedProducts = [
     stockQty: 10,
     eta: "1-2 Days",
     image: Brake_1,
+  },
+    {
+    partNumber: "2075019",
+    name: "Rear Brake Pad",
+    brand: "myTVS",
+    price: 425,
+    mrp: 600,
+    stockQty: 10,
+    eta: "1-2 Days",
+    image: Brake_2,
   },
 ];
 
@@ -111,6 +121,11 @@ const Product = () => {
     eta: ["Same Day", "1-2 Days", "3-5 Days"],
     sortBy: ["Relevance", "Price", "Brand"],
   };
+  useEffect(() => {
+    const close = () => setOpenFilter(null);
+    window.addEventListener("click", close);
+    return () => window.removeEventListener("click", close);
+  }, []);
 
   // ✅ Normalize product before adding to cart
   const handleToggleCart = (product) => {
@@ -180,15 +195,8 @@ const Product = () => {
           <img
             src={LeftArrow}
             alt="Back"
-            width="8"
-            height="10"
-            style={{
-              cursor: "pointer",
-              backgroundColor: "#F36F21",
-              padding: "4px",
-              borderRadius: "50px",
-            }}
             onClick={() => navigate(-1)}
+            className="vnp-breadcrumbs-icon"
           />
           {brand && (
             <>
@@ -272,44 +280,48 @@ const Product = () => {
             </button>
           </div>
 
-<div className="vnp-filters-row">
-  {[
-    { key: "brakeSystem", label: "Brake System" },
-    { key: "price", label: "Price" },
-    { key: "eta", label: "ETA" },
-    { key: "sortBy", label: "Sort by" },
-  ].map(({ key, label }) => (
-    <div className="vnp-filter-wrapper" key={key}>
-      <div
-        className="vnp-filter-item"
-        onClick={() =>
-          setOpenFilter(openFilter === key ? null : key)
-        }
-      >
-        <span>{filters[key] || label}</span>
-        <img src={ExpandDown} alt="" width="24" />
-      </div>
+          <div className="vnp-filters-row">
+            {[
+              { key: "brakeSystem", label: "Brake System" },
+              { key: "price", label: "Price" },
+              { key: "eta", label: "ETA" },
+              { key: "sortBy", label: "Sort by" },
+            ].map(({ key, label }) => (
+              <div className="vnp-filter-wrapper" key={key}>
+                <div
+                  className="vnp-filter-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenFilter(openFilter === key ? null : key);
+                  }}
+                >
+                  <span>{filters[key] || label}</span>
+                  <img src={ExpandDown} alt="" width="24" />
+                </div>
 
-      {openFilter === key && (
-        <div className="vnp-filter-dropdown">
-          {filterOptions[key].map((option) => (
-            <div
-              key={option}
-              className="vnp-filter-option"
-              onClick={() => {
-                setFilters((prev) => ({ ...prev, [key]: option }));
-                setOpenFilter(null);
-              }}
-            >
-              {option}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  ))}
-</div>
-
+                {openFilter === key && (
+                  <div
+                    className="vnp-filter-dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {filterOptions[key].map((option) => (
+                      <div
+                        key={option}
+                        className="vnp-filter-option"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFilters((prev) => ({ ...prev, [key]: option }));
+                          setOpenFilter(null);
+                        }}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -333,7 +345,10 @@ const Product = () => {
           </select>
           <button
             className="vnp-find-btn"
-            onClick={() => setShowEditPopup(false)}
+            onClick={() => {
+              setShowEditPopup(false);
+              navigate("/search-by-vehicle-number");
+            }}
           >
             Find Auto Parts
           </button>

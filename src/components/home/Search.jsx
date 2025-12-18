@@ -21,30 +21,41 @@ const Search = () => {
     return regex.test(value);
   };
 
-  // Part number validation
-  const isPartNumber = (value) => /^[0-9]+$/.test(value);
+  const isPartNumber = (value) => {
+    return /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+  };
+
+  const isServiceType = (value) => {
+    return /^[A-Z\s]+$/i.test(value);
+  };
 
   const handleSearch = (e) => {
     if (e.key !== "Enter") return;
 
-    const value = searchValue.toUpperCase().replace(/\s+/g, "");
+    const rawValue = searchValue.trim();
+    if (!rawValue) return;
 
-    if (isVehicleNumber(value)) {
+    const noSpaceValue = rawValue.replace(/\s+/g, "").toUpperCase();
+
+    // 1️⃣ Vehicle number (strict)
+    if (isVehicleNumber(noSpaceValue)) {
       navigate("/search-by-vehicle-number", {
-        state: { vehicleNumber: value },
+        state: { vehicleNumber: noSpaceValue },
       });
       return;
     }
 
-    if (isPartNumber(value)) {
+    // 2️⃣ Part number (must contain at least ONE digit)
+    if (isPartNumber(noSpaceValue)) {
       navigate("/search-by-part-number", {
-        state: { partNumber: value },
+        state: { partNumber: noSpaceValue },
       });
       return;
     }
 
+    // 3️⃣ Service type (letters / words / phrases)
     navigate("/search-by-service-type", {
-      state: { serviceType: searchValue },
+      state: { serviceType: rawValue.toLowerCase() },
     });
   };
 

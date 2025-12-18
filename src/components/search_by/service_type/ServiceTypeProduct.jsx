@@ -92,7 +92,7 @@ const mockData = [
 
 const ServiceTypeProduct = () => {
   const { state } = useLocation();
-  const searchKey = state?.serviceType || "";
+  const searchKey = (state?.serviceType || "").toUpperCase();
 
   const [quantities, setQuantities] = useState(
     mockData.reduce((acc, item) => {
@@ -165,10 +165,12 @@ const ServiceTypeProduct = () => {
       <div className="srp-content">
         <div className="srp-row">
           {/* Search Key Text */}
-          <div className="srp-search-key-text">
-            <span className="srp-search-key-label">Search Key : </span>
-            <span className="srp-search-key-value">{searchKey}</span>
-          </div>
+          {state?.serviceType && (
+            <div className="srp-search-key-text">
+              <span className="srp-search-key-label">Search Key : </span>
+              <span className="srp-search-key-value">{searchKey}</span>
+            </div>
+          )}
 
           {/* Vehicle Selection Group 480960940 */}
           <div className="srp-vehicle-group">
