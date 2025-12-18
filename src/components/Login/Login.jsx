@@ -2,28 +2,82 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/Login/Login.css';
 import NoImage from '../../assets/Login/sidelogo.png';
+import LogoImage from '../../assets/Login/myTVS_Login.png';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault();
-    // Add authentication logic here
-    console.log('Sign in with:', email, password);
-    // Navigate to home page after successful login
-    navigate('/home');
+    setError('');
+    setLoading(true);
+
+    try {
+      // TODO: Replace with actual API call
+      // Example: const response = await fetch('/api/login', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ email, password })
+      // });
+
+      // Validate email and password
+      if (!email || !password) {
+        setError('Please enter both email and password');
+        setLoading(false);
+        return;
+      }
+
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters');
+        setLoading(false);
+        return;
+      }
+
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Store user data (replace with actual user data from API)
+      const userData = {
+        email: email,
+        name: 'Sam Vijay',
+        mobile: '93228 99498',
+        employeeCode: '93228',
+        reportingTo: 'John',
+        designation: 'Employee',
+        salesManagerName: 'Jhon',
+        salesManagerNumber: '9876545678'
+      };
+
+      // Store in localStorage or context
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('isAuthenticated', 'true');
+
+      console.log('Sign in successful:', email);
+      
+      // Navigate to home page after successful login
+      navigate('/home');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSignUp = () => {
     // Navigate to sign up page
     console.log('Navigate to sign up');
+    // navigate('/signup');
   };
 
   const handleForgotPassword = () => {
     // Navigate to forgot password page
     console.log('Navigate to forgot password');
+    // navigate('/forgot-password');
   };
 
   return (
@@ -34,14 +88,17 @@ const Login = () => {
           <div className="login-intro">
             <h1 className="login-welcome">Welcome Back To</h1>
             <div className="login-logo">
-              <div className="logo-container">
-                <span className="logo-my">my</span>
-                <span className="logo-tvs">TVS</span>
-              </div>
+              <img src={LogoImage} alt="myTVS" className="login-logo-img" />
             </div>
           </div>
 
           <form className="login-form" onSubmit={handleSignIn}>
+            {error && (
+              <div className="login-error-message">
+                {error}
+              </div>
+            )}
+
             <div className="login-input-group">
               <label className="login-label">Email</label>
               <input
@@ -51,6 +108,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -63,6 +121,8 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loading}
+                minLength={8}
               />
             </div>
 
@@ -70,12 +130,13 @@ const Login = () => {
               type="button"
               className="login-forgot-password"
               onClick={handleForgotPassword}
+              disabled={loading}
             >
               Forgot Password?
             </button>
 
-            <button type="submit" className="login-submit-btn">
-              Sign in
+            <button type="submit" className="login-submit-btn" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
 
