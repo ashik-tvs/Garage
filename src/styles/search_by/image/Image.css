@@ -6,19 +6,19 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-      background-color: #fafafa;
-    padding: 10px 20px;
+  background-color: #fafafa;
+  padding: 10px 20px;
 }
-.img-upload-header{
+.img-upload-header {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-.img-upload-title{
+.img-upload-title {
   font-size: 18px;
   font-weight: 200;
   color: #454545;
-      margin: 0;
+  margin: 0;
 }
 /* Vehicle row */
 .img-vehicle-row {
@@ -26,10 +26,9 @@
   justify-content: center;
 }
 
-
 /* Container */
 .vehicle-search-box {
-   display: flex;
+  display: flex;
   align-items: center;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -123,8 +122,7 @@
   color: #fff;
   border: none;
   cursor: pointer;
-    border-radius: 4px;
-
+  border-radius: 4px;
 }
 .img-upload-card {
   display: grid;
@@ -138,24 +136,39 @@
 }
 
 .img-left {
-  text-align: center;
+  width: 100%;
+  max-width: 300px; /* 🔧 adjust square size here */
+  margin: 0 auto;
   cursor: pointer;
 }
 
-.img-left img {
+/* Square container */
+.img-left img,
+.img-left .img-placeholder {
   width: 100%;
-  height: 285px;
+  aspect-ratio: 1 / 1; /* ✅ perfect square */
   object-fit: contain;
+  border-radius: 8px;
+  background: #f7f7f7;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Placeholder text */
+.img-placeholder {
+  font-size: 14px;
+  color: #9aa4b2;
+  border: 1px dashed #d9d9d9;
+}
 
 /* Content */
 .img-content {
   display: flex;
   gap: 20px;
   margin-top: 30px;
-    padding: 0px 20px 20px 20px;
-
+  padding: 0px 20px 20px 20px;
 }
 
 .img-products {
@@ -209,6 +222,9 @@
 
 .img-card-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 /* Tags */
@@ -248,6 +264,10 @@
 .img-title {
   font-size: 13px;
   margin: 0;
+  white-space: nowrap; /* stay in one line */
+  overflow: hidden; /* hide overflow */
+  text-overflow: ellipsis; /* show ... */
+  max-width: 100%; /* respect container width */
 }
 
 /* Price row */
@@ -294,12 +314,16 @@
   margin-top: 30px;
   font-weight: 500;
   color: #424242;
+  white-space: nowrap; /* stay in one line */
+  overflow: hidden; /* hide overflow */
+  text-overflow: ellipsis; /* show ... */
+  max-width: 100%; /* respect container width */
 }
 
 /* Sidebar container */
 .img-sidebar {
   width: 20%;
-  background: #f5f5f5;           /* light grey like figma */
+  background: #f5f5f5; /* light grey like figma */
   border-radius: 10px;
   border: 1px solid #e2e2e2;
   overflow: hidden;
@@ -308,13 +332,20 @@
 
 /* Header */
 .img-sidebar-header {
-  background: #2f2f2f;           /* figma dark grey */
+  background: #2f2f2f; /* figma dark grey */
   color: #ffffff;
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 600;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
-
+.img-sidebar-header-icon {
+  width: 20px;
+  height: auto;
+}
 /* List wrapper */
 .img-sidebar-list {
   list-style: none;

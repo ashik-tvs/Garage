@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../../../context/CartContext";
 import { useLocation } from "react-router-dom";
 import Search from "../../home/Search";
+import serviceType from "../../../assets/vehicle_search_entry/servicetype.png";
 import NoImage from "../../../assets/No Image.png";
 import "../../../styles/search_by/image/Image.css";
 
@@ -224,7 +225,9 @@ const ImageSearch = () => {
                   <p className="img-code">LF6079</p>
 
                   {/* Title */}
-                  <p className="img-title"title={p.title}>{p.title}</p>
+                  <p className="img-title" title={p.title}>
+                    {p.title}
+                  </p>
 
                   {/* Price row */}
                   <div className="img-price-row">
@@ -301,7 +304,16 @@ const ImageSearch = () => {
 
         {/* RIGHT SIDEBAR */}
         <div className="img-sidebar">
-          <div className="img-sidebar-header">Service Type for Brake</div>
+          <div className="img-sidebar-header">
+            <div>Service Type for Brake</div>
+            <div>
+              <img
+                src={serviceType}
+                alt="icon"
+                className="img-sidebar-header-icon"
+              ></img>
+            </div>
+          </div>
 
           <ul className="img-sidebar-list">
             <li>Complete Brake System Inspection</li>
