@@ -1,175 +1,359 @@
-import React from "react";
+import { useState } from "react";
 import Search from "../../home/Search";
 import { useCart } from "../../../context/CartContext";
 import NoImage from "../../../assets/No Image.png";
-import DropDownIcon from "../../../assets/vehicle_search_entry/dropdown.png";
+import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
 
-const filters = [
-  { label: "Year" },
-  { label: "Fuel type" },
-  { label: "ETA" },
-  { label: "Sort by" },
-];
+/* ---------------- MOCK DATA ---------------- */
 
-const recommendedProducts = [
+const products = [
   {
+    id: 1,
     brand: "Valeo",
-    code: "LF60730",
-    title: "Rear Brake Pad Disc Set - F(EON)",
+    partNo: "LF16079",
+    description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
-    model: "Grand i10 1.1L Crdi",
-    fuel: "Petrol",
-    year: "2013 to 2016",
+    eta: "1-2 Days",
+    stock: "In stock",
+    vehicles: 12,
+    image: NoImage,
   },
   {
-    brand: "Bosch",
-    code: "LF60718",
-    title: "Rear Brake Pad Disc Set - F(EON)",
+    id: 2,
+    brand: "Valeo",
+    partNo: "LF16079",
+    description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
-    model: "Grand i10 1.1L Crdi",
-    fuel: "Petrol",
-    year: "2016 to 2020",
-  },
-  {
-    brand: "Bosch",
-    code: "LF607188",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 425,
-    mrp: 600,
-    model: "Grand i10 1.1L Crdi",
-    fuel: "Petrol",
-    year: "2016 to 2020",
+    eta: "1-2 Days",
+    stock: "In stock",
+    vehicles: 12,
+    image: NoImage,
   },
 ];
 
-const otherProducts = [...recommendedProducts];
+const alignedProducts = [
+  {
+    id: 3,
+    brand: "Valeo",
+    description: "Brake Disc Pad",
+    price: 425,
+    mrp: 600,
+    image: NoImage,
+  },
+  {
+    id: 4,
+    brand: "Mobil",
+    description: "Brake Fluid",
+    price: 425,
+    mrp: 600,
+    image: NoImage,
+  },
+  {
+    id: 5,
+    brand: "Valeo",
+    description: "Brake Fitting Kit",
+    price: 425,
+    mrp: 600,
+    image: NoImage,
+  },
+];
+
+/* ---------------- FILTER ---------------- */
+
+const Filter = ({ label }) => (
+  <div className="pn-filter">
+    <span>{label}</span>
+    <img src={DownArrow} alt="" />
+  </div>
+);
 
 /* ---------------- PRODUCT CARD ---------------- */
-const ProductCard = ({ item }) => {
+
+const ProductCard = ({ item, onOpenCompatibility }) => {
   const { cartItems, addToCart, removeFromCart } = useCart();
 
+  const partNumber = item.partNo; // ✅ MATCH CONTEXT
+
   const isAdded = cartItems.some(
-    (cartItem) => cartItem.partNumber === item.code
+    (cartItem) => cartItem.partNumber === partNumber
   );
 
-  const handleAddToCart = () => {
-    if (!isAdded) {
+  const handleCart = () => {
+    if (isAdded) {
+      removeFromCart(partNumber); // ✅ UNDO
+    } else {
       addToCart({
-        partNumber: item.code,
-        itemDescription: item.title,
-        listPrice: item.price,
-        imageUrl: NoImage,
-        brand: item.brand,
+        ...item,
+        partNumber, // ✅ REQUIRED BY CONTEXT
+        listPrice: item.price, // ✅ REQUIRED FOR cartTotal
       });
     }
   };
 
   return (
     <div className="pn-card">
-      <img src={NoImage} alt="product" className="pn-product-img" />
+      <div className="pn-card-row">
+        <img src={item.image} alt="" className="pn-product-img" />
 
-      <div className="pn-badges">
-        <span className="pn-badge brand">{item.brand}</span>
-        <span className="pn-badge success">In stock</span>
-        <span className="pn-badge muted">1-2 Days</span>
+        <div className="pn-card-body">
+          <div className="pn-tags">
+            <span className="pn-tag-brand">{item.brand}</span>
+            <span className="pn-tag-stock">{item.stock}</span>
+            <span className="pn-tag-eta">{item.eta}</span>
+          </div>
+
+          <p className="pn-part">{item.partNo}</p>
+          <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+
+          <div className="pn-price-row">
+            <span className="pn-price">₹ {item.price}</span>
+            <span className="pn-mrp">₹ {item.mrp}</span>
+
+            <button
+              className={`pn-add-btn ${isAdded ? "pn-added" : ""}`}
+              onClick={handleCart}
+            >
+              {isAdded ? "Added" : "Add"}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="pn-code">{item.code}</div>
-      <div className="pn-title">{item.title}</div>
-
-      <div className="pn-price-row">
-        <span className="pn-price">₹ {item.price}.00</span>
-        <span className="pn-mrp">₹ {item.mrp}.00</span>
-
-        <button
-          className={`pn-add-btn ${isAdded ? "added" : ""}`}
-          onClick={() =>
-            isAdded ? removeFromCart(item.code) : handleAddToCart()
-          }
-        >
-          {isAdded ? "Added" : "Add"}
-        </button>
+      <div className="pn-compatible-row" onClick={onOpenCompatibility}>
+        <div>
+          {" "}
+          Compatible with <b className="pn-count-vehicle">
+            {item.vehicles}
+          </b>{" "}
+          vehicles
+        </div>
+        <span className="pn-arrow">›</span>
       </div>
+    </div>
+  );
+};
+const CompatibilityModal = ({ onClose }) => {
+  const vehicles = [
+    {
+      make: "Hyundai",
+      model: "Grand i10",
+      variant: "Sportz",
+      fuel: "Petrol",
+      year: "2012",
+    },
+    {
+      make: "Hyundai",
+      model: "Grand i10",
+      variant: "Asta",
+      fuel: "Diesel",
+      year: "2013",
+    },
+    {
+      make: "Hyundai",
+      model: "i20",
+      variant: "Magna",
+      fuel: "Petrol",
+      year: "2014",
+    },
+    {
+      make: "Hyundai",
+      model: "i20",
+      variant: "Sportz",
+      fuel: "Diesel",
+      year: "2015",
+    },
+    {
+      make: "Hyundai",
+      model: "Xcent",
+      variant: "SX",
+      fuel: "Petrol",
+      year: "2016",
+    },
+    {
+      make: "Hyundai",
+      model: "Xcent",
+      variant: "SX(O)",
+      fuel: "Diesel",
+      year: "2017",
+    },
+    {
+      make: "Hyundai",
+      model: "Aura",
+      variant: "S",
+      fuel: "Petrol",
+      year: "2020",
+    },
+    {
+      make: "Hyundai",
+      model: "Aura",
+      variant: "SX",
+      fuel: "CNG",
+      year: "2021",
+    },
+  ];
 
-      <div className="pn-meta">
-        <span>{item.model}</span>
-        <span>{item.fuel}</span>
-        <span>{item.year}</span>
+  return (
+    <div className="pn-modal-overlay">
+      <div className="pn-modal">
+        {/* Header */}
+        <div className="pn-modal-header">
+          <input type="text" placeholder="Search" className="pn-modal-search" />
+          <button className="pn-modal-close" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        {/* Table Header */}
+        <div className="pn-table-container">
+          <div className="pn-modal-table-header">
+            <span>Make</span>
+            <span>Model</span>
+            <span>Variant</span>
+            <span>Fuel Type</span>
+            <span>Year</span>
+          </div>
+        </div>
+
+        {/* Table Body */}
+        <div>
+          {" "}
+          <div className="pn-modal-table-body">
+            {vehicles.map((v, i) => (
+              <div key={i} className="pn-modal-row">
+                <span>{v.make}</span>
+                <span>{v.model}</span>
+                <span>{v.variant}</span>
+                <span>{v.fuel}</span>
+                <span>{v.year}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-/* ---------------- MAIN PAGE ---------------- */
+/* ---------------- MAIN COMPONENT ---------------- */
+
 const PartNumber = () => {
+  const { cartItems, addToCart, removeFromCart } = useCart();
+  const [showCompatibility, setShowCompatibility] = useState(false);
+
   return (
     <div className="pn-wrapper">
       <Search />
 
-      <div className="pn-layout">
-        {/* LEFT PANEL */}
-        <div className="pn-left">
-          <h4 className="pn-left-title">Part Number Details</h4>
-          <div className="pn-car-image">
-            <img src={NoImage} alt="vehicle" className="pn-car-img" />
+      <div className="pn-body">
+        <div className="pn-search-key">
+          Search Key : <b>LF16079</b>
+        </div>
+
+        {/* FILTERS */}
+        <div className="pn-top">
+          <div className="pn-compatibility">
+            <Filter label="Select Make" />
+            <Filter label="Select Model" />
+            <Filter label="Select Variant" />
+            <Filter label="Select Fuel type" />
+            <Filter label="Select Year" />
+            <button className="pn-compat-btn">Search Compatibility</button>
           </div>
 
-          <div className="pn-info">
-            <div>
-              <label>Make</label>
-              <span>Hyundai</span>
-            </div>
-            <div>
-              <label>Model</label>
-              <span>Grand i10</span>
-            </div>
-            <div>
-              <label>Variant</label>
-              <span>1.1L</span>
-            </div>
-            <div>
-              <label>Year</label>
-              <span>2021</span>
-            </div>
-            <div>
-              <label>Fuel Type</label>
-              <span>Petrol</span>
-            </div>
+          <div className="pn-right-filters">
+            <Filter label="Year" />
+            <Filter label="Fuel type" />
+            <Filter label="ETA" />
+            <Filter label="Sort by" />
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="pn-right">
-          <div className="pn-header">
-            <h3>myTVS Recommended Products</h3>
-            <div className="pn-filters">
-              {filters.map((f, i) => (
-                <div key={i} className="pn-filter">
-                  {f.label}
-                  <img src={DropDownIcon} alt="dropdown" />
-                </div>
+        {/* CONTENT */}
+        <div className="pn-content">
+          {/* LEFT */}
+          <div className="pn-left">
+            <h4 className="pn-section-title">myTVS Recommended Products</h4>
+            <div className="pn-grid">
+              {products.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  item={item}
+                  onOpenCompatibility={() => setShowCompatibility(true)}
+                />
+              ))}
+            </div>
+
+            <h4 className="pn-section-title">Other Products</h4>
+            <div className="pn-grid">
+              {products.map((item) => (
+                <ProductCard
+                  key={`other-${item.id}`}
+                  item={item}
+                  onOpenCompatibility={() => setShowCompatibility(true)}
+                />
               ))}
             </div>
           </div>
 
-          <div className="pn-grid">
-            {recommendedProducts.map((item, i) => (
-              <ProductCard key={i} item={item} />
-            ))}
-          </div>
+          {/* RIGHT */}
+          <div className="pn-right">
+            <h4 className="pn-section-title">Aligned Products</h4>
 
-          <h3 className="pn-section-title">Other Products</h3>
+            <div className="pn-aligned">
+              {alignedProducts.map((item) => {
+                const partNumber = `ALIGNED-${item.id}`;
+                const isAdded = cartItems.some(
+                  (cartItem) => cartItem.partNumber === partNumber
+                );
 
-          <div className="pn-grid">
-            {otherProducts.map((item, i) => (
-              <ProductCard key={i} item={item} />
-            ))}
+                return (
+                  <div key={item.id} className="pn-aligned-card">
+                    <img src={item.image} alt="" />
+
+                    <div className="pn-aligned-card-content">
+                      <div className="pn-b-s-e">
+                        <span className="pn-tag-brand">{item.brand}</span>
+                        <span className="pn-tag-stock">In stock</span>
+                        <span className="pn-tag-eta">1-2 Days</span>
+                      </div>
+
+                      <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+
+                      <div className="pn-price-row">
+                        <span className="pn-price">₹ {item.price}</span>
+                        <span className="pn-mrp">₹ {item.mrp}</span>
+
+                        <button
+                          className={`pn-add-btn ${isAdded ? "pn-added" : ""}`}
+                          onClick={() =>
+                            isAdded
+                              ? removeFromCart(partNumber)
+                              : addToCart({
+                                  ...item,
+                                  partNumber,
+                                  listPrice: item.price,
+                                })
+                          }
+                        >
+                          {isAdded ? "Added" : "Add"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ✅ MODAL MUST BE INSIDE RETURN */}
+      {showCompatibility && (
+        <CompatibilityModal onClose={() => setShowCompatibility(false)} />
+      )}
     </div>
   );
 };

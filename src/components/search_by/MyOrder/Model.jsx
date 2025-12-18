@@ -50,7 +50,7 @@ const Model = () => {
               >
                 <div className="model-card-content">
                   <img src={noImage} alt={model.name} className="model-image" />
-                  <p className="model-name">{model.name}</p>
+                  <p className="model-name" title={model.name}>{model.name}</p>
                 </div>
               </div>
             ))}

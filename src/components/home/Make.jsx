@@ -41,7 +41,7 @@ const Make = () => {
         {visibleBrands.map((b) => (
           <div key={b.id} className="brand-card" onClick={() => handleMakeClick(b)}>
             <img src={b.icon} alt={b.name} className="brand-img" />
-            <p className="brand-label">{b.name}</p>
+            <p className="brand-label" title={b.name}>{b.name}</p>
           </div>
         ))}
       </div>

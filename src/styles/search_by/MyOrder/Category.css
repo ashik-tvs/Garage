@@ -150,6 +150,56 @@
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Tooltip styling */
+.category-label span[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #333333;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: 6px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  animation: categoryTooltipFadeIn 0.2s ease-in-out;
+}
+
+/* Tooltip arrow */
+.category-label span[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #333333;
+  z-index: 1000;
+  pointer-events: none;
+  animation: categoryTooltipFadeIn 0.2s ease-in-out;
+}
+
+@keyframes categoryTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Special case for longer text */

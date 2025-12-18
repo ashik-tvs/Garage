@@ -21,15 +21,20 @@ import SeviceTypeCategory from "./components/search_by/service_type/ServiceTypeC
 import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTypeSubCategory.jsx";
 
 import { CartProvider } from "./context/CartContext.js";
-// import Login from "./components/login/Login.jsx";
+import Login from "./components/Login/Login.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
 function App() {
   return (
     <CartProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
+          {/* Login page without Layout */}
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+
           <Route element={<Layout />}>
-            <Route path="/" element={<Home />} />
             <Route path="/home" element={<Home />} />
 
             <Route
