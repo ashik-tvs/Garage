@@ -11,7 +11,7 @@ const products = [
   {
     id: 1,
     brand: "Valeo",
-    partNo: "LF16079",
+    partNo: "LF16078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,

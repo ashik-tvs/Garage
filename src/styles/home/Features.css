@@ -45,9 +45,10 @@
 
 /* ---------------- LABEL ---------------- */
 .sixcat-label {
-  min-width: 95px;            /* 🔒 prevents reflow */
+  width: fit-content;
+  /* 🔒 prevents reflow */
   font-size: 14px;
-  font-weight: 600;           /* same weight always → no jump */
+  font-weight: 500; /* same weight always → no jump */
   color: #20409a;
   user-select: none;
 }
@@ -60,7 +61,43 @@
   flex-shrink: 0;
   transition: transform 0.25s ease;
 }
+/* Default */
+.sixcat-icon {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
 
+/* Small icons */
+.sixcat-icon--hv {
+  width: 65px;
+  height: auto;
+}
+
+/* Wide car images */
+.sixcat-icon--wide {
+  width: 70px;
+  height: 50px;
+}
+.sixcat-icon--fm{
+  width: 70px;
+  height: auto;
+}
+/* Tall icons */
+.sixcat-icon--e {
+  width: 65px;
+  height: auto;
+}
+
+/* Brand logo */
+.sixcat-icon--logo {
+  width: 65px;
+  height: auto;
+}
+.sixcat-icon--cng {
+  width: 80px;
+  height: auto;
+}
 /* ---------------- HOVER / ACTIVE ---------------- */
 .sixcat-item:hover,
 .sixcat-item--active {

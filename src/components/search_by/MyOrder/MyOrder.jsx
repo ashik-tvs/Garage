@@ -5,50 +5,16 @@ import SearchIcon from "../../../assets/search/search.png";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import "../../../styles/search_by/MyOrder/MyOrder.css";
 
-const initialOrders = [
-  {
-    id: "5340109BAR0012IN",
-    date: "2025-02-10",
-    quantity: 3,
-    status: "Invoiced",
-    location: "Chennai",
-  },
-  {
-    id: "5340109BAR0013IN",
-    date: "2025-02-10",
-    quantity: 4,
-    status: "Dispatched",
-    location: "Chennai",
-  },
-  {
-    id: "5340109BAR0014IN",
-    date: "2025-02-11",
-    quantity: 5,
-    status: "Delivery",
-    location: "Bangalore",
-  },
-  {
-    id: "5340109BAR0015IN",
-    date: "2025-02-11",
-    quantity: 2,
-    status: "Delivery",
-    location: "Hyderabad",
-  },
-  {
-    id: "5340109BAR0016IN",
-    date: "2025-02-12",
-    quantity: 1,
-    status: "Invoiced",
-    location: "Chennai",
-  },
-  {
-    id: "5340109BAR0017IN",
-    date: "2025-02-12",
-    quantity: 6,
-    status: "Dispatched",
-    location: "Mumbai",
-  },
-];
+/* 🔹 Expanded mock data */
+const initialOrders = Array.from({ length: 28 }, (_, i) => ({
+  id: `5340109BAR00${i + 12}IN`,
+  date: `2025-02-${(i % 5) + 10}`,
+  quantity: (i % 6) + 1,
+  status: ["Invoiced", "Dispatched", "Delivery"][i % 3],
+  location: ["Chennai", "Bangalore", "Mumbai", "Hyderabad"][i % 4],
+}));
+
+const ITEMS_PER_PAGE = 10;
 
 const MyOrder = () => {
   const navigate = useNavigate();
@@ -57,9 +23,11 @@ const MyOrder = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchText, setSearchText] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  /* 🔹 Dynamic filtering logic */
+  /* 🔹 Filter logic */
   const filteredOrders = useMemo(() => {
+    setCurrentPage(1); // reset page on filter change
     return orders.filter((order) => {
       const matchTab =
         activeTab === "all" || order.status.toLowerCase() === activeTab;
@@ -75,19 +43,25 @@ const MyOrder = () => {
     });
   }, [orders, activeTab, searchText, selectedDate]);
 
-  /* 🔹 Dynamic tab counts */
-  const counts = useMemo(() => {
-    return {
-      all: orders.length,
-      invoiced: orders.filter((o) => o.status === "Invoiced").length,
-      dispatched: orders.filter((o) => o.status === "Dispatched").length,
-      delivery: orders.filter((o) => o.status === "Delivery").length,
-    };
-  }, [orders]);
+  /* 🔹 Pagination calculations */
+  const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+
+  const paginatedOrders = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredOrders.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredOrders, currentPage]);
+
+  /* 🔹 Tab counts */
+  const counts = useMemo(() => ({
+    all: orders.length,
+    invoiced: orders.filter((o) => o.status === "Invoiced").length,
+    dispatched: orders.filter((o) => o.status === "Dispatched").length,
+    delivery: orders.filter((o) => o.status === "Delivery").length,
+  }), [orders]);
 
   return (
     <div className="myorder-container">
-      {/* 🔹 Top Bar */}
+      {/* Top Bar */}
       <div className="myorder-top-bar">
         <div className="myorder-left-section">
           <button className="back-button" onClick={() => navigate(-1)}>
@@ -119,7 +93,7 @@ const MyOrder = () => {
         </div>
       </div>
 
-      {/* 🔹 Title + Tabs */}
+      {/* Title & Tabs */}
       <div className="myorder-title-section">
         <h2 className="myorder-title">My Orders</h2>
 
@@ -137,7 +111,7 @@ const MyOrder = () => {
         </div>
       </div>
 
-      {/* 🔹 Table */}
+      {/* Table */}
       <div className="myorder-table-container">
         <table className="myorder-table">
           <thead>
@@ -145,40 +119,53 @@ const MyOrder = () => {
               <th>Order Number</th>
               <th>Date</th>
               <th>Quantity</th>
-              <th>Order Status</th>
+              <th>Status</th>
               <th>Location</th>
             </tr>
           </thead>
-
           <tbody>
-            {filteredOrders.length === 0 ? (
-              <tr>
-                <td
-                  colSpan="5"
-                  style={{ textAlign: "center", padding: "20px" }}
-                >
-                  No orders found
+            {paginatedOrders.map((order) => (
+              <tr key={order.id}>
+                <td>{order.id}</td>
+                <td>{order.date}</td>
+                <td>{order.quantity}</td>
+                <td>
+                  <span className={`status-badge status-${order.status.toLowerCase()}`}>
+                    {order.status}
+                  </span>
                 </td>
+                <td>{order.location}</td>
               </tr>
-            ) : (
-              filteredOrders.map((order) => (
-                <tr key={order.id}>
-                  <td>{order.id}</td>
-                  <td>{order.date}</td>
-                  <td>{order.quantity}</td>
-                  <td>
-                    <span
-                      className={`status-badge status-${order.status.toLowerCase()}`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td>{order.location}</td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 🔹 PAGINATION */}
+      <div className="pagination">
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((p) => p - 1)}
+        >
+          Prev
+        </button>
+
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i}
+            className={currentPage === i + 1 ? "active" : ""}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((p) => p + 1)}
+        >
+          Next
+        </button>
       </div>
     </div>
   );

@@ -25,6 +25,8 @@ const MAIN_CATEGORIES = [
   { name: "Steering", icon: NoImage },
   { name: "Body Parts", icon: NoImage },
   { name: "Filters", icon: NoImage },
+  { name: "Suspension", icon: NoImage },
+  { name: "Cooling System", icon: NoImage },
 ];
 
 const SUB_CATEGORIES = [
@@ -34,6 +36,8 @@ const SUB_CATEGORIES = [
   { name: "Fog Lamp", icon: NoImage },
   { name: "Head Lamp", icon: NoImage },
   { name: "Panel", icon: NoImage },
+  { name: "Radiator", icon: NoImage },
+  { name: "Grille", icon: NoImage },
 ];
 
 // -------------------- SMALL COMPONENTS --------------------
