@@ -1,0 +1,254 @@
+/* ===============================
+   GLOBAL RESET & STABILITY
+   =============================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-y: scroll; /* Prevent scrollbar jump */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+  background: #ffffff;
+}
+
+/* ===============================
+   ROOT CONTAINER
+   =============================== */
+.login-container {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* ===============================
+   MAIN CONTENT
+   =============================== */
+.login-content {
+  width: 100%;
+  max-width: 1320px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 40px;
+  padding: 24px;
+}
+
+/* ===============================
+   LEFT – LOGIN FORM SECTION
+   =============================== */
+.login-form-section {
+  width: 100%;
+  max-width: 662px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+/* Intro */
+.login-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Welcome Text */
+.login-welcome {
+  font-weight: 400;
+  font-size: 26px;
+  color: #0c1421;
+  margin: 0;
+}
+
+/* Logo */
+.login-logo {
+  display: flex;
+  justify-content: center;
+}
+
+.logo-image-logo {
+  width: 230px;
+  height: auto;
+  display: block;
+}
+
+/* ===============================
+   FORM
+   =============================== */
+.login-form {
+  width: 100%;
+  max-width: 382px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Input Group */
+.login-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Label */
+.login-label {
+  font-size: 16px;
+  color: #0c1421;
+}
+
+/* Input */
+.login-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  font-size: 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  color: #0c1421;
+}
+
+.login-input::placeholder {
+  color: #8897ad;
+}
+
+.login-input:focus {
+  border-color: #f36f21;
+  outline: none;
+}
+
+/* Forgot Password */
+.login-forgot-password {
+  background: none;
+  border: none;
+  font-size: 15px;
+  color: #1e4ae9;
+  cursor: pointer;
+  text-align: right;
+  padding: 0;
+}
+
+.login-forgot-password:hover {
+  text-decoration: underline;
+}
+
+/* Submit Button */
+.login-submit-btn {
+  width: 100%;
+  height: 52px;
+  background: #f36f21;
+  border: none;
+  border-radius: 6px;
+  font-size: 20px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.login-submit-btn:hover {
+  background: #e05e10;
+}
+
+/* Signup Text */
+.login-signup-text {
+  font-size: 18px;
+  color: #313957;
+  text-align: center;
+  margin: 0;
+}
+
+.login-signup-link {
+  color: #1e4ae9;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.login-signup-link:hover {
+  text-decoration: underline;
+}
+
+/* Copyright */
+.login-copyright {
+  font-size: 15px;
+  color: #959cb6;
+  text-align: center;
+}
+
+/* ===============================
+   RIGHT – IMAGE SECTION
+   =============================== */
+.login-art {
+  width: 100%;
+  max-width: 600px;
+  height: 600px;
+  border-radius: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.login-art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: grayscale(100%) brightness(0.6) contrast(0.75);
+}
+
+/* ===============================
+   RESPONSIVE – LARGE TABLETS
+   =============================== */
+@media (max-width: 1200px) {
+  .login-content {
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .login-art {
+    height: 520px;
+  }
+}
+
+/* ===============================
+   RESPONSIVE – TABLETS
+   =============================== */
+@media (max-width: 768px) {
+  .login-art {
+    display: none;
+  }
+
+  .login-form-section {
+    max-width: 420px;
+  }
+
+  .login-content {
+    padding: 16px;
+  }
+}
+
+/* ===============================
+   RESPONSIVE – MOBILE
+   =============================== */
+@media (max-width: 480px) {
+  .login-welcome {
+    font-size: 22px;
+  }
+
+  .login-submit-btn {
+    font-size: 18px;
+  }
+
+  .login-form {
+    gap: 18px;
+  }
+}

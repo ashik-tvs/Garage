@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
 import Logo from "../../assets/header/Logo.png";
 import CartIcon from "../../assets/header/Cart.png";
 import UserIcon from "../../assets/header/User.png";
 import ChecklistIcon from "../../assets/header/checklist.png";
+import Profile from "./Profile";
 import "../../styles/header/Header.css";
 
 const Header = () => {
   const navigate = useNavigate();
   const { cartItems } = useCart();
+  const [showProfile, setShowProfile] = useState(false);
 
   // ✅ Total quantity
   const cartCount = cartItems.reduce(
@@ -22,7 +24,7 @@ const Header = () => {
       <div className="header-container">
 
         {/* LEFT LOGO */}
-        <div className="header-left" onClick={() => navigate("/")}>
+        <div className="header-left" onClick={() => navigate("/home")}>
           <img src={Logo} alt="myTVS Logo" className="header-logo" />
         </div>
 
@@ -55,12 +57,19 @@ const Header = () => {
             )}
           </div>
 
-          <div className="header-item">
+          <div 
+            className="header-item"
+            onClick={() => setShowProfile(!showProfile)}
+            style={{ cursor: "pointer" }}
+          >
             <img src={UserIcon} alt="User" className="header-icon" />
           </div>
 
         </div>
       </div>
+
+      {/* Profile Popup */}
+      {showProfile && <Profile />}
     </header>
   );
 };
