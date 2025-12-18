@@ -93,20 +93,20 @@ const ServiceTypeProduct = () => {
     }, {})
   );
   const [vehicle] = useState({
-  make: "Hyundai",
-  model: "Grand i10",
-  variant: "Sportz",
-  fuel: "Petrol",
-  year: "2021",
-});
-const [showEdit, setShowEdit] = useState(false);
-const onEdit = () => {
-  setShowEdit((prev) => !prev);
-};
+    make: "Hyundai",
+    model: "Grand i10",
+    variant: "Sportz",
+    fuel: "Petrol",
+    year: "2021",
+  });
+  const [showEdit, setShowEdit] = useState(false);
+  const onEdit = () => {
+    setShowEdit((prev) => !prev);
+  };
 
-const onConfirm = () => {
-  setShowEdit(false);
-};
+  const onConfirm = () => {
+    setShowEdit(false);
+  };
 
   const [showPopup, setShowPopup] = useState(false);
 
@@ -159,7 +159,9 @@ const onConfirm = () => {
           {/* Search Key Text */}
           <div className="srp-search-key-text">
             <span className="srp-search-key-label">Search Key : </span>
-            <span className="srp-search-key-value">Rear Brake Pad Replacement</span>
+            <span className="srp-search-key-value">
+              Rear Brake Pad Replacement
+            </span>
           </div>
 
           {/* Vehicle Selection Group 480960940 */}
@@ -173,28 +175,28 @@ const onConfirm = () => {
               <div className="srp-filter-number">
                 {/* Hyundai */}
                 <div className="srp-num-part">{vehicle.make}</div>
-                
+
                 {/* Separator */}
                 <div className="srp-sep">-</div>
-                
+
                 {/* Grand */}
                 <div className="srp-num-part">{vehicle.model}</div>
-                
+
                 {/* Separator */}
                 <div className="srp-sep">-</div>
-                
+
                 {/* i10 */}
                 <div className="srp-num-part">{vehicle.variant}</div>
-                
+
                 {/* Separator */}
                 <div className="srp-sep">-</div>
-                
+
                 {/* Petrol */}
                 <div className="srp-num-part">{vehicle.fuel}</div>
-                
+
                 {/* Separator */}
                 <div className="srp-sep">-</div>
-                
+
                 {/* 2021 */}
                 <div className="srp-num-part">{vehicle.year}</div>
               </div>
@@ -207,7 +209,11 @@ const onConfirm = () => {
             </div>
 
             {/* Frame 15 - Edit button */}
-            <button className="srp-edit-btn" onClick={onEdit} aria-label="Edit vehicle">
+            <button
+              className="srp-edit-btn"
+              onClick={onEdit}
+              aria-label="Edit vehicle"
+            >
               <img src={EditIcon} alt="edit" className="srp-edit-icon-img" />
             </button>
           </div>
@@ -231,44 +237,49 @@ const onConfirm = () => {
             <select className="srp-dropdown">
               <option>Select Year</option>
             </select>
-            <button className="srp-find-btn" onClick={onConfirm}>Find Auto Parts</button>
+            <button className="srp-find-btn" onClick={onConfirm}>
+              Find Auto Parts
+            </button>
           </div>
         )}
 
-      {showPopup && (
-        <div className="popup-overlay">
-          <div className="popup-card">
-            <h3>Edit Vehicle</h3>
+        {showPopup && (
+          <div className="popup-overlay">
+            <div className="popup-card">
+              <h3>Edit Vehicle</h3>
 
-            <input className="plate-input" placeholder="Enter Vehicle Number" />
+              <input
+                className="plate-input"
+                placeholder="Enter Vehicle Number"
+              />
 
-            <div className="popup-divider">OR</div>
+              <div className="popup-divider">OR</div>
 
-            <select>
-              <option>Make</option>
-            </select>
-            <select>
-              <option>Model</option>
-            </select>
-            <select>
-              <option>Year</option>
-            </select>
-            <select>
-              <option>Variant</option>
-            </select>
+              <select>
+                <option>Make</option>
+              </select>
+              <select>
+                <option>Model</option>
+              </select>
+              <select>
+                <option>Year</option>
+              </select>
+              <select>
+                <option>Variant</option>
+              </select>
 
-            <div className="popup-actions">
-              <button
-                className="cancel-btn"
-                onClick={() => setShowPopup(false)}
-              >
-                Cancel
-              </button>
-              <button className="confirm-btn">Confirm</button>
+              <div className="popup-actions">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setShowPopup(false)}
+                >
+                  Cancel
+                </button>
+                <button className="confirm-btn">Confirm</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
         <table className="srp-table">
           <thead>

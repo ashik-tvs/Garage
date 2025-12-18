@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 import Banner from "../../assets/home/banner.png";
 import SearchIcon from "../../assets/search/search.png";
+import ImageUpload from "./ImageUpload";
 import "../../styles/home/Search.css";
 
 const Search = () => {
@@ -12,6 +13,7 @@ const Search = () => {
   const fileInputRef = useRef(null);
 
   const [searchValue, setSearchValue] = useState("");
+  const [showImageUpload, setShowImageUpload] = useState(false);
 
   // Vehicle number validation
   const isVehicleNumber = (value) => {
@@ -59,6 +61,18 @@ const Search = () => {
     });
   };
 
+  const handleImageUploadSelect = (file) => {
+    if (!file) return;
+
+    navigate("/search-by-image", {
+      state: {
+        imageFile: file,
+        previewUrl: URL.createObjectURL(file),
+      },
+    });
+    setShowImageUpload(false);
+  };
+
   return (
     <div className="search-wrapper">
       <div
@@ -91,7 +105,7 @@ const Search = () => {
             {/* 📸 Image */}
             <AiOutlineCamera
               className="search-upload"
-              onClick={() => fileInputRef.current.click()}
+              onClick={() => setShowImageUpload(true)}
             />
 
             {/* Hidden file input */}
@@ -105,6 +119,14 @@ const Search = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Upload Modal */}
+      {showImageUpload && (
+        <ImageUpload
+          onClose={() => setShowImageUpload(false)}
+          onImageSelect={handleImageUploadSelect}
+        />
+      )}
     </div>
   );
 };

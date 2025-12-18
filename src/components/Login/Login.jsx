@@ -1,68 +1,61 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../../styles/Login/Login.css';
-import NoImage from '../../assets/Login/sidelogo.png';
-import LogoImage from '../../assets/Login/myTVS_Login.png';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Logo from "../../assets/header/Logo.png";
+import "../../styles/Login/Login.css";
+import NoImage from "../../assets/Login/sidelogo.png";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      // TODO: Replace with actual API call
-      // Example: const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email, password })
-      // });
-
       // Validate email and password
       if (!email || !password) {
-        setError('Please enter both email and password');
+        setError("Please enter both email and password");
         setLoading(false);
         return;
       }
 
       if (password.length < 8) {
-        setError('Password must be at least 8 characters');
+        setError("Password must be at least 8 characters");
         setLoading(false);
         return;
       }
 
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Store user data (replace with actual user data from API)
       const userData = {
         email: email,
-        name: 'Sam Vijay',
-        mobile: '93228 99498',
-        employeeCode: '93228',
-        reportingTo: 'John',
-        designation: 'Employee',
-        salesManagerName: 'Jhon',
-        salesManagerNumber: '9876545678'
+        name: "Sam Vijay",
+        mobile: "93228 99498",
+        employeeCode: "93228",
+        reportingTo: "John",
+        designation: "Employee",
+        salesManagerName: "Jhon",
+        salesManagerNumber: "9876545678",
       };
 
-      // Store in localStorage or context
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('isAuthenticated', 'true');
+      // Store in localStorage
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("isAuthenticated", "true");
 
-      console.log('Sign in successful:', email);
-      
+      console.log("Sign in successful:", email);
+
       // Navigate to home page after successful login
-      navigate('/home');
+      navigate("/home");
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Login failed. Please try again.');
+      console.error("Login error:", err);
+      setError("Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -70,14 +63,12 @@ const Login = () => {
 
   const handleSignUp = () => {
     // Navigate to sign up page
-    console.log('Navigate to sign up');
-    // navigate('/signup');
+    console.log("Navigate to sign up");
   };
 
   const handleForgotPassword = () => {
     // Navigate to forgot password page
-    console.log('Navigate to forgot password');
-    // navigate('/forgot-password');
+    console.log("Navigate to forgot password");
   };
 
   return (
@@ -88,7 +79,9 @@ const Login = () => {
           <div className="login-intro">
             <h1 className="login-welcome">Welcome Back To</h1>
             <div className="login-logo">
-              <img src={LogoImage} alt="myTVS" className="login-logo-img" />
+              <div className="logo-container">
+                <img src={Logo} alt="Logo" className="logo-image-logo" />
+              </div>
             </div>
           </div>
 
@@ -117,7 +110,7 @@ const Login = () => {
               <input
                 type="password"
                 className="login-input"
-                placeholder="At least 8 characters"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -141,13 +134,11 @@ const Login = () => {
           </form>
 
           <p className="login-signup-text">
-            Don't you have an account?{' '}
+            Don't you have an account?{" "}
             <span className="login-signup-link" onClick={handleSignUp}>
               Sign up
             </span>
           </p>
-
-          <p className="login-copyright">© 2023 ALL RIGHTS RESERVED</p>
         </div>
 
         {/* Right Side - Art Image */}

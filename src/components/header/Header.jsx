@@ -24,7 +24,7 @@ const Header = () => {
       <div className="header-container">
 
         {/* LEFT LOGO */}
-        <div className="header-left" onClick={() => navigate("/")}>
+        <div className="header-left" onClick={() => navigate("/home")}>
           <img src={Logo} alt="myTVS Logo" className="header-logo" />
         </div>
 
