@@ -2,7 +2,6 @@
    GLOBAL RESET & STABILITY
    =============================== */
 
-
 html {
   overflow-y: scroll; /* Prevent scrollbar jump */
 }
@@ -85,7 +84,7 @@ body {
    =============================== */
 .login-form {
   width: 100%;
-  max-width: 382px;
+  max-width: 405px;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -106,7 +105,7 @@ body {
 
 /* Input */
 .login-input {
-  width: 100%;
+  width: 91%;
   height: 48px;
   padding: 0 16px;
   font-size: 16px;
@@ -174,13 +173,6 @@ body {
   text-decoration: underline;
 }
 
-/* Copyright */
-.login-copyright {
-  font-size: 15px;
-  color: #959cb6;
-  text-align: center;
-}
-
 /* ===============================
    RIGHT – IMAGE SECTION
    =============================== */
@@ -198,7 +190,7 @@ body {
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: grayscale(100%) brightness(0.6) contrast(0.75);
+  filter: grayscale(100%) brightness(0.8) contrast(0.75);
 }
 
 /* ===============================

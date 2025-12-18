@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Logo from "../../assets/header/Logo.png"
-import '../../styles/Login/Login.css';
-import NoImage from '../../assets/Login/sidelogo.png';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Logo from "../../assets/header/Logo.png";
+import "../../styles/Login/Login.css";
+import NoImage from "../../assets/Login/sidelogo.png";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const handleSignIn = (e) => {
     e.preventDefault();
     // Add authentication logic here
-    console.log('Sign in with:', email, password);
+    console.log("Sign in with:", email, password);
     // Navigate to home page after successful login
-    navigate('/home');
+    navigate("/home");
   };
 
   const handleSignUp = () => {
     // Navigate to sign up page
-    console.log('Navigate to sign up');
+    console.log("Navigate to sign up");
   };
 
   const handleForgotPassword = () => {
     // Navigate to forgot password page
-    console.log('Navigate to forgot password');
+    console.log("Navigate to forgot password");
   };
 
   return (
@@ -80,13 +80,11 @@ const Login = () => {
           </form>
 
           <p className="login-signup-text">
-            Don't you have an account?{' '}
+            Don't you have an account?{" "}
             <span className="login-signup-link" onClick={handleSignUp}>
               Sign up
             </span>
           </p>
-
-          <p className="login-copyright">© 2023 ALL RIGHTS RESERVED</p>
         </div>
 
         {/* Right Side - Art Image */}
