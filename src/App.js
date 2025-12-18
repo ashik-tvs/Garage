@@ -22,11 +22,13 @@ import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTy
 
 import { CartProvider } from "./context/CartContext.js";
 import Login from "./components/Login/Login.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 
 function App() {
   return (
     <CartProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           {/* Login page without Layout */}
           <Route path="/" element={<Login />} />
