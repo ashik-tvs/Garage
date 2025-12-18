@@ -6,35 +6,37 @@ import NoImage from "../../../assets/No Image.png";
 import ServiceTypeIcon from "../../../assets/vehicle_search_entry/servicetype.png";
 
 // Brake Sub Category Images
-import BrakeCable from "../../../assets/Sub Category/BRAKE CABLE.png";
-import BrakeDisc from "../../../assets/Sub Category/BRAKE DISC.png";
-import Brake_Hose from "../../../assets/Sub Category/BRAKE HOSE.png";
-import BrakePad from "../../../assets/Sub Category/BRAKE PAD.png";
-import BrakeShoe from "../../../assets/Sub Category/Belts And Tensioner - Belts.png";
-
+import BrakePad from "../../../assets/brakePad.png"
+import BrakeDisc from "../../../assets/Brake Disk.png"
+import Caliper from "../../../assets/caliperPins.png"
+import BrakeShoe from "../../../assets/brakeShoe.png"
+import BrakeLining from "../../../assets/BrakeLining.png"
+import MC from "../../../assets/McBooster.png"
+import Anti from "../../../assets/AntiLocking.png"
+import BrakeHose from "../../../assets/brakeHose.png"
+import BrakeDrum from "../../../assets/brakeDrum.png"
+import BrakeCable from "../../../assets/Sub Category/BRAKE CABLE.png"
+import Cylinder from "../../../assets/Cylinder.png"
 
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { make, model, brand, category } = location.state || {};
 
-  const subCategories = [
-    [
-      { id: 1, name: "Brake Pad", image: BrakePad },
-      { id: 2, name: "Brake Disc", image: BrakeDisc },
-      { id: 3, name: "Caliper Pins", image: BrakeShoe },
-      { id: 4, name: "Brake Shoe", image: NoImage },
-      { id: 5, name: "Brake Lining", image: NoImage },
-      { id: 6, name: "MC / Booster", image: NoImage },
-      { id: 7, name: "Cylinder", image: NoImage },
-    ],
-    [
-      { id: 8, name: "Anti Locking (ABS)", image: NoImage },
-      { id: 9, name: "Brake Hose", image: Brake_Hose },
-      { id: 10, name: "Brake Drum", image: NoImage },
-      { id: 11, name: "Brake Cable", image: BrakeCable },
-    ],
-  ];
+const subCategories = [
+  { id: 1, name: "Brake Pad", image: BrakePad },
+  { id: 2, name: "Brake Disc", image: BrakeDisc },
+  { id: 3, name: "Caliper Pins", image: Caliper },
+  { id: 4, name: "Brake Shoe", image: BrakeShoe },
+  { id: 5, name: "Brake Lining", image: BrakeLining },
+  { id: 6, name: "MC / Booster", image: MC },
+  { id: 7, name: "Cylinder", image: Cylinder },
+  { id: 8, name: "Anti Locking (ABS)", image: Anti },
+  { id: 9, name: "Brake Hose", image: BrakeHose },
+  { id: 10, name: "Brake Drum", image: BrakeDrum },
+  { id: 11, name: "Brake Cable", image: BrakeCable },
+];
+
 
   const serviceTypes = [
     "Complete Brake System Inspection",
@@ -95,30 +97,27 @@ const Sub_Category = () => {
       <div className="sub-category-main">
         {/* Sub Categories */}
         <div className="sub-category-content">
-          {subCategories.map((row, rowIndex) => (
-            <div key={rowIndex} className="sub-category-row">
-              {row.map((subCategory) => (
-                <div
-                  key={subCategory.id}
-                  className="sub-category-item"
-                  onClick={() => handleSubCategoryClick(subCategory)}
-                >
-                  <div className="sub-category-image-wrapper">
-                    <img
-                      src={subCategory.image}
-                      alt={subCategory.name}
-                      className="sub-category-image"
-                    />
-                  </div>
-                  <div className="sub-category-label">
-                    <span title={subCategory.name}>
-                      {subCategory.name}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ))}
+<div className="sub-category-grid">
+  {subCategories.map((subCategory) => (
+    <div
+      key={subCategory.id}
+      className="sub-category-item"
+      onClick={() => handleSubCategoryClick(subCategory)}
+    >
+      <div className="sub-category-image-wrapper">
+        <img
+          src={subCategory.image}
+          alt={subCategory.name}
+          className="sub-category-image"
+        />
+      </div>
+      <div className="sub-category-label">
+        <span title={subCategory.name}>{subCategory.name}</span>
+      </div>
+    </div>
+  ))}
+</div>
+
         </div>
 
         {/* Service Type Sidebar */}

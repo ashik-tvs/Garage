@@ -135,7 +135,7 @@ const ImageSearch = () => {
 
     return formatted;
   };
-
+ 
   const handleChange = (e) => {
     const raw = e.target.value.replace(/ - /g, "");
     setValue(formatVehicleNumber(raw));

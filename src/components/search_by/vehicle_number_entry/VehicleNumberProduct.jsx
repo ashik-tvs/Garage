@@ -88,6 +88,8 @@ const alignedProducts = [
 const Product = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [openFilter, setOpenFilter] = useState(null);
+
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -97,6 +99,18 @@ const Product = () => {
   // Get navigation flow data from state
   const { vehicle, make, model, brand, category, subCategory } =
     location.state || {};
+  const [filters, setFilters] = useState({
+    brakeSystem: "",
+    price: "",
+    eta: "",
+    sortBy: "",
+  });
+  const filterOptions = {
+    brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
+    price: ["Low to High", "High to Low"],
+    eta: ["Same Day", "1-2 Days", "3-5 Days"],
+    sortBy: ["Relevance", "Price", "Brand"],
+  };
 
   // ✅ Normalize product before adding to cart
   const handleToggleCart = (product) => {
@@ -166,7 +180,7 @@ const Product = () => {
           <img
             src={LeftArrow}
             alt="Back"
-            width="10"
+            width="8"
             height="10"
             style={{
               cursor: "pointer",
@@ -258,14 +272,44 @@ const Product = () => {
             </button>
           </div>
 
-          <div className="vnp-filters-row">
-            {["Brake System", "Price", "ETA", "Sort by"].map((f) => (
-              <div className="vnp-filter-item" key={f}>
-                <span>{f}</span>
-                <img src={ExpandDown} alt="" width="24" />
-              </div>
-            ))}
-          </div>
+<div className="vnp-filters-row">
+  {[
+    { key: "brakeSystem", label: "Brake System" },
+    { key: "price", label: "Price" },
+    { key: "eta", label: "ETA" },
+    { key: "sortBy", label: "Sort by" },
+  ].map(({ key, label }) => (
+    <div className="vnp-filter-wrapper" key={key}>
+      <div
+        className="vnp-filter-item"
+        onClick={() =>
+          setOpenFilter(openFilter === key ? null : key)
+        }
+      >
+        <span>{filters[key] || label}</span>
+        <img src={ExpandDown} alt="" width="24" />
+      </div>
+
+      {openFilter === key && (
+        <div className="vnp-filter-dropdown">
+          {filterOptions[key].map((option) => (
+            <div
+              key={option}
+              className="vnp-filter-option"
+              onClick={() => {
+                setFilters((prev) => ({ ...prev, [key]: option }));
+                setOpenFilter(null);
+              }}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
         </div>
       </div>
 

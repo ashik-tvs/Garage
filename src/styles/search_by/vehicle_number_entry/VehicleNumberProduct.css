@@ -652,3 +652,41 @@ padding: 6px 12px;
   height: 8px;
 }
 
+.vnp-filter-wrapper {
+  position: relative;
+}
+
+.vnp-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #f3f3f3;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+}
+
+.vnp-filter-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+}
+
+.vnp-filter-option {
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vnp-filter-option:hover {
+  background: #f36f21;
+  color: #ffffff;
+}
