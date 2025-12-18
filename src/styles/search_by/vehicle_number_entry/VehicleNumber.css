@@ -464,6 +464,10 @@
 .Vne-right-section {
   /* min-width: 280px; */
 }
+.vne-search-key-text{
+  top: -100px;
+  padding-left: 20px;
+}
 /* Responsive */
 @media (max-width: 1024px) {
   .Vne-main-content {

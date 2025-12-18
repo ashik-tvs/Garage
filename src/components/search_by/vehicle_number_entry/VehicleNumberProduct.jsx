@@ -8,6 +8,9 @@ import LeftArrow from "../../../assets/vehicle_search_entry/LeftArrow.png";
 import RightArrow from "../../../assets/vehicle_search_entry/RightArrow.png";
 import Edit from "../../../assets/vehicle_search_entry/edit.png";
 import ExpandDown from "../../../assets/vehicle_search_entry/dropdown.png";
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- MOCK DATA ---------------- */
 
@@ -20,16 +23,8 @@ const recommendedProducts = [
     mrp: 600,
     stockQty: 10,
     eta: "1-2 Days",
+    image: Brake_1,
   },
-  // {
-  //   partNumber: "207510",
-  //   name: "Front Brake Pad",
-  //   brand: "myTVS",
-  //   price: 480,
-  //   mrp: 650,
-  //   stockQty: 5,
-  //   eta: "1-2 Days",
-  // },
 ];
 
 const otherProducts = [
@@ -41,6 +36,7 @@ const otherProducts = [
     mrp: 600,
     stockQty: 8,
     eta: "1-2 Days",
+    image: Brake_2,
   },
   {
     partNumber: "LF16080",
@@ -50,6 +46,7 @@ const otherProducts = [
     mrp: 700,
     stockQty: 6,
     eta: "1-2 Days",
+    image: Brake_3,
   },
 ];
 
@@ -62,6 +59,7 @@ const alignedProducts = [
     mrp: 600,
     stockQty: 12,
     eta: "1-2 Days",
+    image: Brake_1,
   },
   {
     partNumber: "99000M24120-624",
@@ -71,6 +69,7 @@ const alignedProducts = [
     mrp: 450,
     stockQty: 15,
     eta: "1-2 Days",
+    image: Brake_2,
   },
   {
     partNumber: "T0494M81207",
@@ -80,6 +79,7 @@ const alignedProducts = [
     mrp: 520,
     stockQty: 7,
     eta: "1-2 Days",
+    image: Brake_3,
   },
 ];
 
@@ -108,18 +108,28 @@ const Product = () => {
         itemDescription: product.name,
         listPrice: product.price,
         stockQty: product.stockQty,
-        imageUrl: NoImage,
+        imageUrl: product.image || NoImage,
       });
     }
   };
 
   const renderProductCard = (product) => (
     <div className="vnp-card" key={product.partNumber}>
-      <div className="vnp-image-placeholder">No Image</div>
+      <div className="vnp-image-placeholder">
+        {" "}
+        <img
+          src={product.image || NoImage}
+          alt={product.name}
+          width="100"
+          height="auto"
+        />
+      </div>
 
       <div className="vnp-details">
         <div className="vnp-badges">
-          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}>
+          <span
+            className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}
+          >
             {product.brand}
           </span>
           <span className="vnp-badge vnp-badge-stock">In stock</span>
@@ -127,14 +137,18 @@ const Product = () => {
         </div>
 
         <p className="vnp-code">{product.partNumber}</p>
-        <p className="vnp-name" title={product.name}>{product.name}</p>
+        <p className="vnp-name" title={product.name}>
+          {product.name}
+        </p>
 
         <div className="vnp-price-row">
           <span className="vnp-price-current">₹ {product.price}.00</span>
           <span className="vnp-price-original">₹ {product.mrp}.00</span>
 
           <button
-            className={`vnp-btn-add ${isInCart(product.partNumber) ? "added" : ""}`}
+            className={`vnp-btn-add ${
+              isInCart(product.partNumber) ? "added" : ""
+            }`}
             onClick={() => handleToggleCart(product)}
           >
             {isInCart(product.partNumber) ? "Added" : "Add"}
@@ -200,31 +214,31 @@ const Product = () => {
               {/* Number group */}
               <div className="vnp-filter-number">
                 {/* Hyundai */}
-                <div className="vnp-num-part">{vehicle?.make || 'Hyundai'}</div>
-                
+                <div className="vnp-num-part">{vehicle?.make || "Hyundai"}</div>
+
                 {/* Separator */}
                 <div className="vnp-sep">-</div>
-                
+
                 {/* Grand */}
-                <div className="vnp-num-part">{vehicle?.model || 'Grand'}</div>
-                
+                <div className="vnp-num-part">{vehicle?.model || "Grand"}</div>
+
                 {/* Separator */}
                 <div className="vnp-sep">-</div>
-                
+
                 {/* i10 */}
-                <div className="vnp-num-part">{vehicle?.variant || 'i10'}</div>
-                
+                <div className="vnp-num-part">{vehicle?.variant || "i10"}</div>
+
                 {/* Separator */}
                 <div className="vnp-sep">-</div>
-                
+
                 {/* Petrol */}
-                <div className="vnp-num-part">{vehicle?.fuel || 'Petrol'}</div>
-                
+                <div className="vnp-num-part">{vehicle?.fuel || "Petrol"}</div>
+
                 {/* Separator */}
                 <div className="vnp-sep">-</div>
-                
+
                 {/* 2021 */}
-                <div className="vnp-num-part">{vehicle?.year || '2021'}</div>
+                <div className="vnp-num-part">{vehicle?.year || "2021"}</div>
               </div>
 
               {/* Hidden indicator */}
@@ -235,8 +249,8 @@ const Product = () => {
             </div>
 
             {/* Frame 15 - Edit button */}
-            <button 
-              className="vnp-edit-btn" 
+            <button
+              className="vnp-edit-btn"
               onClick={() => setShowEditPopup(!showEditPopup)}
               aria-label="Edit vehicle"
             >
@@ -273,7 +287,12 @@ const Product = () => {
           <select className="vnp-dropdown">
             <option>Select Year</option>
           </select>
-          <button className="vnp-find-btn" onClick={() => setShowEditPopup(false)}>Find Auto Parts</button>
+          <button
+            className="vnp-find-btn"
+            onClick={() => setShowEditPopup(false)}
+          >
+            Find Auto Parts
+          </button>
         </div>
       )}
 
@@ -301,21 +320,38 @@ const Product = () => {
 
             {alignedProducts.map((product) => (
               <div className="vnp-aligned-card" key={product.partNumber}>
-                <div className="vnp-image-placeholder-small">No Image</div>
+                <div className="vnp-image-placeholder-small">
+                  <img
+                    src={product.image || NoImage}
+                    alt={product.name}
+                    width="100"
+                    height="auto"
+                  />
+                </div>
 
                 <div className="vnp-aligned-details">
                   <div className="vnp-badges">
-                    <span className="vnp-badge vnp-badge-valeo">{product.brand}</span>
+                    <span className="vnp-badge vnp-badge-valeo">
+                      {product.brand}
+                    </span>
                     <span className="vnp-badge vnp-badge-stock">In stock</span>
-                    <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
+                    <span className="vnp-badge vnp-badge-eta">
+                      {product.eta}
+                    </span>
                   </div>
 
                   <p className="vnp-code">{product.partNumber}</p>
-                  <p className="vnp-name" title={product.name}>{product.name}</p>
+                  <p className="vnp-name" title={product.name}>
+                    {product.name}
+                  </p>
 
                   <div className="vnp-price-row">
-                    <span className="vnp-price-current">₹ {product.price}.00</span>
-                    <span className="vnp-price-original">₹ {product.mrp}.00</span>
+                    <span className="vnp-price-current">
+                      ₹ {product.price}.00
+                    </span>
+                    <span className="vnp-price-original">
+                      ₹ {product.mrp}.00
+                    </span>
 
                     <button
                       className={`vnp-btn-add ${
