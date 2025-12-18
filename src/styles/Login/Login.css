@@ -1,11 +1,7 @@
 /* ===============================
    GLOBAL RESET & STABILITY
    =============================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
+
 
 html {
   overflow-y: scroll; /* Prevent scrollbar jump */
