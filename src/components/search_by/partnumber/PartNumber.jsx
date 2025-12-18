@@ -1,11 +1,17 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import Search from "../../home/Search";
 import { useCart } from "../../../context/CartContext";
 import NoImage from "../../../assets/No Image.png";
 import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- MOCK DATA ---------------- */
+const brakeImages = [Brake_1, Brake_2, Brake_3];
 
 const products = [
   {
@@ -18,7 +24,7 @@ const products = [
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: NoImage,
+    image: brakeImages[0],
   },
   {
     id: 2,
@@ -30,9 +36,13 @@ const products = [
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: NoImage,
+    image: brakeImages[1],
   },
 ];
+const otherProducts = products.map((item) => ({
+  ...item,
+  partNo: `OTHER-${item.partNo}`,
+}));
 
 const alignedProducts = [
   {
@@ -41,7 +51,7 @@ const alignedProducts = [
     description: "Brake Disc Pad",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    image: brakeImages[2],
   },
   {
     id: 4,
@@ -49,7 +59,7 @@ const alignedProducts = [
     description: "Brake Fluid",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    image: brakeImages[0],
   },
   {
     id: 5,
@@ -57,7 +67,7 @@ const alignedProducts = [
     description: "Brake Fitting Kit",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    image: brakeImages[1],
   },
 ];
 
@@ -106,7 +116,9 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
           </div>
 
           <p className="pn-part">{item.partNo}</p>
-          <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+          <p className="pn-name pn-truncate" title={item.description}>
+            {item.description}
+          </p>
 
           <div className="pn-price-row">
             <span className="pn-price">₹ {item.price}</span>
@@ -240,6 +252,9 @@ const CompatibilityModal = ({ onClose }) => {
 /* ---------------- MAIN COMPONENT ---------------- */
 
 const PartNumber = () => {
+  const { state } = useLocation();
+  const searchKey = state?.partNumber || "";
+
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showCompatibility, setShowCompatibility] = useState(false);
 
@@ -249,7 +264,7 @@ const PartNumber = () => {
 
       <div className="pn-body">
         <div className="pn-search-key">
-          Search Key : <b>LF16079</b>
+          Search Key : <b>{searchKey}</b>
         </div>
 
         {/* FILTERS */}
@@ -320,7 +335,12 @@ const PartNumber = () => {
                         <span className="pn-tag-eta">1-2 Days</span>
                       </div>
 
-                      <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+                      <p
+                        className="pn-name pn-truncate"
+                        title={item.description}
+                      >
+                        {item.description}
+                      </p>
 
                       <div className="pn-price-row">
                         <span className="pn-price">₹ {item.price}</span>

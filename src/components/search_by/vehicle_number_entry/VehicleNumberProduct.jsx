@@ -8,6 +8,9 @@ import LeftArrow from "../../../assets/vehicle_search_entry/LeftArrow.png";
 import RightArrow from "../../../assets/vehicle_search_entry/RightArrow.png";
 import Edit from "../../../assets/vehicle_search_entry/edit.png";
 import ExpandDown from "../../../assets/vehicle_search_entry/dropdown.png";
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- MOCK DATA ---------------- */
 
@@ -20,16 +23,8 @@ const recommendedProducts = [
     mrp: 600,
     stockQty: 10,
     eta: "1-2 Days",
+    image: Brake_1,
   },
-  // {
-  //   partNumber: "207510",
-  //   name: "Front Brake Pad",
-  //   brand: "myTVS",
-  //   price: 480,
-  //   mrp: 650,
-  //   stockQty: 5,
-  //   eta: "1-2 Days",
-  // },
 ];
 
 const otherProducts = [
@@ -41,6 +36,7 @@ const otherProducts = [
     mrp: 600,
     stockQty: 8,
     eta: "1-2 Days",
+    image: Brake_2,
   },
   {
     partNumber: "LF16080",
@@ -50,6 +46,7 @@ const otherProducts = [
     mrp: 700,
     stockQty: 6,
     eta: "1-2 Days",
+    image: Brake_3,
   },
 ];
 
@@ -62,6 +59,7 @@ const alignedProducts = [
     mrp: 600,
     stockQty: 12,
     eta: "1-2 Days",
+    image: Brake_1,
   },
   {
     partNumber: "99000M24120-624",
@@ -71,6 +69,7 @@ const alignedProducts = [
     mrp: 450,
     stockQty: 15,
     eta: "1-2 Days",
+    image: Brake_2,
   },
   {
     partNumber: "T0494M81207",
@@ -80,6 +79,7 @@ const alignedProducts = [
     mrp: 520,
     stockQty: 7,
     eta: "1-2 Days",
+    image: Brake_3,
   },
 ];
 
@@ -108,7 +108,7 @@ const Product = () => {
         itemDescription: product.name,
         listPrice: product.price,
         stockQty: product.stockQty,
-        imageUrl: NoImage,
+        imageUrl: product.image || NoImage,
       });
     }
   };
@@ -117,7 +117,12 @@ const Product = () => {
     <div className="vnp-card" key={product.partNumber}>
       <div className="vnp-image-placeholder">
         {" "}
-        <img src={NoImage} alt="No Image" width="100" height="auto" />
+        <img
+          src={product.image || NoImage}
+          alt={product.name}
+          width="100"
+          height="auto"
+        />
       </div>
 
       <div className="vnp-details">
@@ -316,7 +321,12 @@ const Product = () => {
             {alignedProducts.map((product) => (
               <div className="vnp-aligned-card" key={product.partNumber}>
                 <div className="vnp-image-placeholder-small">
-                  <img src={NoImage} alt="No Image" width="100" height="auto" />
+                  <img
+                    src={product.image || NoImage}
+                    alt={product.name}
+                    width="100"
+                    height="auto"
+                  />
                 </div>
 
                 <div className="vnp-aligned-details">

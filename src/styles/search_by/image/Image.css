@@ -137,9 +137,14 @@
 
 .img-left {
   width: 100%;
-  max-width: 300px; /* 🔧 adjust square size here */
+  max-width: 300px;
   margin: 0 auto;
   cursor: pointer;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
 }
 
 /* Square container */
@@ -149,8 +154,6 @@
   aspect-ratio: 1 / 1; /* ✅ perfect square */
   object-fit: contain;
   border-radius: 8px;
-  background: #f7f7f7;
-
   display: flex;
   align-items: center;
   justify-content: center;

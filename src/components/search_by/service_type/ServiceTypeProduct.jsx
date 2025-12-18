@@ -1,10 +1,15 @@
 import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import Search from "../../home/Search";
 import "../../../styles/search_by/service_type/ServiceTypeProduct.css";
 import EditIcon from "../../../assets/vehicle_search_entry/edit.png";
 import MyTvs from "../../../assets/mytvs.png";
 import NoImage from "../../../assets/No Image.png";
 import Success from "../../cart/Success"; // Import the Success component
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
 
 const mockData = [
   {
@@ -15,7 +20,7 @@ const mockData = [
       price: 425,
       mrp: 600,
       img: MyTvs,
-      image: NoImage,
+      image: Brake_1,
     },
     valeo: {
       code: "F002H23845",
@@ -23,7 +28,7 @@ const mockData = [
       price: 425,
       mrp: 600,
       img: MyTvs,
-      image: NoImage,
+      image: Brake_2,
     },
     hyundai: {
       code: "55801M60M00",
@@ -31,7 +36,7 @@ const mockData = [
       price: 425,
       mrp: 600,
       img: MyTvs,
-      image: NoImage,
+      image: Brake_3,
     },
   },
   {
@@ -41,21 +46,21 @@ const mockData = [
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_3,
     },
     valeo: {
       code: "F002H23845",
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_1,
     },
     hyundai: {
       code: "55801M60M00",
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_2,
     },
   },
   {
@@ -65,27 +70,30 @@ const mockData = [
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_3,
     },
     valeo: {
       code: "F002H23845",
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_2,
     },
     hyundai: {
       code: "55801M60M00",
       eta: "1-2 Days",
       price: 425,
       mrp: 600,
-      image: NoImage,
+      image: Brake_1,
     },
   },
   // ...other mock data
 ];
 
 const ServiceTypeProduct = () => {
+  const { state } = useLocation();
+  const searchKey = state?.serviceType || "";
+
   const [quantities, setQuantities] = useState(
     mockData.reduce((acc, item) => {
       acc[item.part] = { myTVS: 1, valeo: 1, hyundai: 1 };
@@ -159,9 +167,7 @@ const ServiceTypeProduct = () => {
           {/* Search Key Text */}
           <div className="srp-search-key-text">
             <span className="srp-search-key-label">Search Key : </span>
-            <span className="srp-search-key-value">
-              Rear Brake Pad Replacement
-            </span>
+            <span className="srp-search-key-value">{searchKey}</span>
           </div>
 
           {/* Vehicle Selection Group 480960940 */}

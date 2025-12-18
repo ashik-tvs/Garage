@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import NoImage from "../../../assets/customer/No Image.png";
-import { getOciImage } from "../../../utils/ociImage";
+import NoImage from "../../assets/No Image.png";
+import { getOciImage } from "../../utils/ociImage";
 
 const Image = ({ partNumber, folder = "products" }) => {
   const [imgUrl, setImgUrl] = useState(NoImage);

@@ -60,28 +60,28 @@ const VehicleSelection = ({
         <div className="Vne-filter-number">
           {/* Hyundai */}
           <div className="Vne-num-part">{vehicle.make}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* Grand */}
           <div className="Vne-num-part">{vehicle.model}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* i10 */}
           <div className="Vne-num-part">{vehicle.variant}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* Petrol */}
           <div className="Vne-num-part">{vehicle.fuel}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* 2021 */}
           <div className="Vne-num-part">{vehicle.year}</div>
         </div>
@@ -94,7 +94,11 @@ const VehicleSelection = ({
       </div>
 
       {/* Frame 15 - Edit button */}
-      <button className="Vne-edit-btn" onClick={onEdit} aria-label="Edit vehicle">
+      <button
+        className="Vne-edit-btn"
+        onClick={onEdit}
+        aria-label="Edit vehicle"
+      >
         <img src={EditIcon} alt="edit" className="Vne-edit-icon-img" />
       </button>
     </div>
@@ -175,6 +179,7 @@ const ServicePanel = ({ services }) => {
 const VehicleNumberEntry = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const searchKey = state?.vehicleNumber || "";
 
   const [vehicle] = useState({
     ...MOCK_VEHICLE,
@@ -206,6 +211,10 @@ const VehicleNumberEntry = () => {
   return (
     <div className="Vne-vehicle-page">
       <Search />
+      <div className="vne-search-key-text">
+        <span className="srp-search-key-label">Search Key : </span>
+        <span className="srp-search-key-value">{searchKey}</span>
+      </div>
 
       <div className="Vne-vehicle-content">
         <VehicleSelection
