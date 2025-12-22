@@ -8,6 +8,27 @@ import ServiceTypeIcon from "../../../assets/vehicle_search_entry/servicetype.pn
 import NoImage from "../../../assets/No Image.png";
 
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumber.css";
+//category
+import BrakeSystem from "../../../assets/Categories/BRAKE SYSTEM.png";
+import Accessories from "../../../assets/Categories/ACCESSORIES.png";
+import Battery from "../../../assets/Categories/BATTERY.png";
+import Bearing from "../../../assets/Categories/BEARING.png";
+import Belts from "../../../assets/Categories/BELTS AND TENSIONER.png";
+import BodyParts from "../../../assets/Categories/BODY PARTS.png";
+import Cables from "../../../assets/Categories/CABLES AND WIRES.png";
+import ChildParts from "../../../assets/Categories/CHILD PARTS.png";
+//sub-category
+import BrakePad from "../../../assets/brakePad.png";
+import BrakeDisc from "../../../assets/Brake Disk.png";
+import Caliper from "../../../assets/caliperPins.png";
+import BrakeShoe from "../../../assets/brakeShoe.png";
+import BrakeLining from "../../../assets/BrakeLining.png";
+import MC from "../../../assets/McBooster.png";
+import Anti from "../../../assets/AntiLocking.png";
+import BrakeHose from "../../../assets/brakeHose.png";
+import BrakeDrum from "../../../assets/brakeDrum.png";
+import BrakeCable from "../../../assets/Sub Category/BRAKE CABLE.png";
+import Cylinder from "../../../assets/Cylinder.png";
 
 // -------------------- MOCK DATA --------------------
 const MOCK_VEHICLE = {
@@ -19,21 +40,28 @@ const MOCK_VEHICLE = {
 };
 
 const MAIN_CATEGORIES = [
-  { name: "Engine", icon: NoImage },
-  { name: "Brakes", icon: NoImage },
-  { name: "Battery", icon: NoImage },
-  { name: "Steering", icon: NoImage },
-  { name: "Body Parts", icon: NoImage },
-  { name: "Filters", icon: NoImage },
+  { name: "Brake System", icon: BrakeSystem },
+  { name: "Accessories", icon: Accessories },
+  { name: "Battery", icon: Battery },
+  { name: "Bearing", icon: Bearing },
+  { name: "Belts and Tensioner", icon: Belts },
+  { name: "Body Parts", icon: BodyParts },
+  { name: "Cables and Wires", icon: Cables },
+  { name: "Child Parts", icon: ChildParts },
 ];
 
 const SUB_CATEGORIES = [
-  { name: "Bonnet", icon: NoImage },
-  { name: "Bumper", icon: NoImage },
-  { name: "Body Bush", icon: NoImage },
-  { name: "Fog Lamp", icon: NoImage },
-  { name: "Head Lamp", icon: NoImage },
-  { name: "Panel", icon: NoImage },
+  { name: "Brake Pad", icon: BrakePad },
+  { name: "Brake Disc", icon: BrakeDisc },
+  { name: "Caliper Pins", icon: Caliper },
+  { name: "Brake Shoe", icon: BrakeShoe },
+  { name: "Brake Lining", icon: BrakeLining },
+  { name: "MC / Booster", icon: MC },
+  { name: "Cylinder", icon: Cylinder },
+  { name: "Anti Locking (ABS)", icon: Anti },
+  { name: "Brake Hose", icon: BrakeHose },
+  { name: "Brake Drum", icon: BrakeDrum },
+  { name: "Brake Cable", icon: BrakeCable },
 ];
 
 // -------------------- SMALL COMPONENTS --------------------
@@ -56,28 +84,28 @@ const VehicleSelection = ({
         <div className="Vne-filter-number">
           {/* Hyundai */}
           <div className="Vne-num-part">{vehicle.make}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* Grand */}
           <div className="Vne-num-part">{vehicle.model}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* i10 */}
           <div className="Vne-num-part">{vehicle.variant}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* Petrol */}
           <div className="Vne-num-part">{vehicle.fuel}</div>
-          
+
           {/* Separator */}
           <div className="Vne-sep">-</div>
-          
+
           {/* 2021 */}
           <div className="Vne-num-part">{vehicle.year}</div>
         </div>
@@ -90,7 +118,11 @@ const VehicleSelection = ({
       </div>
 
       {/* Frame 15 - Edit button */}
-      <button className="Vne-edit-btn" onClick={onEdit} aria-label="Edit vehicle">
+      <button
+        className="Vne-edit-btn"
+        onClick={onEdit}
+        aria-label="Edit vehicle"
+      >
         <img src={EditIcon} alt="edit" className="Vne-edit-icon-img" />
       </button>
     </div>
@@ -148,7 +180,7 @@ const CategoryGrid = ({ title, items, onSelect, activeItem }) => (
   </div>
 );
 
-const ServicePanel = ({ services }) => {
+const ServicePanel = ({ services, onSelectService, activeService }) => {
   return (
     <div className="Vne-service-panel">
       <div className="Vne-service-header">
@@ -158,7 +190,13 @@ const ServicePanel = ({ services }) => {
 
       <ul className="Vne-service-list">
         {services.map((service, i) => (
-          <li key={i} className="Vne-service-item">
+          <li
+            key={i}
+            className={`Vne-service-item ${
+              activeService === service ? "active" : ""
+            }`}
+            onClick={() => onSelectService(service)}
+          >
             {service}
           </li>
         ))}
@@ -171,11 +209,27 @@ const ServicePanel = ({ services }) => {
 const VehicleNumberEntry = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const searchKey = state?.vehicleNumber || "";
 
   const [vehicle] = useState({
     ...MOCK_VEHICLE,
     number: state?.vehicleNumber,
   });
+  const [selectedService, setSelectedService] = useState(null);
+
+  const handleServiceClick = (serviceType) => {
+    setSelectedService(serviceType);
+
+    navigate("/service-type-products", {
+      state: {
+        serviceType,
+        make: vehicle.make,
+        model: vehicle.model,
+        category: selectedCategory,
+        subCategory: selectedSubCategory,
+      },
+    });
+  };
 
   const [selectedCategory, setSelectedCategory] = useState(
     MAIN_CATEGORIES[0].name
@@ -202,6 +256,12 @@ const VehicleNumberEntry = () => {
   return (
     <div className="Vne-vehicle-page">
       <Search />
+      {searchKey && (
+        <div className="vne-search-key-text">
+          <span className="srp-search-key-label">Search Key : </span>
+          <span className="srp-search-key-value">{searchKey}</span>
+        </div>
+      )}
 
       <div className="Vne-vehicle-content">
         <VehicleSelection
@@ -248,11 +308,13 @@ const VehicleNumberEntry = () => {
                 "Rear Brake Pad Replacement",
                 "Front Brake Pad Replacement",
                 "ABS Warning Light Check",
-                " Brake Fluid Replacement",
+                "Brake Fluid Replacement",
                 "Brake Shoe Replacement (Drum Brakes)",
                 "Brake Pad Cleaning & Adjustment",
                 "Brake Rotor (Disc) Replacement",
               ]}
+              onSelectService={handleServiceClick}
+              activeService={selectedService}
             />
           </div>
         </div>

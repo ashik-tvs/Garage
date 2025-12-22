@@ -1,0 +1,160 @@
+/* Overlay */
+.image-upload-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Frame 1321315483 - Main Container */
+.image-upload-container {
+  box-sizing: border-box;
+  position: relative;
+  width: 488px;
+  height: 274px;
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Frame 1984077766 - Dropzone */
+.image-upload-dropzone {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 10px;
+  position: absolute;
+  width: 199px;
+  height: 183px;
+  left: calc(50% - 199px/2 + 0.5px);
+  top: calc(50% - 183px/2 - 18.5px);
+  border: 1px dashed #DADADA;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: border-color 0.3s ease;
+}
+
+.image-upload-dropzone:hover {
+  border-color: #F36F21;
+}
+
+/* Upload Icon */
+.image-upload-icon {
+  width: 143px;
+  height: 143px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  object-fit: contain;
+}
+
+/* Preview Image */
+.image-upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Hidden File Input */
+.image-upload-input-hidden {
+  display: none;
+}
+
+/* Drop your Image or Browse */
+.image-upload-text {
+  position: absolute;
+  width: 380px;
+  height: 24px;
+  left: calc(50% - 380px/2);
+  top: 234px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 24px;
+  text-align: center;
+  color: #454545;
+  margin: 0;
+}
+
+/* Browse Link */
+.image-upload-browse {
+  color: #F36F21;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.image-upload-browse:hover {
+  color: #E05E10;
+}
+
+/* Close Button Container */
+.image-upload-close-btn {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  right: 21px;
+  top: 21px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 10;
+  transition: transform 0.2s ease;
+}
+
+.image-upload-close-btn:hover {
+  transform: scale(1.1);
+}
+
+/* Ellipse 47 - Background Circle */
+.image-upload-close-circle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 0;
+  top: 0;
+  background: rgba(203, 29, 29, 0.1);
+  border-radius: 50%;
+}
+
+/* Vector 8 - First Line of X */
+.image-upload-close-x1 {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 0;
+  border: 1.2px solid #CB1D1D;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  transform-origin: center;
+}
+
+/* Vector 9 - Second Line of X */
+.image-upload-close-x2 {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 0;
+  border: 1.2px solid #CB1D1D;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  transform-origin: center;
+}

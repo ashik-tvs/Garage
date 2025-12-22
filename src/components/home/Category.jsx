@@ -2,6 +2,16 @@ import React, { useState } from "react"
 import { useNavigate } from "react-router-dom";
 import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
+import Accessories from "../../assets/Categories/ACCESSORIES.png"
+import Battery from "../../assets/Categories/BATTERY.png"
+import Bearing from "../../assets/Categories/BEARING.png"
+import Belts from "../../assets/Categories/BELTS AND TENSIONER.png"
+import BodyParts from "../../assets/Categories/BODY PARTS.png"
+import BrakeSystem from "../../assets/Categories/BRAKE SYSTEM.png"
+import Cables from "../../assets/Categories/CABLES AND WIRES.png"
+import ChildParts from "../../assets/Categories/CHILD PARTS.png"
+import Filters from "../../assets/Categories/FILTERS.png"
+
 
 const Category = () => {
   const navigate = useNavigate();
@@ -14,15 +24,15 @@ const Category = () => {
   };
 
   const categories = [
-    { id: 1, label: "Engine", icon: NoImage },
-    { id: 2, label: "Brakes", icon: NoImage },
-    { id: 3, label: "Battery", icon: NoImage },
-    { id: 4, label: "Steering", icon: NoImage },
-    { id: 5, label: "Tyres", icon: NoImage },
-    { id: 6, label: "Body Parts", icon: NoImage },
-    { id: 7, label: "Accessories", icon: NoImage },
-    { id: 8, label: "Electricals", icon: NoImage },
-    { id: 9, label: "Filters", icon: NoImage },
+    { id: 1, label: "Accessories", icon: Accessories },
+    { id: 2, label: "Bearing", icon: Bearing },
+    { id: 3, label: "Battery", icon: Battery },
+    { id: 4, label: "Bealts & Tensioner", icon: Belts },
+    { id: 5, label: "Brake System", icon: BrakeSystem },
+    { id: 6, label: "Body Parts", icon: BodyParts },
+    { id: 7, label: "Cables", icon: Cables },
+    { id: 8, label: "ChildParts", icon: ChildParts },
+    { id: 9, label: "Filters", icon: Filters },
   ];
 
   const visibleCategories = expanded ? categories : categories.slice(0, 8);

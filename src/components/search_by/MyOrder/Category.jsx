@@ -1,10 +1,26 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import '../../../styles/search_by/MyOrder/Category.css';
-import LeftArrow from '../../../assets/Product/Left_Arrow.png';
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import "../../../styles/search_by/MyOrder/Category.css";
+import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 
-// Category images - using No Image placeholder for now
-import NoImage from '../../../assets/No Image.png';
+// Category Images
+import BrakeSystem from "../../../assets/Categories/BRAKE SYSTEM.png";
+import Accessories from "../../../assets/Categories/ACCESSORIES.png";
+import Battery from "../../../assets/Categories/BATTERY.png";
+import Bearing from "../../../assets/Categories/BEARING.png";
+import Belts from "../../../assets/Categories/BELTS AND TENSIONER.png";
+import BodyParts from "../../../assets/Categories/BODY PARTS.png";
+import Cables from "../../../assets/Categories/CABLES AND WIRES.png";
+import ChildParts from "../../../assets/Categories/CHILD PARTS.png";
+import Clutch from "../../../assets/Categories/CLUTCH SYSTEMS.png";
+import Comfort from "../../../assets/Categories/GLASS.png";
+import Electricals from "../../../assets/Categories/ELECTRICALS AND ELECTRONICS.png";
+import Engine from "../../../assets/Categories/ENGINE.png";
+import Filters from "../../../assets/Categories/FILTERS.png";
+import Fluids from "../../../assets/Categories/FLUIDS COOLANT AND GREASE.png";
+import Horns from "../../../assets/Categories/HORNS.png";
+import Lubes from "../../../assets/Categories/LUBES.png";
+import Lights from "../../../assets/Categories/LIGHTING.png";
 
 const Category = () => {
   const navigate = useNavigate();
@@ -12,50 +28,35 @@ const Category = () => {
   const { make, model, brand } = location.state || {};
 
   const categories = [
-    { id: 1, name: 'Engine', image: NoImage },
-    { id: 2, name: 'Brakes', image: NoImage },
-    { id: 3, name: 'Battery', image: NoImage },
-    { id: 4, name: 'Steering', image: NoImage },
-    { id: 5, name: 'Tyres', image: NoImage },
-    { id: 6, name: 'Body Parts', image: NoImage },
-    { id: 7, name: 'Accessories', image: NoImage },
-    { id: 8, name: 'Electricals', image: NoImage },
-    { id: 9, name: 'Filters', image: NoImage },
-    { id: 10, name: 'Cables and Wires', image: NoImage },
-    { id: 11, name: 'Bearing', image: NoImage },
-    { id: 12, name: 'Horns', image: NoImage },
-    { id: 13, name: 'Lubes', image: NoImage },
-    { id: 14, name: 'FLUIDS AND GREASE', image: NoImage },
-    { id: 15, name: 'Glass', image: NoImage },
-    { id: 16, name: 'INTERIOR & COMFORTS', image: NoImage },
-    { id: 17, name: 'TRANSMISSION', image: NoImage },
-    { id: 18, name: 'Rubber and .....', image: NoImage },
-    { id: 19, name: 'Wiper System', image: NoImage },
-    { id: 20, name: 'CLUTCH SYSTEMS', image: NoImage },
-    { id: 21, name: 'ELECTRICALS AND ...', image: NoImage },
-    { id: 22, name: 'Suspension', image: NoImage },
-    { id: 23, name: 'Belt and Tensionor', image: NoImage },
-    { id: 24, name: 'HVAC and Thermal', image: NoImage },
-    { id: 25, name: 'Lighting', image: NoImage },
-    { id: 26, name: 'PAINTS AND CON....', image: NoImage },
-    { id: 27, name: 'Child Parts', image: NoImage },
-    { id: 28, name: 'Fuel Systems', image: NoImage },
+    { id: 1, name: "Engine", image: Engine },
+    { id: 2, name: "Brake System", image: BrakeSystem },
+    { id: 3, name: "Battery", image: Battery },
+    { id: 4, name: "Body Parts", image: BodyParts },
+    { id: 5, name: "Accessories", image: Accessories },
+    { id: 6, name: "Electricals & Electronics", image: Electricals },
+    { id: 7, name: "Filters", image: Filters },
+    { id: 8, name: "Cables & Wires", image: Cables },
+    { id: 9, name: "Bearing", image: Bearing },
+    { id: 10, name: "Horns", image: Horns },
+    { id: 11, name: "Lubes", image: Lubes },
+    { id: 12, name: "Fluids, Coolant & Grease", image: Fluids },
+    { id: 13, name: "Glass / Comfort", image: Comfort },
+    { id: 14, name: "Clutch Systems", image: Clutch },
+    { id: 15, name: "Belts & Tensioner", image: Belts },
+    { id: 16, name: "Lighting", image: Lights },
+    { id: 17, name: "Child Parts", image: ChildParts },
   ];
 
-  const handleBack = () => {
-    navigate(-1);
-  };
+  const handleBack = () => navigate(-1);
 
   const handleCategoryClick = (category) => {
-    console.log('Selected category:', category);
-    // Navigate to Sub Category page
-    navigate('/sub_category', {
+    navigate("/sub_category", {
       state: {
-        make: make,
-        model: model,
-        brand: brand,
-        category: category.name
-      }
+        make,
+        model,
+        brand,
+        category: category.name,
+      },
     });
   };
 

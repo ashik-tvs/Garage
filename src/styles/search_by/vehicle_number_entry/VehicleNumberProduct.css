@@ -31,6 +31,11 @@
   align-items: center;
   gap: 16px;
 }
+.vnp-container,
+.vnp-top-row,
+.vnp-top-right {
+  overflow: visible !important;
+}
 
 /* Group 480960940 - Vehicle Group */
 .vnp-vehicle-group {
@@ -149,7 +154,6 @@
   transform: rotate(90deg);
 }
 
-/* Frame 15 - Edit button */
 .vnp-edit-btn {
   /* Auto layout */
   display: flex;
@@ -161,7 +165,7 @@
   position: absolute;
   width: 54px;
   height: 38px;
-  left: 395px;
+  left: 375px;
   top: calc(50% - 38px/2);
   background: #F36F21;
   border-radius: 2px 6px 6px 2px;
@@ -196,7 +200,13 @@
   margin-bottom: 0;
   font-size: 10px;
 }
-
+.vnp-breadcrumbs-icon{
+  width: 12px;
+  height: 12px;
+  background-color: #F36F21;
+  padding: 6px;
+  border-radius: 50px;
+}
 .vnp-breadcrumbs .icon {
   width: 12px;
   height: 12px;
@@ -291,22 +301,12 @@ padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 10px;
+    position: relative;
+  z-index: 5000;
+  isolation: isolate;
 }
 
-.vnp-filter-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f5f6fa;
-  border-radius: 20px;
-  padding: 6px 16px;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  font-weight: 400;
-  color: #444;
-  min-width: fit-content;
-  white-space: nowrap;
-}
+
 
 .vnp-expand-icon {
   width: 9px;
@@ -318,6 +318,8 @@ padding: 6px 12px;
   display: flex;
   margin-top: 30px;
   max-width: 1268px;
+    position: relative;
+  z-index: 1;
 }
 
 .vnp-left-section {
@@ -395,14 +397,10 @@ padding: 6px 12px;
 .vnp-image-placeholder {
   width: 103px;
   height: 84px;
-  background: #f5f6fa;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Poppins", sans-serif;
-  font-size: 14px;
-  color: #888;
   flex-shrink: 0;
 }
 
@@ -480,6 +478,7 @@ padding: 6px 12px;
   max-width: 100%;
   cursor: pointer;
   position: relative;
+  
 }
 
 /* Tooltip styling */
@@ -586,6 +585,12 @@ padding: 6px 12px;
   background: #e55a2b;
 }
 
+.vnp-btn-add.added {
+  background: #b04622;
+  cursor: pointer;
+}
+
+
 /* Aligned Products (Right Section) */
 .vnp-aligned-product-card {
   display: flex;
@@ -599,14 +604,10 @@ padding: 6px 12px;
 .vnp-image-placeholder-small {
   width: 80px;
   height: 80px;
-  background: #f5f6fa;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "Poppins", sans-serif;
-  font-size: 12px;
-  color: #888;
   flex-shrink: 0;
 }
 
@@ -658,5 +659,51 @@ padding: 6px 12px;
 .vnp-filter-item img {
   width: 12px;
   height: 8px;
+}
+
+.vnp-filter-wrapper {
+  position: relative;
+  z-index: 50;
+}
+
+
+.vnp-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #F2F4F7;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+}
+
+.vnp-filter-wrapper {
+  position: relative;
+  /* z-index: 200; */
+}
+
+.vnp-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  min-width: 100%;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  z-index: 999999;
+}
+
+.vnp-filter-option {
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.vnp-filter-option:hover {
+  background: #f36f21;
+  color: #ffffff;
 }
 

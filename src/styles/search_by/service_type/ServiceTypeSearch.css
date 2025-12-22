@@ -90,7 +90,7 @@
   flex-direction: column;
   align-items: center;
   padding: 10px;
-  border: 1px solid #eee;
+  border: 1px solid #cdcdcd;
   border-radius: 6px;
   cursor: pointer;
   transition: transform 0.2s ease;

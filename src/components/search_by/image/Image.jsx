@@ -2,12 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useCart } from "../../../context/CartContext";
 import { useLocation } from "react-router-dom";
 import Search from "../../home/Search";
+import serviceType from "../../../assets/vehicle_search_entry/servicetype.png";
 import NoImage from "../../../assets/No Image.png";
 import "../../../styles/search_by/image/Image.css";
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
+
+const brakeImages = [Brake_1, Brake_2, Brake_3];
 
 const mockProducts = [
   {
     id: 1,
+    code: "LF6072",
     brand: "myTVS",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
@@ -20,6 +27,7 @@ const mockProducts = [
   },
   {
     id: 2,
+    code: "LF6073",
     brand: "Valeo",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
@@ -32,10 +40,52 @@ const mockProducts = [
   },
   {
     id: 3,
+    code: "LF6074",
     brand: "Valeo",
     title: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
+    stock: "In stock",
+    eta: "1-2 Days",
+    vehicle: "Grand i10 1.2L",
+    fuel: "Petrol",
+    year: "2016 to 2020",
+  },
+];
+const otherProducts = [
+  {
+    id: 101,
+    code: "LF6081",
+    brand: "Valeo",
+    title: "Rear Brake Pad Disc Set - F(EON)",
+    price: 410,
+    mrp: 580,
+    stock: "In stock",
+    eta: "1-2 Days",
+    vehicle: "Grand i10 1.1L CRDi",
+    fuel: "Petrol",
+    year: "2013 to 2016",
+  },
+  {
+    id: 102,
+    code: "LF6082",
+    brand: "Bosch",
+    title: "Rear Brake Pad Disc Set - F(EON)",
+    price: 430,
+    mrp: 620,
+    stock: "In stock",
+    eta: "1-2 Days",
+    vehicle: "Grand i10 1.2L",
+    fuel: "Petrol",
+    year: "2016 to 2020",
+  },
+  {
+    id: 103,
+    code: "LF6083",
+    brand: "TVS",
+    title: "Rear Brake Pad Disc Set - F(EON)",
+    price: 445,
+    mrp: 650,
     stock: "In stock",
     eta: "1-2 Days",
     vehicle: "Grand i10 1.2L",
@@ -48,10 +98,9 @@ const ImageSearch = () => {
   const location = useLocation();
   const { cartItems, addToCart, removeFromCart } = useCart();
 
-  const isInCart = (partNumber) =>
-    cartItems.some((item) => item.partNumber === partNumber);
+  const isInCart = (code) => cartItems.some((item) => item.partNumber === code);
 
-  const [previewUrl, setPreviewUrl] = useState(NoImage);
+  const [previewUrl, setPreviewUrl] = useState("");
   useEffect(() => {
     return () => {
       if (previewUrl && previewUrl !== NoImage) {
@@ -86,7 +135,7 @@ const ImageSearch = () => {
 
     return formatted;
   };
-
+ 
   const handleChange = (e) => {
     const raw = e.target.value.replace(/ - /g, "");
     setValue(formatVehicleNumber(raw));
@@ -102,7 +151,7 @@ const ImageSearch = () => {
       {/* Upload Card */}
       <div className="img-upload-card">
         {/* LEFT IMAGE */}
-        <label htmlFor="upload-image" className="img-left">
+        <label abel htmlFor="upload-image" className="img-left">
           {previewUrl ? (
             <img src={previewUrl} alt="uploaded preview" />
           ) : (
@@ -208,7 +257,10 @@ const ImageSearch = () => {
               <div key={p.id} className="img-card">
                 {/* Image */}
                 <div className="img-card-image">
-                  <img src={NoImage} alt="" />
+                  <img
+                    src={brakeImages[p.id % brakeImages.length]}
+                    alt={p.title}
+                  />
                 </div>
 
                 {/* Card Body */}
@@ -221,33 +273,35 @@ const ImageSearch = () => {
                   </div>
 
                   {/* Code */}
-                  <p className="img-code">LF6079</p>
+                  <p className="img-code">{p.code}</p>
 
                   {/* Title */}
-                  <p className="img-title"title={p.title}>{p.title}</p>
+                  <p className="img-title" title={p.title}>
+                    {p.title}
+                  </p>
 
                   {/* Price row */}
                   <div className="img-price-row">
                     <span className="price">₹ {p.price}</span>
                     <del>₹ {p.mrp}</del>
                     <button
-                      className={`img-add ${isInCart("LF6079") ? "added" : ""}`}
+                      className={`img-add ${isInCart(p.code) ? "added" : ""}`}
                       onClick={() => {
-                        if (isInCart("LF6079")) {
-                          removeFromCart("LF6079"); // UNDO
+                        if (isInCart(p.code)) {
+                          removeFromCart(p.code);
                         } else {
                           addToCart({
-                            partNumber: "LF6079",
+                            partNumber: p.code,
                             title: p.title,
                             brand: p.brand,
                             listPrice: p.price,
                             mrp: p.mrp,
-                            image: NoImage,
+                            image: brakeImages[p.id % brakeImages.length],
                           });
                         }
                       }}
                     >
-                      {isInCart("LF6079") ? "Added" : "Add"}
+                      {isInCart(p.code) ? "Added" : "Add"}
                     </button>
                   </div>
 
@@ -266,10 +320,13 @@ const ImageSearch = () => {
           <h3 className="img-other-title">Other Products</h3>
 
           <div className="img-grid">
-            {mockProducts.map((p) => (
+            {otherProducts.map((p) => (
               <div key={`o-${p.id}`} className="img-card">
                 <div className="img-card-image">
-                  <img src={NoImage} alt="" />
+                  <img
+                    src={brakeImages[p.id % brakeImages.length]}
+                    alt={p.title}
+                  />
                 </div>
 
                 <div className="img-card-body">
@@ -279,13 +336,31 @@ const ImageSearch = () => {
                     <span className="tag eta">1-2 Days</span>
                   </div>
 
-                  <p className="img-code">LF6079</p>
+                  <p className="img-code">{p.code}</p>
                   <p className="img-title">{p.title}</p>
 
                   <div className="img-price-row">
                     <span className="price">₹ {p.price}</span>
                     <del>₹ {p.mrp}</del>
-                    <button className="img-add">Add</button>
+                    <button
+                      className={`img-add ${isInCart(p.code) ? "added" : ""}`}
+                      onClick={() => {
+                        if (isInCart(p.code)) {
+                          removeFromCart(p.code);
+                        } else {
+                          addToCart({
+                            partNumber: p.code,
+                            title: p.title,
+                            brand: p.brand,
+                            listPrice: p.price,
+                            mrp: p.mrp,
+                            image: brakeImages[p.id % brakeImages.length],
+                          });
+                        }
+                      }}
+                    >
+                      {isInCart(p.code) ? "Added" : "Add"}
+                    </button>
                   </div>
 
                   <div className="img-meta">
@@ -301,7 +376,16 @@ const ImageSearch = () => {
 
         {/* RIGHT SIDEBAR */}
         <div className="img-sidebar">
-          <div className="img-sidebar-header">Service Type for Brake</div>
+          <div className="img-sidebar-header">
+            <div>Service Type for Brake</div>
+            <div>
+              <img
+                src={serviceType}
+                alt="icon"
+                className="img-sidebar-header-icon"
+              ></img>
+            </div>
+          </div>
 
           <ul className="img-sidebar-list">
             <li>Complete Brake System Inspection</li>

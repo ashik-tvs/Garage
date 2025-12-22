@@ -1,63 +1,90 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import Search from "../../home/Search";
 import { useCart } from "../../../context/CartContext";
 import NoImage from "../../../assets/No Image.png";
 import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
+import Brake_1 from "../../../assets/brake1.png";
+import Brake_2 from "../../../assets/brake2.png";
+import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- MOCK DATA ---------------- */
+const brakeImages = [Brake_1, Brake_2, Brake_3];
 
 const products = [
   {
     id: 1,
-    brand: "Valeo",
-    partNo: "LF16079",
+    brand: "myTVS",
+    partNo: "LF16078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: NoImage,
+    imageUrl: brakeImages[0],
   },
   {
     id: 2,
     brand: "Valeo",
-    partNo: "LF16079",
+    partNo: "0A00022116078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
     eta: "1-2 Days",
     stock: "In stock",
     vehicles: 12,
-    image: NoImage,
+    imageUrl: brakeImages[1],
+  },
+  {
+    id: 2,
+    brand: "Valeo",
+    partNo: "45DS16078",
+    description: "Rear Brake Pad Disc Set - F(EON)",
+    price: 425,
+    mrp: 600,
+    eta: "1-2 Days",
+    stock: "In stock",
+    vehicles: 12,
+    imageUrl: brakeImages[2],
   },
 ];
+const otherProducts = products.map((item) => ({
+  ...item,
+  partNo: `OTHER-${item.partNo}`,
+}));
 
 const alignedProducts = [
   {
     id: 3,
+    partNo: "A6732S233132",
     brand: "Valeo",
     description: "Brake Disc Pad",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    imageUrl: brakeImages[2],
   },
   {
     id: 4,
+    partNo: "SA233663824",
+
     brand: "Mobil",
     description: "Brake Fluid",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    imageUrl: brakeImages[0],
   },
   {
     id: 5,
+    partNo: "YD323S5632",
+
     brand: "Valeo",
     description: "Brake Fitting Kit",
     price: 425,
     mrp: 600,
-    image: NoImage,
+    imageUrl: brakeImages[1],
   },
 ];
 
@@ -74,21 +101,22 @@ const Filter = ({ label }) => (
 
 const ProductCard = ({ item, onOpenCompatibility }) => {
   const { cartItems, addToCart, removeFromCart } = useCart();
-
-  const partNumber = item.partNo; // ✅ MATCH CONTEXT
+  const localPartNumber =
+    item.localPartNumber || `${item.partNo}_${item.brand}`;
+  const cartKey = `${item.partNo}_${item.brand}`;
 
   const isAdded = cartItems.some(
-    (cartItem) => cartItem.partNumber === partNumber
+    (cartItem) => cartItem.partNumber === localPartNumber
   );
-
   const handleCart = () => {
     if (isAdded) {
-      removeFromCart(partNumber); // ✅ UNDO
+      removeFromCart(localPartNumber);
     } else {
       addToCart({
         ...item,
-        partNumber, // ✅ REQUIRED BY CONTEXT
-        listPrice: item.price, // ✅ REQUIRED FOR cartTotal
+        partNumber: localPartNumber,
+        listPrice: item.price,
+        image: item.imageUrl, // ✅ IMAGE PASSED TO CART
       });
     }
   };
@@ -96,7 +124,7 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
   return (
     <div className="pn-card">
       <div className="pn-card-row">
-        <img src={item.image} alt="" className="pn-product-img" />
+        <img src={item.imageUrl} alt="" className="pn-product-img" />
 
         <div className="pn-card-body">
           <div className="pn-tags">
@@ -106,7 +134,9 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
           </div>
 
           <p className="pn-part">{item.partNo}</p>
-          <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+          <p className="pn-name pn-truncate" title={item.description}>
+            {item.description}
+          </p>
 
           <div className="pn-price-row">
             <span className="pn-price">₹ {item.price}</span>
@@ -240,8 +270,29 @@ const CompatibilityModal = ({ onClose }) => {
 /* ---------------- MAIN COMPONENT ---------------- */
 
 const PartNumber = () => {
+  const { state } = useLocation();
+  const searchKey = (state?.partNumber || "").toUpperCase();
+
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showCompatibility, setShowCompatibility] = useState(false);
+
+  const filterByPartNumber = (list, key) => {
+    if (!key) return list;
+
+    return list.filter((item) => item.partNo.toUpperCase().includes(key));
+  };
+  const partMatchedProducts = filterByPartNumber(products, searchKey);
+
+const recommendedProducts = products.filter(
+  (item) =>
+    item.brand.toUpperCase() === "MYTVS" &&
+    item.partNo.toUpperCase().includes(searchKey)
+);
+
+const otherBrandProducts = products.filter(
+  (item) => item.brand.toUpperCase() !== "MYTVS"
+);
+
 
   return (
     <div className="pn-wrapper">
@@ -249,7 +300,7 @@ const PartNumber = () => {
 
       <div className="pn-body">
         <div className="pn-search-key">
-          Search Key : <b>LF16079</b>
+          Search Key : <b>{searchKey}</b>
         </div>
 
         {/* FILTERS */}
@@ -276,25 +327,39 @@ const PartNumber = () => {
           {/* LEFT */}
           <div className="pn-left">
             <h4 className="pn-section-title">myTVS Recommended Products</h4>
+
             <div className="pn-grid">
-              {products.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  item={item}
-                  onOpenCompatibility={() => setShowCompatibility(true)}
-                />
-              ))}
+              {recommendedProducts.length > 0 ? (
+                recommendedProducts.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    item={item}
+                    onOpenCompatibility={() => setShowCompatibility(true)}
+                  />
+                ))
+              ) : (
+                <div className="pn-no-results">
+                  No myTVS products found for <b>{searchKey}</b>
+                </div>
+              )}
             </div>
 
             <h4 className="pn-section-title">Other Products</h4>
+
             <div className="pn-grid">
-              {products.map((item) => (
-                <ProductCard
-                  key={`other-${item.id}`}
-                  item={item}
-                  onOpenCompatibility={() => setShowCompatibility(true)}
-                />
-              ))}
+              {otherBrandProducts.length > 0 ? (
+                otherBrandProducts.map((item) => (
+                  <ProductCard
+                    key={item.id}
+                    item={item}
+                    onOpenCompatibility={() => setShowCompatibility(true)}
+                  />
+                ))
+              ) : (
+                <div className="pn-no-results">
+                  No other brand products found for <b>{searchKey}</b>
+                </div>
+              )}
             </div>
           </div>
 
@@ -311,7 +376,7 @@ const PartNumber = () => {
 
                 return (
                   <div key={item.id} className="pn-aligned-card">
-                    <img src={item.image} alt="" />
+                    <img src={item.imageUrl} alt="" />
 
                     <div className="pn-aligned-card-content">
                       <div className="pn-b-s-e">
@@ -320,7 +385,15 @@ const PartNumber = () => {
                         <span className="pn-tag-eta">1-2 Days</span>
                       </div>
 
-                      <p className="pn-name pn-truncate" title={item.description}>{item.description}</p>
+                      {/* Display Part Number */}
+                      <p className="pn-align-part">{item.partNo}</p>
+
+                      <p
+                        className="pn-name-align pn-truncate"
+                        title={item.description}
+                      >
+                        {item.description}
+                      </p>
 
                       <div className="pn-price-row">
                         <span className="pn-price">₹ {item.price}</span>
@@ -335,6 +408,7 @@ const PartNumber = () => {
                                   ...item,
                                   partNumber,
                                   listPrice: item.price,
+                                  image: item.imageUrl, // ✅ ADD IMAGE
                                 })
                           }
                         >
