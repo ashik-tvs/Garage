@@ -14,7 +14,7 @@ const initialOrders = Array.from({ length: 28 }, (_, i) => ({
   location: ["Chennai", "Bangalore", "Mumbai", "Hyderabad"][i % 4],
 }));
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE =6;
 
 const MyOrder = () => {
   const navigate = useNavigate();

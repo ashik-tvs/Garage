@@ -29,7 +29,7 @@ const products = [
   {
     id: 2,
     brand: "Valeo",
-    partNo: "LF16078",
+    partNo: "0A00022116078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -41,7 +41,7 @@ const products = [
   {
     id: 2,
     brand: "Valeo",
-    partNo: "LF16078",
+    partNo: "45DS16078",
     description: "Rear Brake Pad Disc Set - F(EON)",
     price: 425,
     mrp: 600,
@@ -59,7 +59,7 @@ const otherProducts = products.map((item) => ({
 const alignedProducts = [
   {
     id: 3,
-    partNo: "LF2331",
+    partNo: "A6732S233132",
     brand: "Valeo",
     description: "Brake Disc Pad",
     price: 425,
@@ -68,7 +68,7 @@ const alignedProducts = [
   },
   {
     id: 4,
-    partNo: "LF2334",
+    partNo: "SA233663824",
 
     brand: "Mobil",
     description: "Brake Fluid",
@@ -78,7 +78,7 @@ const alignedProducts = [
   },
   {
     id: 5,
-    partNo: "LF2338",
+    partNo: "YD323S5632",
 
     brand: "Valeo",
     description: "Brake Fitting Kit",
@@ -283,13 +283,16 @@ const PartNumber = () => {
   };
   const partMatchedProducts = filterByPartNumber(products, searchKey);
 
-  const recommendedProducts = partMatchedProducts.filter(
-    (item) => item.brand.toUpperCase() === "MYTVS"
-  );
+const recommendedProducts = products.filter(
+  (item) =>
+    item.brand.toUpperCase() === "MYTVS" &&
+    item.partNo.toUpperCase().includes(searchKey)
+);
 
-  const otherBrandProducts = partMatchedProducts.filter(
-    (item) => item.brand.toUpperCase() !== "MYTVS"
-  );
+const otherBrandProducts = products.filter(
+  (item) => item.brand.toUpperCase() !== "MYTVS"
+);
+
 
   return (
     <div className="pn-wrapper">
