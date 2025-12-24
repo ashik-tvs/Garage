@@ -38,7 +38,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
+  padding: 10px 15px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 12px;
@@ -217,10 +217,10 @@
   font-size: 12px;
   color: #666;
 }
-.pn-name-align{
+.pn-name-align {
   font-size: 13px;
   font-weight: 500;
-margin: 0;
+  margin: 0;
 }
 /* ALIGNED */
 .pn-aligned {
@@ -283,14 +283,15 @@ margin: 0;
   display: flex;
   align-items: center;
   padding: 14px;
+  justify-content: space-between;
 }
 
 .pn-modal-search {
-  flex: 1;
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 13px;
+  width: 300px;
 }
 
 .pn-modal-close {
@@ -306,6 +307,7 @@ margin: 0;
 .pn-modal-table-body {
   width: 560px; /* 👈 adjust as needed (520–600px ideal) */
   margin: 0 auto; /* center inside modal */
+  padding-bottom: 15px;
 }
 /* ---------- TABLE HEADER ---------- */
 .pn-table-container {

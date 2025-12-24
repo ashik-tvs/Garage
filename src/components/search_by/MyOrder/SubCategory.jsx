@@ -72,7 +72,7 @@ const Sub_Category = () => {
   };
 
   const handleServiceTypeClick = (serviceType) => {
-    navigate("/vehicle-number-products", {
+    navigate("/search-by-service-type", {
       state: {
         make,
         model,

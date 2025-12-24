@@ -126,7 +126,7 @@ const ServiceTypeSearch = () => {
           <div className="st-s-vehicle-number-search">
             <input
               type="text"
-              placeholder="TN - 59 - CS - 3866"
+              placeholder="TN  -  59  -  CS  -  3866"
               className="st-s-vehicle-input"
               value={vehicleNumber}
               onChange={handleVehicleChange}
