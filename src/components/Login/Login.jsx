@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/header/Logo.png";
 import "../../styles/Login/Login.css";
 import NoImage from "../../assets/Login/sidelogo.png";
+import apiService from "../../services/apiservice"; // Adjust path as needed
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Validate email and password
+      // Basic validation
       if (!email || !password) {
         setError("Please enter both email and password");
         setLoading(false);
@@ -30,45 +31,32 @@ const Login = () => {
         return;
       }
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Call backend login API
+      const response = await apiService.post("/auth/login", { email, password });
+      const { token, user } = response;
 
-      // Store user data (replace with actual user data from API)
-      const userData = {
-        email: email,
-        name: "Sam Vijay",
-        mobile: "93228 99498",
-        employeeCode: "93228",
-        reportingTo: "John",
-        designation: "Employee",
-        salesManagerName: "Jhon",
-        salesManagerNumber: "9876545678",
-      };
-
-      // Store in localStorage
-      localStorage.setItem("user", JSON.stringify(userData));
+      // Store token and user data in localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
 
       console.log("Sign in successful:", email);
+      navigate("/home"); // Redirect to home page
 
-      // Navigate to home page after successful login
-      navigate("/home");
     } catch (err) {
       console.error("Login error:", err);
-      setError("Login failed. Please try again.");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSignUp = () => {
-    // Navigate to sign up page
-    console.log("Navigate to sign up");
+    navigate("/signup"); // Navigate to signup page
   };
 
   const handleForgotPassword = () => {
-    // Navigate to forgot password page
-    console.log("Navigate to forgot password");
+    navigate("/forgot-password"); // Navigate to forgot password page
   };
 
   return (
@@ -86,11 +74,7 @@ const Login = () => {
           </div>
 
           <form className="login-form" onSubmit={handleSignIn}>
-            {error && (
-              <div className="login-error-message">
-                {error}
-              </div>
-            )}
+            {error && <div className="login-error-message">{error}</div>}
 
             <div className="login-input-group">
               <label className="login-label">Email</label>
@@ -129,12 +113,12 @@ const Login = () => {
             </button>
 
             <button type="submit" className="login-submit-btn" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
 
           <p className="login-signup-text">
-            Don't you have an account?{" "}
+            Don't have an account?{" "}
             <span className="login-signup-link" onClick={handleSignUp}>
               Sign up
             </span>

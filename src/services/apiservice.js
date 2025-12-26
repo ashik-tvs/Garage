@@ -1,66 +1,57 @@
-// utils/getOciImage.js
-import NoImage from "../assets/customer/No Image.png";
-import { apiService } from ""; // adjust path if needed
+import axios from "axios";
+import axiosRetry from "axios-retry";
 
-export const getOciImage = async (folder, fileName) => {
-  try {
-    if (!fileName) return NoImage;
+const BASE_URL = "http://localhost:5000/api";
 
-    const original = fileName.trim();
-    const upper = original.toUpperCase();
-    const lower = original.toLowerCase();
+// ✅ Create ONE axios instance
+const apiClient = axios.create({
+  baseURL: BASE_URL,
+  timeout: 60000,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-    let path = "";
+// 🔁 Attach retry to THIS instance
+axiosRetry(apiClient, {
+  retries: 3,
+  retryDelay: (retryCount) => retryCount * 2000,
+  retryCondition: (error) =>
+    axiosRetry.isNetworkOrIdempotentRequestError(error) ||
+    error.code === "ECONNABORTED" ||
+    (error.response && error.response.status >= 500),
+});
 
-    switch (folder) {
-      case "make":
-        path = "Partsmart/PartsmartImages/CV/Make/";
-        break;
-      case "model":
-        path = "Partsmart/PartsmartImages/CV/Model/";
-        break;
-      case "products":
-        path = "Partsmart/PartsmartImages/products/";
-        break;
-      case "brand":
-        path = "Partsmart/PartsmartImages/brand/";
-        break;
-      default:
-        return NoImage;
+// 🔐 Attach token automatically
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token"); // ✅ FIXED
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-    const tryFiles = [
-      `${upper}.png`,
-      `${lower}.png`,
-      `${original}.png`,
-      `${upper}.jpg`,
-      `${lower}.jpg`,
-      `${original}.jpg`,
-      `${upper}.PNG`,
-      `${lower}.PNG`,
-      `${original}.PNG`,
-      `${upper}.JPG`,
-      `${lower}.JPG`,
-      `${original}.JPG`,
-    ];
-
-    for (const f of tryFiles) {
-      try {
-        const fullPath = `${path}${f}`;
-
-        const response = await apiService.getBlob("/oci/read", {
-          name: fullPath,
-        });
-
-        return URL.createObjectURL(response.data);
-      } catch {
-        // silently try next file
-      }
+// 🚫 Global auth error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = "/";
     }
-
-    return NoImage;
-  } catch (err) {
-    console.error("OCI Image Error:", err);
-    return NoImage;
+    return Promise.reject(error);
   }
+);
+
+// ✅ Unified API methods
+const apiService = {
+  get: (url, params = {}) => apiClient.get(url, { params }).then(res => res.data),
+  post: (url, data = {}) => apiClient.post(url, data).then(res => res.data),
+  put: (url, data = {}) => apiClient.put(url, data).then(res => res.data),
+  delete: (url) => apiClient.delete(url).then(res => res.data),
 };
+
+export default apiService;
