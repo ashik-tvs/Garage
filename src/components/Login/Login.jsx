@@ -1,24 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../../assets/header/Logo.png";
 import "../../styles/Login/Login.css";
 import NoImage from "../../assets/Login/sidelogo.png";
-import apiService from "../../services/apiservice"; // Adjust path as needed
+import apiService from "../../services/apiservice";
 
 const Login = () => {
   const navigate = useNavigate();
+
+  // State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Prefill email if saved
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("rememberedEmail");
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
+
+  // Handle Sign In
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      // Basic validation
       if (!email || !password) {
         setError("Please enter both email and password");
         setLoading(false);
@@ -31,20 +43,24 @@ const Login = () => {
         return;
       }
 
-      // Call backend login API
       const response = await apiService.post("/auth/login", { email, password });
       const { token, user } = response;
 
-      // Store token and user data in localStorage
+      // Store token and user data
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
 
-      console.log("Sign in successful:", email);
-      navigate("/home"); // Redirect to home page
+      // Remember email if checked
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+
+      navigate("/home");
 
     } catch (err) {
-      console.error("Login error:", err);
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
@@ -52,11 +68,11 @@ const Login = () => {
   };
 
   const handleSignUp = () => {
-    navigate("/signup"); // Navigate to signup page
+    navigate("/signup");
   };
 
   const handleForgotPassword = () => {
-    navigate("/forgot-password"); // Navigate to forgot password page
+    navigate("/forgot-password");
   };
 
   return (
@@ -67,9 +83,7 @@ const Login = () => {
           <div className="login-intro">
             <h1 className="login-welcome">Welcome Back To</h1>
             <div className="login-logo">
-              <div className="logo-container">
-                <img src={Logo} alt="Logo" className="logo-image-logo" />
-              </div>
+              <img src={Logo} alt="Logo" className="logo-image-logo" />
             </div>
           </div>
 
@@ -103,26 +117,31 @@ const Login = () => {
               />
             </div>
 
-            <button
-              type="button"
-              className="login-forgot-password"
-              onClick={handleForgotPassword}
-              disabled={loading}
-            >
-              Forgot Password?
-            </button>
+            {/* Remember Me & Forgot Password */}
+            <div className="login-extra">
+              <label className="remember-me">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                Remember Me
+              </label>
+
+              <button
+                type="button"
+                className="login-forgot-password"
+                onClick={handleForgotPassword}
+                disabled={loading}
+              >
+                Forgot Password?
+              </button>
+            </div>
 
             <button type="submit" className="login-submit-btn" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
-
-          <p className="login-signup-text">
-            Don't have an account?{" "}
-            <span className="login-signup-link" onClick={handleSignUp}>
-              Sign up
-            </span>
-          </p>
         </div>
 
         {/* Right Side - Art Image */}
