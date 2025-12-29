@@ -279,12 +279,13 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-bottom: 20px;
-  padding: 10px 74px 10px 0px;
-  justify-content: flex-end;
+  padding: 10px 0;
+  justify-content: center;
 }
 
 .srp-dropdown {
-  padding: 10px 16px;
+  height: 48px;
+  padding: 0 16px;
   border: 1px solid #ddd;
   border-radius: 4px;
   background: #fff;
@@ -300,7 +301,8 @@
 }
 
 .srp-find-btn {
-  padding: 10px 24px;
+  height: 48px;
+  padding: 0 24px;
   background-color: #f36f21;
   color: #fff;
   border: none;
