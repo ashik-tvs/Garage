@@ -1,9 +1,10 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
 
+// ✅ Hardcoded backend URL
 const BASE_URL = "http://localhost:5000/api";
 
-// ✅ Create ONE axios instance
+// Create axios instance
 const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 60000,
@@ -12,7 +13,7 @@ const apiClient = axios.create({
   },
 });
 
-// 🔁 Attach retry to THIS instance
+// Attach retry logic
 axiosRetry(apiClient, {
   retries: 3,
   retryDelay: (retryCount) => retryCount * 2000,
@@ -22,19 +23,17 @@ axiosRetry(apiClient, {
     (error.response && error.response.status >= 500),
 });
 
-// 🔐 Attach token automatically
+// Attach token automatically
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token"); // ✅ FIXED
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// 🚫 Global auth error handling
+// Global auth error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -46,12 +45,15 @@ apiClient.interceptors.response.use(
   }
 );
 
-// ✅ Unified API methods
+// Unified API methods
 const apiService = {
   get: (url, params = {}) => apiClient.get(url, { params }).then(res => res.data),
   post: (url, data = {}) => apiClient.post(url, data).then(res => res.data),
   put: (url, data = {}) => apiClient.put(url, data).then(res => res.data),
   delete: (url) => apiClient.delete(url).then(res => res.data),
+
+  // Helper to get full URL for static assets
+  getAssetUrl: (filePath) => `http://localhost:5000${filePath}`,
 };
 
 export default apiService;

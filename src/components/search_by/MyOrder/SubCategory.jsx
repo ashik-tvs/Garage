@@ -1,11 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import apiService from "../../../services/apiservice"; // Adjust path if needed
 import "../../../styles/home/SubCategory.css";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
-import NoImage from "../../../assets/No Image.png";
-import ServiceTypeIcon from "../../../assets/vehicle_search_entry/servicetype.png";
 
-// Brake Sub Category Images
+// Brake Sub Category Images (static as before)
 import BrakePad from "../../../assets/brakePad.png";
 import BrakeDisc from "../../../assets/Brake Disk.png";
 import Caliper from "../../../assets/caliperPins.png";
@@ -22,6 +20,27 @@ const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { make, model, brand, category } = location.state || {};
+
+  const [uiAssets, setUiAssets] = useState({});
+
+  // Fetch UI assets
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets"); // returns {success: true, data: {...}}
+        setUiAssets(assets.data);
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
+      }
+    };
+    fetchUiAssets();
+  }, []);
+
+  // Helper to build full asset URL
+  const getAssetUrl = (filePath) => {
+    if (!filePath) return "";
+    return apiService.getAssetUrl(filePath);
+  };
 
   const subCategories = [
     { id: 1, name: "Brake Pad", image: BrakePad },
@@ -88,7 +107,10 @@ const Sub_Category = () => {
       {/* Header */}
       <div className="sub-category-header">
         <button className="back-button" onClick={handleBack}>
-          <img src={LeftArrow} alt="Back" />
+          <img
+            src={getAssetUrl(uiAssets["LEFT ARROW"])}
+            alt="Back"
+          />
         </button>
         <h1 className="sub-category-title">Search by Sub Category</h1>
       </div>
@@ -123,7 +145,10 @@ const Sub_Category = () => {
           <div className="service-type-header">
             <span>Service Type for Brake</span>
             <div className="service-type-icon">
-              <img src={ServiceTypeIcon} alt="Service Type" />
+              <img
+                src={getAssetUrl(uiAssets["SERVICE TYPE"])}
+                alt="Service Type"
+              />
             </div>
           </div>
 

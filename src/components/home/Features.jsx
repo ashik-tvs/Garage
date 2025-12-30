@@ -1,55 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-import Speedometer from "../../assets/home/Speedometer.png";
-import Brake from "../../assets/home/Brake.png";
-import Car1 from "../../assets/home/Group 5776.png";
-import Car from "../../assets/home/car.png";
-import ElectricCar from "../../assets/home/battery 1.png";
-import MyTVS from "../../assets/home/mytvs.png";
-
+import apiService from "../../services/apiservice";
 import "../../styles/home/Features.css";
 
 const Features = () => {
   const navigate = useNavigate();
+  const [uiAssets, setUiAssets] = useState({});
+
+  // Fetch UI assets for categories
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets");
+        setUiAssets(assets.data); // backend returns {success: true, data: {...}}
+      } catch (err) {
+        console.error("❌ Failed to load category assets", err);
+      }
+    };
+
+    fetchUiAssets();
+  }, []);
 
   const categories = [
-    {
-      id: 1,
-      label: "Fast Movers",
-      icon: Speedometer,
-      path: "/Category",
-      variant: "fm",
-    },
-    {
-      id: 2,
-      label: "High Value",
-      icon: Brake,
-      path: "/Category",
-      variant: "hv",
-    },
-    { id: 3, label: "CNG", icon: Car1, path: "/MakeNew", variant: "cng" },
-    {
-      id: 4,
-      label: "Discontinued Model",
-      icon: Car,
-      path: "/MakeNew",
-      variant: "wide",
-    },
-    {
-      id: 5,
-      label: "Electric",
-      icon: ElectricCar,
-      path: "/MakeNew",
-      variant: "e",
-    },
-    {
-      id: 6,
-      label: "Only with us",
-      icon: MyTVS,
-      path: "/brand",
-      variant: "logo",
-    },
+    { id: 1, label: "Fast Movers", tag: "FASTMOVERS", path: "/Category", variant: "fm" },
+    { id: 2, label: "High Value", tag: "HIGHVALUE", path: "/Category", variant: "hv" },
+    { id: 3, label: "CNG", tag: "CNG", path: "/MakeNew", variant: "cng" },
+    { id: 4, label: "Discontinued Model", tag: "DISCONTINUE", path: "/MakeNew", variant: "wide" },
+    { id: 5, label: "Electric", tag: "ELECTRIC", path: "/MakeNew", variant: "e" },
+    { id: 6, label: "Only with us", tag: "ONLY WITH US", path: "/brand", variant: "logo" },
   ];
 
   const [activeId, setActiveId] = useState(null);
@@ -66,6 +44,12 @@ const Features = () => {
     }
   };
 
+  // Helper to build full asset URL
+  const getAssetUrl = (filePath) => {
+    if (!filePath) return "";
+    return apiService.getAssetUrl(filePath);
+  };
+
   return (
     <section className="sixcat" aria-label="Explore categories">
       <div className="sixcat-inner">
@@ -73,9 +57,7 @@ const Features = () => {
           {categories.map((c) => (
             <div
               key={c.id}
-              className={`sixcat-item ${
-                activeId === c.id ? "sixcat-item--active" : ""
-              }`}
+              className={`sixcat-item ${activeId === c.id ? "sixcat-item--active" : ""}`}
               onClick={() => handleSelect(c)}
               role="button"
               tabIndex={0}
@@ -84,7 +66,7 @@ const Features = () => {
               <span className="sixcat-label">{c.label}</span>
               <img
                 className={`sixcat-icon sixcat-icon--${c.variant}`}
-                src={c.icon}
+                src={getAssetUrl(uiAssets[c.tag])}
                 alt={c.label}
               />
             </div>

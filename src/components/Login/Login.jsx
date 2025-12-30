@@ -1,21 +1,42 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Logo from "../../assets/header/Logo.png";
 import "../../styles/Login/Login.css";
-import NoImage from "../../assets/Login/sidelogo.png";
 import apiService from "../../services/apiservice";
 
 const Login = () => {
   const navigate = useNavigate();
 
-  // State
+  // ===============================
+  // STATE
+  // ===============================
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Prefill email if saved
+  // UI Assets
+  const [uiAssets, setUiAssets] = useState({});
+
+  // ===============================
+  // LOAD UI ASSETS
+  // ===============================
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets"); // returns { success: true, data: {...} }
+        setUiAssets(assets.data); // use 'data' from backend
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
+      }
+    };
+
+    fetchUiAssets();
+  }, []);
+
+  // ===============================
+  // PREFILL EMAIL
+  // ===============================
   useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
@@ -24,7 +45,9 @@ const Login = () => {
     }
   }, []);
 
-  // Handle Sign In
+  // ===============================
+  // LOGIN HANDLER
+  // ===============================
   const handleSignIn = async (e) => {
     e.preventDefault();
     setError("");
@@ -33,25 +56,21 @@ const Login = () => {
     try {
       if (!email || !password) {
         setError("Please enter both email and password");
-        setLoading(false);
         return;
       }
 
       if (password.length < 8) {
         setError("Password must be at least 8 characters");
-        setLoading(false);
         return;
       }
 
       const response = await apiService.post("/auth/login", { email, password });
       const { token, user } = response;
 
-      // Store token and user data
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("isAuthenticated", "true");
 
-      // Remember email if checked
       if (rememberMe) {
         localStorage.setItem("rememberedEmail", email);
       } else {
@@ -59,31 +78,42 @@ const Login = () => {
       }
 
       navigate("/home");
-
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
+      setError(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignUp = () => {
-    navigate("/signup");
-  };
-
-  const handleForgotPassword = () => {
-    navigate("/forgot-password");
-  };
-
+  // ===============================
+  // JSX
+  // ===============================
   return (
     <div className="login-container">
       <div className="login-content">
-        {/* Left Side - Login Form */}
+        {/* LEFT SIDE */}
+        <div className="login-art">
+          {uiAssets.LOGIN_IMAGE && (
+            <img
+              src={apiService.getAssetUrl(uiAssets.LOGIN_IMAGE)}
+              alt="Login Background"
+              className="login-art-image"
+            />
+          )}
+        </div>
+
+        {/* RIGHT SIDE */}
         <div className="login-form-section">
           <div className="login-intro">
             <h1 className="login-welcome">Welcome Back To</h1>
             <div className="login-logo">
-              <img src={Logo} alt="Logo" className="logo-image-logo" />
+              {uiAssets.LOGO && (
+                <img
+                  src={apiService.getAssetUrl(uiAssets.LOGO)}
+                  alt="Login Logo"
+                  className="logo-image-logo"
+                />
+              )}
             </div>
           </div>
 
@@ -98,8 +128,8 @@ const Login = () => {
                 placeholder="Example@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 disabled={loading}
+                required
               />
             </div>
 
@@ -111,13 +141,12 @@ const Login = () => {
                 placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 disabled={loading}
                 minLength={8}
+                required
               />
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="login-extra">
               <label className="remember-me">
                 <input
@@ -131,22 +160,21 @@ const Login = () => {
               <button
                 type="button"
                 className="login-forgot-password"
-                onClick={handleForgotPassword}
+                onClick={() => navigate("/forgot-password")}
                 disabled={loading}
               >
                 Forgot Password?
               </button>
             </div>
 
-            <button type="submit" className="login-submit-btn" disabled={loading}>
+            <button
+              type="submit"
+              className="login-submit-btn"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
-        </div>
-
-        {/* Right Side - Art Image */}
-        <div className="login-art">
-          <img src={NoImage} alt="Login Art" className="login-art-image" />
         </div>
       </div>
     </div>
