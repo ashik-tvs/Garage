@@ -86,24 +86,39 @@ const Sub_Category = () => {
 
       console.log('Fetching subcategories for:', aggregateName);
 
-      const response = await axios.post("http://localhost:5000/api/parts-list", {
-        brandPriority: ["VALEO"],
-        limit: 1000,
-        offset: 0,
-        sortOrder: "ASC",
-        fieldOrder: null,
-        customerCode: "0046",
-        partNumber: null,
-        model: null,
-        brand: null,
-        subAggregate: null,
-        aggregate: aggregateName,
-        make: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null,
-      });
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Please login to view subcategories");
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/api/catalog/parts-list",
+        {
+          brandPriority: ["VALEO"],
+          limit: 500,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: null,
+          brand: null,
+          subAggregate: null,
+          aggregate: aggregateName,
+          make: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       console.log('SubCategory API Response:', response.data);
 
@@ -118,18 +133,24 @@ const Sub_Category = () => {
       }
 
       // Extract unique subAggregates
-      const uniqueSubAggregates = [...new Set(partsData.map(item => item.subAggregate))];
+      const uniqueSubAggregates = [...new Set(
+        partsData
+          .map(item => item.subAggregate)
+          .filter(subAggregate => subAggregate) // Remove null/undefined
+      )];
       console.log('Unique subAggregates:', uniqueSubAggregates);
 
-      // Format subcategories
-      const formattedSubCategories = uniqueSubAggregates
-        .filter(subAggregate => subAggregate)
-        .map((subAggregate, index) => ({
-          id: index + 1,
-          name: subAggregate.charAt(0).toUpperCase() + subAggregate.slice(1).toLowerCase(),
-          subAggregateName: subAggregate,
-          image: getIconForSubCategory(subAggregate),
-        }));
+      // Format subcategories with proper title case
+      const formattedSubCategories = uniqueSubAggregates.map((subAggregate, index) => ({
+        id: index + 1,
+        name: subAggregate
+          .toLowerCase()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        subAggregateName: subAggregate,
+        image: getIconForSubCategory(subAggregate),
+      }));
 
       console.log('Formatted subcategories:', formattedSubCategories);
 
@@ -142,7 +163,12 @@ const Sub_Category = () => {
       setSubCategories(formattedSubCategories);
     } catch (err) {
       console.error('Error fetching subcategories:', err);
-      setError(`Failed to load subcategories: ${err.message || "Please try again."}`);
+      
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(`Failed to load subcategories: ${err.message || "Please try again."}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -177,6 +203,7 @@ const Sub_Category = () => {
         model,
         brand,
         category,
+        aggregateName, // Pass the aggregate name from Category
         subCategory: subCategory.name,
         subAggregateName: subCategory.subAggregateName,
       },

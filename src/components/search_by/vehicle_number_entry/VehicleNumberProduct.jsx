@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
 
@@ -12,87 +13,6 @@ import Brake_1 from "../../../assets/brake1.png";
 import Brake_2 from "../../../assets/brake2.png";
 import Brake_3 from "../../../assets/brake3.png";
 
-/* ---------------- MOCK DATA ---------------- */
-
-const recommendedProducts = [
-  {
-    partNumber: "207509",
-    name: "Rear Brake Pad",
-    brand: "myTVS",
-    price: 425,
-    mrp: 600,
-    stockQty: 10,
-    eta: "1-2 Days",
-    image: Brake_1,
-  },
-    {
-    partNumber: "2075019",
-    name: "Rear Brake Pad",
-    brand: "myTVS",
-    price: 425,
-    mrp: 600,
-    stockQty: 10,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-];
-
-const otherProducts = [
-  {
-    partNumber: "LF16079",
-    name: "Brake Pad for Hyundai",
-    brand: "Denso",
-    price: 425,
-    mrp: 600,
-    stockQty: 8,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-  {
-    partNumber: "LF16080",
-    name: "Brake Pad for Car (Set of 4)",
-    brand: "Bosch",
-    price: 520,
-    mrp: 700,
-    stockQty: 6,
-    eta: "1-2 Days",
-    image: Brake_3,
-  },
-];
-
-const alignedProducts = [
-  {
-    partNumber: "LF16081",
-    name: "Brake Disc Pad",
-    brand: "Valeo",
-    price: 425,
-    mrp: 600,
-    stockQty: 12,
-    eta: "1-2 Days",
-    image: Brake_1,
-  },
-  {
-    partNumber: "99000M24120-624",
-    name: "Brake Fluid",
-    brand: "Valeo",
-    price: 300,
-    mrp: 450,
-    stockQty: 15,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-  {
-    partNumber: "T0494M81207",
-    name: "Brake Fitting Kit",
-    brand: "Valeo",
-    price: 380,
-    mrp: 520,
-    stockQty: 7,
-    eta: "1-2 Days",
-    image: Brake_3,
-  },
-];
-
 /* ---------------- COMPONENT ---------------- */
 
 const Product = () => {
@@ -103,24 +23,131 @@ const Product = () => {
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  
+  // Product states
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const isInCart = (partNumber) =>
     cartItems.some((item) => item.partNumber === partNumber);
 
   // Get navigation flow data from state
-  const { vehicle, make, model, brand, category, subCategory } =
+  const { vehicle, make, model, brand, category, subCategory, aggregateName, subAggregateName } =
     location.state || {};
+    
   const [filters, setFilters] = useState({
     brakeSystem: "",
     price: "",
     eta: "",
     sortBy: "",
   });
+  
   const filterOptions = {
     brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
     price: ["Low to High", "High to Low"],
     eta: ["Same Day", "1-2 Days", "3-5 Days"],
     sortBy: ["Relevance", "Price", "Brand"],
   };
+
+  // Fetch products based on category and subcategory
+  useEffect(() => {
+    if (aggregateName && subAggregateName) {
+      fetchProducts();
+    }
+  }, [aggregateName, subAggregateName]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log("Fetching products for:", { aggregateName, subAggregateName });
+
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Please login to view products");
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/api/catalog/parts-list",
+        {
+          brandPriority: ["VALEO"],
+          limit: 100,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: null,
+          brand: null,
+          subAggregate: subAggregateName, // From SubCategory selection
+          aggregate: aggregateName, // From Category selection
+          make: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 60000,
+        }
+      );
+
+      console.log("Products API Response:", response.data);
+
+      // Handle different response structures
+      let partsData = [];
+      if (Array.isArray(response.data)) {
+        partsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        partsData = response.data.data;
+      }
+
+      // Transform API data to match component structure
+      const formattedProducts = partsData.map((item, index) => ({
+        partNumber: item.partNumber || `PART-${index}`,
+        name: item.itemDescription || "Product Name",
+        brand: item.brandName || "Brand",
+        price: parseFloat(item.listPrice) || 0,
+        mrp: parseFloat(item.mrp) || 0,
+        stockQty: 10, // Static
+        eta: "1-2 Days", // Static
+        image: getRandomImage(), // Static random image
+        // Keep original data for reference
+        originalData: item
+      }));
+
+      console.log("Formatted products:", formattedProducts);
+      setProducts(formattedProducts);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(`Failed to load products: ${err.message || "Please try again."}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to get random product image
+  const getRandomImage = () => {
+    const images = [Brake_1, Brake_2, Brake_3];
+    return images[Math.floor(Math.random() * images.length)];
+  };
+
+  // Split products into categories (you can modify this logic as needed)
+  const recommendedProducts = products.slice(0, Math.ceil(products.length * 0.3));
+  const otherProducts = products.slice(Math.ceil(products.length * 0.3), Math.ceil(products.length * 0.6));
+  const alignedProducts = products.slice(Math.ceil(products.length * 0.6));
   useEffect(() => {
     const close = () => setOpenFilter(null);
     window.addEventListener("click", close);
@@ -356,28 +383,60 @@ const Product = () => {
       )}
 
       {/* ---------- CONTENT ---------- */}
-      <div className="vnp-content-wrapper">
-        <div className="vnp-left-section">
-          <div className="vnp-section">
-            <h2 className="vnp-section-title">myTVS Recommended Products</h2>
-            <div className="vnp-cards-grid">
-              {recommendedProducts.map(renderProductCard)}
-            </div>
-          </div>
-
-          <div className="vnp-section">
-            <h2 className="vnp-section-title">Other Products</h2>
-            <div className="vnp-cards-grid">
-              {otherProducts.map(renderProductCard)}
-            </div>
-          </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px' }}>
+          Loading products...
         </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <p style={{ color: 'red', fontSize: '16px', marginBottom: '20px' }}>{error}</p>
+          <button 
+            onClick={fetchProducts}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <div className="vnp-content-wrapper">
+          <div className="vnp-left-section">
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+              <div className="vnp-cards-grid">
+                {recommendedProducts.length > 0 ? (
+                  recommendedProducts.map(renderProductCard)
+                ) : (
+                  <p>No recommended products found.</p>
+                )}
+              </div>
+            </div>
 
-        <div className="vnp-right-section">
-          <div className="vnp-section-right">
-            <h2 className="vnp-section-title">Aligned Products</h2>
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">Other Products</h2>
+              <div className="vnp-cards-grid">
+                {otherProducts.length > 0 ? (
+                  otherProducts.map(renderProductCard)
+                ) : (
+                  <p>No other products found.</p>
+                )}
+              </div>
+            </div>
+          </div>
 
-            {alignedProducts.map((product) => (
+          <div className="vnp-right-section">
+            <div className="vnp-section-right">
+              <h2 className="vnp-section-title">Aligned Products</h2>
+
+              {alignedProducts.length > 0 ? (
+                alignedProducts.map((product) => (
               <div className="vnp-aligned-card" key={product.partNumber}>
                 <div className="vnp-image-placeholder-small">
                   <img
@@ -423,10 +482,14 @@ const Product = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))
+            ) : (
+              <p>No aligned products found.</p>
+            )}
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

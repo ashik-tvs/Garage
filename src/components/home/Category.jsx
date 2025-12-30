@@ -70,27 +70,48 @@ const Category = () => {
 
       console.log("Fetching categories from API...");
 
-      const response = await axios.post("http://localhost:5000/api/parts-list", {
-        brandPriority: ["VALEO"],
-        limit: 1000,
-        offset: 0,
-        sortOrder: "ASC",
-        fieldOrder: null,
-        customerCode: "0046",
-        partNumber: null,
-        model: null,
-        brand: null,
-        subAggregate: null,
-        aggregate: null,
-        make: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null,
-      });
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error("Please login to view categories");
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/api/catalog/parts-list",
+        {
+          brandPriority: ["VALEO"],
+          limit: 5000, // Increased to get more unique categories
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: null,
+          brand: null,
+          subAggregate: null,
+          aggregate: null, // Get all aggregates
+          make: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          timeout: 90000, // 90 second timeout for larger dataset
+        }
+      );
 
       console.log("API Response:", response);
       console.log("Response data:", response.data);
+
+      // Check if using mock data
+      if (response.data.message && response.data.message.includes('mock data')) {
+        console.warn('⚠️ Using mock category data - external API unavailable');
+      }
 
       // Handle different response structures
       let partsData = [];
@@ -107,19 +128,26 @@ const Category = () => {
 
       console.log("Parts data:", partsData);
 
-      // Extract unique aggregates from the response
-      const uniqueAggregates = [...new Set(partsData.map(item => item.aggregate))];
+      // Extract unique aggregates (Categories) from the response
+      const uniqueAggregates = [...new Set(
+        partsData
+          .map(item => item.aggregate)
+          .filter(aggregate => aggregate) // Remove null/undefined/empty
+      )];
+      
       console.log("Unique aggregates:", uniqueAggregates);
       
       // Format categories with proper title case and icons
-      const formattedCategories = uniqueAggregates
-        .filter(aggregate => aggregate) // Remove null/undefined
-        .map((aggregate, index) => ({
-          id: index + 1,
-          label: aggregate.charAt(0).toUpperCase() + aggregate.slice(1).toLowerCase(),
-          aggregateName: aggregate,
-          icon: getIconForCategory(aggregate),
-        }));
+      const formattedCategories = uniqueAggregates.map((aggregate, index) => ({
+        id: index + 1,
+        label: aggregate
+          .toLowerCase()
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        aggregateName: aggregate,
+        icon: getIconForCategory(aggregate),
+      }));
 
       console.log("Formatted categories:", formattedCategories);
       
@@ -136,7 +164,19 @@ const Category = () => {
         response: err.response?.data,
         status: err.response?.status
       });
-      setError(`Failed to load categories: ${err.message || "Please try again."}`);
+      
+      // Handle authentication errors
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+        // Optionally redirect to login
+        // navigate('/login');
+      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError("Request timeout. The external API is slow or unreachable. Please try again later.");
+      } else if (err.response?.data?.error?.includes('timeout')) {
+        setError("External API timeout. Please try again in a moment.");
+      } else {
+        setError(`Failed to load categories: ${err.message || "Please try again."}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -171,10 +211,24 @@ const Category = () => {
           </p>
         </div>
       ) : error ? (
-        <div className="grid-container">
-          <p style={{ textAlign: "center", padding: "20px", color: "red", gridColumn: "1 / -1" }}>
+        <div className="grid-container" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
+          <p style={{ color: "red", marginBottom: "10px" }}>
             {error}
           </p>
+          <button 
+            onClick={fetchCategories}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "14px"
+            }}
+          >
+            Retry
+          </button>
         </div>
       ) : (
         <div className="grid-container">
