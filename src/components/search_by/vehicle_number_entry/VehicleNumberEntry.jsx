@@ -1,8 +1,8 @@
 // src/components/search_by/vehicle_number_entry/VehicleNumberEntry.jsx
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Search from "../../home/Search";
-
+import apiService from "../../../services/apiservice"; 
 import EditIcon from "../../../assets/vehicle_search_entry/edit.png";
 import ServiceTypeIcon from "../../../assets/vehicle_search_entry/servicetype.png";
 import NoImage from "../../../assets/No Image.png";
@@ -210,6 +210,25 @@ const VehicleNumberEntry = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const searchKey = state?.vehicleNumber || "";
+    const [uiAssets, setUiAssets] = useState({});
+
+  // Fetch UI assets
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const res = await apiService.get("/ui-assets");
+        setUiAssets(res.data); // backend returns {success: true, data: {...}}
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
+      }
+    };
+    fetchUiAssets();
+  }, []);
+
+  const getAssetUrl = (tagName) => {
+    if (!uiAssets[tagName]) return "";
+    return apiService.getAssetUrl(uiAssets[tagName]);
+  };
 
   const [vehicle] = useState({
     ...MOCK_VEHICLE,

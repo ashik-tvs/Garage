@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import apiService from "../../../services/apiservice"; // Adjust path if needed
 import "../../../styles/home/SubCategory.css";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
-import NoImage from "../../../assets/No Image.png";
-import ServiceTypeIcon from "../../../assets/vehicle_search_entry/servicetype.png";
 
-// Brake Sub Category Images
+// Brake Sub Category Images (static as before)
 import BrakePad from "../../../assets/brakePad.png";
 import BrakeDisc from "../../../assets/Brake Disk.png";
 import Caliper from "../../../assets/caliperPins.png";
@@ -23,156 +20,43 @@ const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { make, model, brand, category, aggregateName } = location.state || {};
-  
-  const [subCategories, setSubCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  const [uiAssets, setUiAssets] = useState({});
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Icon mapping for subcategories
-  const subCategoryIconMap = {
-    "BRAKE PAD": BrakePad,
-    "BRAKE DISC": BrakeDisc,
-    "BRAKE DISK": BrakeDisc,
-    "CALIPER PINS": Caliper,
-    "CALIPER": Caliper,
-    "BRAKE SHOE": BrakeShoe,
-    "BRAKE LINING": BrakeLining,
-    "MC / BOOSTER": MC,
-    "MC BOOSTER": MC,
-    "CYLINDER": Cylinder,
-    "ANTI LOCKING (ABS)": Anti,
-    "ANTI LOCKING": Anti,
-    "ABS": Anti,
-    "BRAKE HOSE": BrakeHose,
-    "BRAKE DRUM": BrakeDrum,
-    "BRAKE CABLE": BrakeCable,
-  };
-
-  const getIconForSubCategory = (subAggregateName) => {
-    const upperName = subAggregateName.toUpperCase();
-    return subCategoryIconMap[upperName] || NoImage;
-  };
-
+  // Fetch UI assets
   useEffect(() => {
-    if (aggregateName) {
-      // Check cache first
-      const cacheKey = `subCategory_${aggregateName}`;
-      const cachedData = localStorage.getItem(cacheKey);
-      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
-      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
-
-      if (cachedData && cacheTimestamp) {
-        const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
-        
-        if (isCacheValid) {
-          console.log('Loading subcategories from cache...');
-          setSubCategories(JSON.parse(cachedData));
-          setLoading(false);
-          return;
-        }
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets"); // returns {success: true, data: {...}}
+        setUiAssets(assets.data);
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
       }
+    };
+    fetchUiAssets();
+  }, []);
 
-      // Fetch from API if no valid cache
-      fetchSubCategories();
-    } else {
-      setLoading(false);
-    }
-  }, [aggregateName]);
-
-  const fetchSubCategories = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log('Fetching subcategories for:', aggregateName);
-
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error("Please login to view subcategories");
-      }
-
-      const response = await axios.post(
-        "http://localhost:5000/api/catalog/parts-list",
-        {
-          brandPriority: ["VALEO"],
-          limit: 500,
-          offset: 0,
-          sortOrder: "ASC",
-          fieldOrder: null,
-          customerCode: "0046",
-          partNumber: null,
-          model: null,
-          brand: null,
-          subAggregate: null,
-          aggregate: aggregateName,
-          make: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log('SubCategory API Response:', response.data);
-
-      // Handle different response structures
-      let partsData = [];
-      if (Array.isArray(response.data)) {
-        partsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        partsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.parts)) {
-        partsData = response.data.parts;
-      }
-
-      // Extract unique subAggregates
-      const uniqueSubAggregates = [...new Set(
-        partsData
-          .map(item => item.subAggregate)
-          .filter(subAggregate => subAggregate) // Remove null/undefined
-      )];
-      console.log('Unique subAggregates:', uniqueSubAggregates);
-
-      // Format subcategories with proper title case
-      const formattedSubCategories = uniqueSubAggregates.map((subAggregate, index) => ({
-        id: index + 1,
-        name: subAggregate
-          .toLowerCase()
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' '),
-        subAggregateName: subAggregate,
-        image: getIconForSubCategory(subAggregate),
-      }));
-
-      console.log('Formatted subcategories:', formattedSubCategories);
-
-      // Cache the subcategories
-      const cacheKey = `subCategory_${aggregateName}`;
-      localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
-      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-      console.log('Subcategories cached successfully');
-
-      setSubCategories(formattedSubCategories);
-    } catch (err) {
-      console.error('Error fetching subcategories:', err);
-      
-      if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else {
-        setError(`Failed to load subcategories: ${err.message || "Please try again."}`);
-      }
-    } finally {
-      setLoading(false);
-    }
+  // Helper to build full asset URL
+  const getAssetUrl = (filePath) => {
+    if (!filePath) return "";
+    return apiService.getAssetUrl(filePath);
   };
+
+  const subCategories = [
+    { id: 1, name: "Brake Pad", image: BrakePad },
+    { id: 2, name: "Brake Disc", image: BrakeDisc },
+    { id: 3, name: "Caliper Pins", image: Caliper },
+    { id: 4, name: "Brake Shoe", image: BrakeShoe },
+    { id: 5, name: "Brake Lining", image: BrakeLining },
+    { id: 6, name: "MC / Booster", image: MC },
+    { id: 7, name: "Cylinder", image: Cylinder },
+    { id: 8, name: "Anti Locking (ABS)", image: Anti },
+    { id: 9, name: "Brake Hose", image: BrakeHose },
+    { id: 10, name: "Brake Drum", image: BrakeDrum },
+    { id: 11, name: "Brake Cable", image: BrakeCable },
+  ];
 
   const serviceTypes = [
     "Complete Brake System Inspection",
@@ -227,7 +111,10 @@ const Sub_Category = () => {
       {/* Header */}
       <div className="sub-category-header">
         <button className="back-button" onClick={handleBack}>
-          <img src={LeftArrow} alt="Back" />
+          <img
+            src={getAssetUrl(uiAssets["LEFT ARROW"])}
+            alt="Back"
+          />
         </button>
         <h1 className="sub-category-title">Search by Sub Category</h1>
       </div>
@@ -276,7 +163,10 @@ const Sub_Category = () => {
           <div className="service-type-header">
             <span>Service Type for {category || "Category"}</span>
             <div className="service-type-icon">
-              <img src={ServiceTypeIcon} alt="Service Type" />
+              <img
+                src={getAssetUrl(uiAssets["SERVICE TYPE"])}
+                alt="Service Type"
+              />
             </div>
           </div>
 

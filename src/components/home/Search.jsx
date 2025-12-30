@@ -1,9 +1,8 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { AiOutlineCamera } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-
-import Banner from "../../assets/home/banner.png";
+import apiService from "../../services/apiservice";
 import SearchIcon from "../../assets/search/search.png";
 import ImageUpload from "./ImageUpload";
 import "../../styles/home/Search.css";
@@ -11,64 +10,38 @@ import "../../styles/home/Search.css";
 const Search = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
+  const [bannerUrl, setBannerUrl] = useState(""); // Only banner
   const [searchValue, setSearchValue] = useState("");
   const [showImageUpload, setShowImageUpload] = useState(false);
 
   // Vehicle number validation
-  const isVehicleNumber = (value) => {
-    const regex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i;
-    return regex.test(value);
-  };
-
-  const isPartNumber = (value) => {
-    return /^(?=.*\d)[A-Z0-9]+$/i.test(value);
-  };
-
-  const isServiceType = (value) => {
-    return /^[A-Z\s]+$/i.test(value);
-  };
+  const isVehicleNumber = (value) => /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i.test(value);
+  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+  const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
 
   const handleSearch = (e) => {
     if (e.key !== "Enter") return;
 
     const rawValue = searchValue.trim();
     if (!rawValue) return;
-
     const noSpaceValue = rawValue.replace(/\s+/g, "").toUpperCase();
 
-    // 1️⃣ Vehicle number (strict)
     if (isVehicleNumber(noSpaceValue)) {
-      navigate("/search-by-vehicle-number", {
-        state: { vehicleNumber: noSpaceValue },
-      });
-      return;
+      navigate("/search-by-vehicle-number", { state: { vehicleNumber: noSpaceValue } });
+    } else if (isPartNumber(noSpaceValue)) {
+      navigate("/search-by-part-number", { state: { partNumber: noSpaceValue } });
+    } else {
+      navigate("/search-by-service-type", { state: { serviceType: rawValue.toLowerCase() } });
     }
-
-    // 2️⃣ Part number (must contain at least ONE digit)
-    if (isPartNumber(noSpaceValue)) {
-      navigate("/search-by-part-number", {
-        state: { partNumber: noSpaceValue },
-      });
-      return;
-    }
-
-    // 3️⃣ Service type (letters / words / phrases)
-    navigate("/search-by-service-type", {
-      state: { serviceType: rawValue.toLowerCase() },
-    });
   };
 
-  // 📸 IMAGE SEARCH
+  // 📸 Image search
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     navigate("/search-by-image", {
-      state: {
-        imageFile: file,
-        previewUrl: URL.createObjectURL(file),
-      },
+      state: { imageFile: file, previewUrl: URL.createObjectURL(file) },
     });
   };
 
@@ -76,19 +49,38 @@ const Search = () => {
     if (!file) return;
 
     navigate("/search-by-image", {
-      state: {
-        imageFile: file,
-        previewUrl: URL.createObjectURL(file),
-      },
+      state: { imageFile: file, previewUrl: URL.createObjectURL(file) },
     });
     setShowImageUpload(false);
   };
+
+  // ===============================
+  // Fetch only banner from backend
+  // ===============================
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets");
+        if (assets?.data?.BANNER) {
+          setBannerUrl(apiService.getAssetUrl(assets.data.BANNER));
+        }
+      } catch (err) {
+        console.error("❌ Failed to load banner", err);
+      }
+    };
+
+    fetchBanner();
+  }, []);
 
   return (
     <div className="search-wrapper">
       <div
         className="search-banner-container"
-        style={{ backgroundImage: `url(${Banner})` }}
+        style={{
+          backgroundImage: `url(${bannerUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         <div className="search-content">
           <h2 className="search-title">
@@ -107,19 +99,16 @@ const Search = () => {
               onKeyDown={handleSearch}
             />
 
-            {/* 🎤 Voice */}
             <HiOutlineMicrophone
               className="search-mic"
               onClick={() => alert("Voice search coming soon")}
             />
 
-            {/* 📸 Image */}
             <AiOutlineCamera
               className="search-upload"
               onClick={() => setShowImageUpload(true)}
             />
 
-            {/* Hidden file input */}
             <input
               type="file"
               accept="image/*"
@@ -131,7 +120,6 @@ const Search = () => {
         </div>
       </div>
 
-      {/* Image Upload Modal */}
       {showImageUpload && (
         <ImageUpload
           onClose={() => setShowImageUpload(false)}

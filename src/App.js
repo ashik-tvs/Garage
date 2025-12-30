@@ -22,6 +22,9 @@ import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTy
 
 import { CartProvider } from "./context/CartContext.js";
 import Login from "./components/Login/Login.jsx";
+import ForgotPassword from "./components/Login/Forgotpassword.jsx";
+import VerifyOtp from "./components/Login/VerifyOtp.jsx";
+import ResetPassword from "./components/Login/ResetPassword.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
 
 function App() {
@@ -33,6 +36,9 @@ function App() {
           {/* Login page without Layout */}
           <Route path="/" element={<Login />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route element={<Layout />}>
             <Route path="/home" element={<Home />} />
@@ -53,8 +59,14 @@ function App() {
               path="/service-type-products"
               element={<ServiceTypeProduct />}
             />
-            <Route path="/service-type-category" element={<SeviceTypeCategory />} />
-            <Route path="/service-type-sub-category" element={<SeviceTypeSubCategory />} />
+            <Route
+              path="/service-type-category"
+              element={<SeviceTypeCategory />}
+            />
+            <Route
+              path="/service-type-sub-category"
+              element={<SeviceTypeSubCategory />}
+            />
             <Route path="/service-type-model" element={<SeviceTypeModel />} />
             <Route path="/search-by-part-number" element={<PartNumber />} />
             <Route path="/search-by-image" element={<Image />} />
