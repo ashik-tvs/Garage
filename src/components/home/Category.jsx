@@ -70,14 +70,8 @@ const Category = () => {
 
       console.log("Fetching categories from API...");
 
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error("Please login to view categories");
-      }
-
       const response = await axios.post(
-        "http://localhost:5000/api/catalog/parts-list",
+        "http://localhost:5000/api/parts-list",
         {
           brandPriority: ["VALEO"],
           limit: 5000, // Increased to get more unique categories
@@ -98,7 +92,6 @@ const Category = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           timeout: 90000, // 90 second timeout for larger dataset
@@ -165,12 +158,8 @@ const Category = () => {
         status: err.response?.status
       });
       
-      // Handle authentication errors
-      if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
-        // Optionally redirect to login
-        // navigate('/login');
-      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      // Handle errors
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
         setError("Request timeout. The external API is slow or unreachable. Please try again later.");
       } else if (err.response?.data?.error?.includes('timeout')) {
         setError("External API timeout. Please try again in a moment.");
