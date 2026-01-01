@@ -2,25 +2,30 @@ import React, { useEffect, useState } from "react";
 import NoImage from "../../assets/No Image.png";
 import { getOciImage } from "../../utils/ociImage";
 
-const Image = ({ partNumber, folder = "products" }) => {
-  const [imgUrl, setImgUrl] = useState(NoImage);
+const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr-image", alt }) => {
+  const [imgUrl, setImgUrl] = useState(fallbackImage || NoImage);
 
   useEffect(() => {
     if (!partNumber) return;
 
     const loadImage = async () => {
       const url = await getOciImage(folder, partNumber);
-      setImgUrl(url);
+      // If the image is not found (returns NoImage), use the fallback if provided
+      if (url === NoImage && fallbackImage) {
+        setImgUrl(fallbackImage);
+      } else {
+        setImgUrl(url);
+      }
     };
 
     loadImage();
-  }, [partNumber, folder]);
+  }, [partNumber, folder, fallbackImage]);
 
   return (
     <img
       src={imgUrl}
-      alt={partNumber}
-      className="pr-image"
+      alt={alt || partNumber}
+      className={className}
       style={{
         width: "100%",
         height: "150px",

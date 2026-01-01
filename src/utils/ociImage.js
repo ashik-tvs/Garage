@@ -20,6 +20,10 @@ export const getOciImage = async (folder, fileName) => {
       path = `Partsmart/PartsmartImages/products/`;
     } else if (folder === "brand") {
       path = `Partsmart/PartsmartImages/brand/`;
+    } else if (folder === "categories") {
+      path = `Partsmart/PartsmartImages/PV/Categories/`;
+    } else if (folder === "subcategories") {
+      path = `Partsmart/PartsmartImages/PV/SubCategory/`;
     } 
 
 

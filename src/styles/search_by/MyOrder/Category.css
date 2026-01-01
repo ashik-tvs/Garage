@@ -127,7 +127,8 @@
 .category-label {
   position: relative;
   width: 110px;
-  height: 30px;
+  min-height: 30px;
+  height: auto;
   background: #F3F3F3;
   display: flex;
   align-items: center;
@@ -144,9 +145,9 @@
   line-height: 24px;
   color: #454545;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow: visible;
   width: 100%;
   cursor: pointer;
   position: relative;

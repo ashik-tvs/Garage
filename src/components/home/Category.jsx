@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import NoImage from "../../assets/No Image.png";
+// import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
+import OciImage from "../oci_image/ociImages";
 import Accessories from "../../assets/Categories/ACCESSORIES.png"
 import Battery from "../../assets/Categories/BATTERY.png"
 import Bearing from "../../assets/Categories/BEARING.png"
@@ -39,7 +40,7 @@ const Category = () => {
 
   const getIconForCategory = (aggregateName) => {
     const upperName = aggregateName.toUpperCase();
-    return iconMap[upperName] || NoImage;
+    return iconMap[upperName]  ;
   };
 
   useEffect(() => {
@@ -224,7 +225,12 @@ const Category = () => {
           {visibleCategories.map((cat) => (
             <div key={cat.id} className="cat-card" onClick={() => handleCategoryClick(cat)}>
               <div className="cat-img-box">
-                <img src={cat.icon} alt={cat.label} className="cat-img" />
+                <OciImage 
+                  partNumber={cat.aggregateName} 
+                  folder="categories"
+                  fallbackImage={cat.icon}
+                  className="cat-img"
+                />
               </div>
               <p className="cat-label" title={cat.label}>{cat.label}</p>
             </div>

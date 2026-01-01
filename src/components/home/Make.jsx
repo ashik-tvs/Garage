@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import apiService from "../../services/apiservice";
 import OciImage from "../oci_image/ociImages.jsx";
 import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Make.css";
@@ -21,6 +21,7 @@ const Make = () => {
   const [makes, setMakes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [usingFallback, setUsingFallback] = useState(false);
 
   // Icon mapping for makes
   const makeIconMap = {
@@ -68,64 +69,57 @@ const Make = () => {
     try {
       setLoading(true);
       setError(null);
+      setUsingFallback(false);
 
       console.log("Fetching makes from API...");
 
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error("Please login to view makes");
+      const response = await apiService.post("/vehicle-list", {
+        limit: 5000,
+        offset: 0,
+        sortOrder: "ASC",
+        customerCode: "0046",
+        brand: null,
+        partNumber: null,
+        aggregate: null,
+        subAggregate: null,
+        make: null, // Get all makes
+        model: null,
+        variant: null,
+        fuelType: null,
+        vehicle: null,
+        year: null,
+      });
+
+      console.log("API Response:", response);
+
+      // Response structure: { success: true, message: "...", count: 235485, data: [...] }
+      // Since apiService.post() returns res.data, response IS the data object
+      const vehicleData = Array.isArray(response?.data) ? response.data : [];
+
+      console.log("Vehicle data count:", vehicleData.length);
+
+      if (vehicleData.length === 0) {
+        console.warn("No vehicle data received from API");
+        setError("No makes available at the moment.");
+        setLoading(false);
+        return;
       }
-
-      const response = await axios.post(
-        "http://localhost:5000/api/catalog/vehicle-list",
-        {
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: null,
-          aggregate: null,
-          subAggregate: null,
-          make: null, // Get all makes
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 90000,
-        }
-      );
-
-      console.log("API Response:", response.data);
-
-      // Handle different response structures
-      let vehicleData = [];
-      if (Array.isArray(response.data)) {
-        vehicleData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        vehicleData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.vehicles)) {
-        vehicleData = response.data.vehicles;
-      }
-
-      console.log("Vehicle data:", vehicleData);
 
       // Extract unique makes
       const uniqueMakes = [...new Set(
         vehicleData
           .map(item => item.make)
-          .filter(make => make) // Remove null/undefined/empty
-      )];
+          .filter(make => make && make.trim() !== '') // Remove null/undefined/empty
+      )].sort(); // Sort alphabetically
 
-      console.log("Unique makes:", uniqueMakes);
+      console.log("Unique makes found:", uniqueMakes.length, uniqueMakes);
+
+      if (uniqueMakes.length === 0) {
+        console.warn("No makes found in vehicle data");
+        setError("No makes available.");
+        setLoading(false);
+        return;
+      }
 
       // Format makes with proper title case and icons
       const formattedMakes = uniqueMakes.map((make, index) => ({
@@ -152,19 +146,39 @@ const Make = () => {
       console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
-        status: err.response?.status
+        status: err.response?.status,
+        code: err.code
       });
 
-      // Handle authentication errors
-      if (err.response?.status === 401) {
-        setError("Session expired. Please login again.");
-      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        setError("Request timeout. The external API is slow or unreachable. Please try again later.");
-      } else if (err.response?.data?.error?.includes('timeout')) {
-        setError("External API timeout. Please try again in a moment.");
+      // Handle specific error types
+      let errorMessage = "Failed to load makes. ";
+      
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        errorMessage = "⏱️ Request timeout. The API is taking too long to respond. Please try again later.";
+      } else if (err.response) {
+        const status = err.response.status;
+        const errorType = err.response.data?.error;
+        
+        if (status === 502) {
+          errorMessage = "🔌 Bad Gateway (502). The external parts API is currently unavailable. Please try again in a few moments.";
+        } else if (status === 503) {
+          errorMessage = "⚠️ Service Unavailable (503). The parts API is temporarily down. Please try again later.";
+        } else if (status === 504) {
+          errorMessage = "⏱️ Gateway Timeout (504). The API request timed out. Please try again.";
+        } else if (errorType === 'timeout') {
+          errorMessage = "⏱️ API timeout. The external service is slow. Please try again in a moment.";
+        } else if (status === 401) {
+          errorMessage = "🔒 Authentication failed. Please contact support.";
+        } else {
+          errorMessage = `❌ Error ${status}: ${err.response.data?.message || err.message || "Unknown error"}`;
+        }
+      } else if (err.message.includes('Network Error')) {
+        errorMessage = "🌐 Network error. Please check your internet connection or ensure the backend server is running.";
       } else {
-        setError(`Failed to load makes: ${err.message || "Please try again."}`);
+        errorMessage = `❌ ${err.message || "An unexpected error occurred. Please try again."}`;
       }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
