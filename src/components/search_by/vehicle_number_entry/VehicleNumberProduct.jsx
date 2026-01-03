@@ -242,14 +242,14 @@ const Product = () => {
 
       <div className="vnp-details">
         <div className="vnp-badges">
-          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}>
+          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`} title={product.brand}>
             {product.brand}
            </span>
           <span 
             className="vnp-badge vnp-badge-stock" 
             style={{ 
-              backgroundColor: isInStock ? '#8fe4a3ff' : '#f15e6dff',
-              color: 'white'
+              backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
+              color: isInStock ? '#16a34a' : '#c3111e'
             }}
           >
             {isInStock ? 'In Stock' : 'Out of Stock'}
@@ -502,12 +502,12 @@ const Product = () => {
 
                 <div className="vnp-aligned-details">
                   <div className="vnp-badges">
-                    <span className="vnp-badge vnp-badge-valeo">{product.brand}</span>
+                    <span className="vnp-badge vnp-badge-valeo" title={product.brand}>{product.brand}</span>
                     <span 
                       className="vnp-badge vnp-badge-stock"
                       style={{ 
-                        backgroundColor: isInStock ? '#92f1a8ff' : '#f08690ff',
-                        color: 'white'
+                        backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
+                        color: isInStock ? '#16a34a' : '#c3111e'
                       }}
                     >
                       {isInStock ? 'In Stock' : 'Out of Stock'}
