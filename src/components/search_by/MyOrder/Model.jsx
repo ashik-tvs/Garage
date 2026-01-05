@@ -54,16 +54,23 @@ const Model = () => {
   };
 
   useEffect(() => {
-    if (make) {
+    // For discontinued and electric variants, fetch without needing a make
+    if (variant === 'wide' || featureLabel === 'Discontinued Model' || variant === 'e' || featureLabel === 'Electric') {
+      fetchModels();
+    } else if (make) {
       fetchModels();
     } else {
       setLoading(false);
       setError("No make selected. Please go back and select a make.");
     }
-  }, [make]);
+  }, [make, variant, featureLabel]);
 
   const fetchModels = async () => {
-    if (!make) {
+    // For discontinued model and electric, we don't need a make
+    const isDiscontinued = variant === 'wide' || featureLabel === 'Discontinued Model';
+    const isElectric = variant === 'e' || featureLabel === 'Electric';
+    
+    if (!make && !isDiscontinued && !isElectric) {
       setError("No make selected. Please go back and select a make.");
       setLoading(false);
       return;
@@ -74,7 +81,7 @@ const Model = () => {
       setError(null);
 
       // Check cache first - include variant for proper cache separation
-      const cacheKey = variant ? `models_${variant}_${make}` : `models_${make}`;
+      const cacheKey = isDiscontinued ? 'models_discontinued' : (isElectric ? 'models_electric' : (variant ? `models_${variant}_${make}` : `models_${make}`));
       const cachedData = localStorage.getItem(cacheKey);
       const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
       const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
@@ -83,7 +90,12 @@ const Model = () => {
         const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
         
         if (isCacheValid) {
-          console.log(`Loading models for ${make} from cache...`);
+          const cacheMsg = isDiscontinued 
+            ? 'Loading discontinued models from cache...' 
+            : (isElectric 
+              ? 'Loading electric models from cache...'
+              : `Loading models for ${make} from cache...`);
+          console.log(cacheMsg);
           try {
             // Cached data is now just model names, need to format with icons
             const cachedModelNames = JSON.parse(cachedData);
@@ -124,59 +136,94 @@ const Model = () => {
       }
 
       // Fetch from API
-      console.log(`Fetching models for ${make} from API...`);
-      console.log('Request payload:', {
-        limit: 5000,
-        offset: 0,
-        sortOrder: "ASC",
-        customerCode: "0046",
-        brand: null,
-        partNumber: null,
-        aggregate: null,
-        subAggregate: null,
-        make: make,
-        model: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null
-      });
-      
-      const response = await apiService.post('/vehicle-list', {
-        limit: 5000,
-        offset: 0,
-        sortOrder: "ASC",
-        customerCode: "0046",
-        brand: null,
-        partNumber: null,
-        aggregate: null,
-        subAggregate: null,
-        make: make,
-        model: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null
-      });
-
-      console.log('API Response:', response);
-      console.log('API Response type:', typeof response);
-      console.log('Is Array:', Array.isArray(response));
-
-      // Handle different response structures
+      let response;
       let vehicleData = [];
-      if (Array.isArray(response)) {
-        vehicleData = response;
-      } else if (response && response.success && Array.isArray(response.data)) {
-        vehicleData = response.data;
-      } else if (response && Array.isArray(response.data)) {
-        vehicleData = response.data;
-      } else if (response && response.data) {
-        console.error("Response has data but not an array:", response.data);
-        throw new Error("Invalid response format - data is not an array");
+
+      if (isDiscontinued) {
+        // Fetch discontinued models from dedicated API
+        console.log('Fetching discontinued models from API...');
+        response = await apiService.get('/discontinue-model');
+        console.log('Discontinued API Response:', response);
+        
+        // Extract data from response
+        if (response && response.success && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (Array.isArray(response)) {
+          vehicleData = response;
+        } else {
+          console.error('Unexpected discontinued response structure:', response);
+          throw new Error('Invalid response format from discontinued API');
+        }
+      } else if (isElectric) {
+        // Fetch electric models from dedicated API
+        console.log('Fetching electric models from API...');
+        response = await apiService.get('/electric');
+        console.log('Electric API Response:', response);
+        
+        // Extract data from response
+        if (response && response.success && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (Array.isArray(response)) {
+          vehicleData = response;
+        } else {
+          console.error('Unexpected electric response structure:', response);
+          throw new Error('Invalid response format from electric API');
+        }
       } else {
-        console.error("Unexpected response structure:", response);
-        throw new Error("Invalid response format");
+        // Fetch regular models from vehicle-list API
+        console.log(`Fetching models for ${make} from API...`);
+        console.log('Request payload:', {
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          customerCode: "0046",
+          brand: null,
+          partNumber: null,
+          aggregate: null,
+          subAggregate: null,
+          make: make,
+          model: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null
+        });
+        
+        response = await apiService.post('/vehicle-list', {
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          customerCode: "0046",
+          brand: null,
+          partNumber: null,
+          aggregate: null,
+          subAggregate: null,
+          make: make,
+          model: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null
+        });
+
+        console.log('API Response:', response);
+        console.log('API Response type:', typeof response);
+        console.log('Is Array:', Array.isArray(response));
+
+        // Handle different response structures
+        if (Array.isArray(response)) {
+          vehicleData = response;
+        } else if (response && response.success && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (response && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (response && response.data) {
+          console.error("Response has data but not an array:", response.data);
+          throw new Error("Invalid response format - data is not an array");
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
       }
 
       console.log('Extracted vehicleData:', vehicleData);
@@ -184,7 +231,12 @@ const Model = () => {
       console.log('First 3 items:', vehicleData.slice(0, 3));
 
       if (vehicleData.length === 0) {
-        setError(`No models found for ${make}. Please try another make.`);
+        const errorMsg = isDiscontinued 
+          ? 'No discontinued models found.' 
+          : (isElectric 
+            ? 'No electric models found.'
+            : `No models found for ${make}. Please try another make.`);
+        setError(errorMsg);
         setModels([]);
         setLoading(false);
         return;
@@ -208,7 +260,12 @@ const Model = () => {
       console.log('Unique models count:', uniqueModels.length);
 
       if (uniqueModels.length === 0) {
-        setError(`No models available for ${make}.`);
+        const errorMsg = isDiscontinued 
+          ? 'No discontinued models available.' 
+          : (isElectric 
+            ? 'No electric models available.'
+            : `No models available for ${make}.`);
+        setError(errorMsg);
         setModels([]);
         setLoading(false);
         return;
@@ -227,7 +284,12 @@ const Model = () => {
         const modelNamesOnly = uniqueModels;
         localStorage.setItem(cacheKey, JSON.stringify(modelNamesOnly));
         localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-        console.log(`Models for ${make} cached successfully (${modelNamesOnly.length} models)`);
+        const cacheMsg = isDiscontinued 
+          ? `Discontinued models cached successfully (${modelNamesOnly.length} models)` 
+          : (isElectric 
+            ? `Electric models cached successfully (${modelNamesOnly.length} models)`
+            : `Models for ${make} cached successfully (${modelNamesOnly.length} models)`);
+        console.log(cacheMsg);
       } catch (quotaError) {
         console.warn('Failed to cache models (storage quota exceeded):', quotaError);
         // Continue without caching - the app will still work
@@ -244,9 +306,11 @@ const Model = () => {
   };
 
   const handleModelClick = (model) => {
+    const isDiscontinued = variant === 'wide' || featureLabel === 'Discontinued Model';
+    const isElectric = variant === 'e' || featureLabel === 'Electric';
     navigate("/Category", {
       state: {
-        make,
+        make: (isDiscontinued || isElectric) ? null : make, // No make for discontinued or electric
         model: model.name,
         variant,
         featureLabel
@@ -261,7 +325,11 @@ const Model = () => {
           <img src={LeftArrow} alt="Back" />
         </button>
         <h1 className="model-title">
-          {featureLabel ? `${featureLabel} - ` : ''}{make ? `${make} - ` : ''}Model
+          {variant === 'wide' || featureLabel === 'Discontinued Model' 
+            ? 'Discontinued Models' 
+            : (variant === 'e' || featureLabel === 'Electric'
+              ? 'Electric Models'
+              : `${featureLabel ? `${featureLabel} - ` : ''}${make ? `${make} - ` : ''}Model`)}
         </h1>
       </div>
 

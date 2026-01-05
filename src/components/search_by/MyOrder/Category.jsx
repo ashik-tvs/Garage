@@ -26,21 +26,27 @@ import Lights from "../../../assets/Categories/LIGHTING.png";
 const Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, variant, featureLabel } = location.state || {};
+  const { make, model, brand, variant, featureLabel, isOnlyWithUs } = location.state || {};
   
-  console.log('Category component - Received state:', { make, model, brand, variant, featureLabel });
+  console.log('Category component - Received state:', { make, model, brand, variant, featureLabel, isOnlyWithUs });
   
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Determine if we're coming from Make/Model flow or Features flow
+  // Determine if we're coming from Make/Model flow, Discontinued flow, Electric flow, or Features flow
   const isFromMakeModel = make && model;
+  const isFromDiscontinued = model && (variant === 'wide' || featureLabel === 'Discontinued Model');
+  const isFromElectric = model && (variant === 'e' || featureLabel === 'Electric');
+  const isFromOnlyWithUs = isOnlyWithUs || (brand && (variant === 'logo' || featureLabel === 'Only with us'));
 
   // Determine API endpoint based on source
   const getApiEndpoint = () => {
-    if (isFromMakeModel) {
-      return 'parts-list'; // Use parts-list API for Make/Model flow
+    if (isFromOnlyWithUs) {
+      return 'parts-list'; // Use parts-list API for Only with us brand flow
+    }
+    if (isFromMakeModel || isFromDiscontinued || isFromElectric) {
+      return 'parts-list'; // Use parts-list API for Make/Model, Discontinued, or Electric flow
     }
     // For Features flow (Fast Movers, High Value, etc.)
     switch(variant) {
@@ -55,6 +61,15 @@ const Category = () => {
 
   // Determine cache key based on source
   const getCacheKey = () => {
+    if (isFromOnlyWithUs && brand) {
+      return `categories_onlywithus_${brand}`;
+    }
+    if (isFromDiscontinued) {
+      return `categories_discontinued_${model}`;
+    }
+    if (isFromElectric) {
+      return `categories_electric_${model}`;
+    }
     if (isFromMakeModel) {
       return `categories_${make}_${model}`;
     }
@@ -95,7 +110,7 @@ const Category = () => {
 
   useEffect(() => {
     fetchCategories();
-  }, [variant, make, model]);
+  }, [variant, make, model, brand]);
 
   const fetchCategories = async () => {
     try {
@@ -125,9 +140,75 @@ const Category = () => {
       
       let response;
       
-      if (isFromMakeModel) {
-        // Use parts-list API with make and model filter
-        response = await apiService.post('/parts-list', {
+      if (isFromOnlyWithUs && brand) {
+        // Use parts-list API with brand filter for "Only with us" flow
+        const requestPayload = {
+          brandPriority: [brand.toUpperCase()],
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: null,
+          brand: "mytvs",
+          subAggregate: null,
+          aggregate: null,
+          make: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null
+        };
+        
+        console.log('Parts-list API request for Only with us brand:', requestPayload);
+        response = await apiService.post('/parts-list', requestPayload);
+
+        console.log('Parts-list API Response:', response);
+
+        // Handle response structure
+        let partsData = [];
+        if (Array.isArray(response)) {
+          partsData = response;
+        } else if (response && Array.isArray(response.data)) {
+          partsData = response.data;
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
+
+        // Extract unique aggregates (categories) for the selected brand
+        const uniqueCategories = [...new Set(
+          partsData
+            .map(item => item.aggregate)
+            .filter(aggregate => aggregate)
+        )];
+
+        console.log('Unique categories for brand:', uniqueCategories);
+
+        if (uniqueCategories.length === 0) {
+          const errorMsg = `No categories found for brand ${brand}.`;
+          setError(errorMsg);
+          setCategories([]);
+          setLoading(false);
+          return;
+        }
+
+        const formattedCategories = uniqueCategories.map((categoryName, index) => ({
+          id: index + 1,
+          name: categoryName,
+          image: getIconForCategory(categoryName)
+        }));
+
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify(formattedCategories));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        console.log(`Categories cached successfully`);
+
+        setCategories(formattedCategories);
+      } else if (isFromMakeModel || isFromDiscontinued || isFromElectric) {
+        // Use parts-list API with model filter (and make if available)
+        const requestPayload = {
           brandPriority: ["VALEO"],
           limit: 5000,
           offset: 0,
@@ -139,12 +220,15 @@ const Category = () => {
           brand: null,
           subAggregate: null,
           aggregate: null,
-          make: make,
+          make: (isFromDiscontinued || isFromElectric) ? null : make, // No make for discontinued/electric
           variant: null,
           fuelType: null,
           vehicle: null,
           year: null
-        });
+        };
+        
+        console.log('Parts-list API request:', requestPayload);
+        response = await apiService.post('/parts-list', requestPayload);
 
         console.log('Parts-list API Response:', response);
 
@@ -169,7 +253,12 @@ const Category = () => {
         console.log('Unique categories:', uniqueCategories);
 
         if (uniqueCategories.length === 0) {
-          setError(`No categories found for ${make} ${model}.`);
+          const errorMsg = isFromDiscontinued 
+            ? `No categories found for discontinued model ${model}.`
+            : (isFromElectric 
+              ? `No categories found for electric model ${model}.`
+              : `No categories found for ${make} ${model}.`);
+          setError(errorMsg);
           setCategories([]);
           setLoading(false);
           return;
@@ -226,6 +315,9 @@ const Category = () => {
         brand,
         category: category.name,
         aggregateName: category.name, // Pass the aggregate name for API filtering
+        variant,
+        featureLabel,
+        isOnlyWithUs
       },
     });
   };
@@ -239,7 +331,10 @@ const Category = () => {
         </button>
         <h1 className="category-title">
           {featureLabel && `${featureLabel} - `}
-          {make && model && `${make} ${model} - `}
+          {isFromOnlyWithUs && brand && `${brand} - `}
+          {isFromDiscontinued && model && `${model} - `}
+          {isFromElectric && model && `${model} - `}
+          {isFromMakeModel && `${make} ${model} - `}
           Search by Category
         </h1>
       </div>
