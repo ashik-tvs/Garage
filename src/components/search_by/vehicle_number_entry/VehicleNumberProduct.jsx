@@ -74,14 +74,19 @@ const Product = () => {
     if (aggregateName && subAggregateName) {
       fetchProducts();
     }
-  }, [aggregateName, subAggregateName]);
+  }, [aggregateName, subAggregateName, make, model]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching products for:", { aggregateName, subAggregateName });
+      console.log("Fetching products for:", { 
+        aggregateName, 
+        subAggregateName, 
+        make, 
+        model 
+      });
 
       const response = await apiService.post("/parts-list", {
         brandPriority: ["VALEO"],
@@ -91,11 +96,11 @@ const Product = () => {
         fieldOrder: null,
         customerCode: "0046",
         partNumber: null,
-        model: null,
+        model: model || null, // Include model from navigation state
         brand: null,
         subAggregate: subAggregateName, // From SubCategory selection
         aggregate: aggregateName, // From Category selection
-        make: null,
+        make: make || null, // Include make from navigation state
         variant: null,
         fuelType: null,
         vehicle: null,

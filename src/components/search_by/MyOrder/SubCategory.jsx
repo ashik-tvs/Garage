@@ -69,6 +69,23 @@ const Sub_Category = () => {
   // Fetch sub-categories from API
   useEffect(() => {
     if (aggregateName) {
+      // Check cache first
+      const cacheKey = `subCategory_${aggregateName}`;
+      const cachedData = localStorage.getItem(cacheKey);
+      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (cachedData && cacheTimestamp) {
+        const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+        
+        if (isCacheValid) {
+          console.log(`Loading sub-categories for ${aggregateName} from cache...`);
+          setSubCategories(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+      }
+
       fetchSubCategories();
     }
   }, [aggregateName]);
@@ -145,6 +162,12 @@ const Sub_Category = () => {
       }));
 
       console.log("Formatted sub-categories:", formattedSubCategories);
+      
+      // Cache the sub-categories
+      const cacheKey = `subCategory_${aggregateName}`;
+      localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
+      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+      console.log(`Sub-categories for ${aggregateName} cached successfully`);
       
       setSubCategories(formattedSubCategories);
     } catch (err) {

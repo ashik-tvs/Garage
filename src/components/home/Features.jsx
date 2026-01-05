@@ -34,7 +34,11 @@ const Features = () => {
 
   const handleSelect = (cat) => {
     setActiveId(cat.id);
-    if (cat.path) navigate(cat.path);
+    if (cat.path) {
+      navigate(cat.path, {
+        state: { variant: cat.variant, featureLabel: cat.label }
+      });
+    }
   };
 
   const handleKey = (e, cat) => {

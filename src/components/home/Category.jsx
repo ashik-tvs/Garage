@@ -223,8 +223,8 @@ const Category = () => {
       ) : (
         <div className="grid-container">
           {visibleCategories.map((cat) => (
-            <div key={cat.id} className="cat-card" onClick={() => handleCategoryClick(cat)}>
-              <div className="cat-img-box">
+            <div key={cat.id} className=" cat-card" onClick={() => handleCategoryClick(cat)}>
+              <div className=" cat-img-box">
                 <OciImage 
                   partNumber={cat.aggregateName} 
                   folder="categories"

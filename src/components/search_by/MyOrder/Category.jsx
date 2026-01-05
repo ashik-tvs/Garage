@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Category.css";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
+import apiService from "../../../services/apiservice";
 
 // Category Images
 import BrakeSystem from "../../../assets/Categories/BRAKE SYSTEM.png";
@@ -25,27 +26,195 @@ import Lights from "../../../assets/Categories/LIGHTING.png";
 const Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand } = location.state || {};
+  const { make, model, brand, variant, featureLabel } = location.state || {};
+  
+  console.log('Category component - Received state:', { make, model, brand, variant, featureLabel });
+  
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const categories = [
-    { id: 1, name: "Engine", image: Engine },
-    { id: 2, name: "Brake System", image: BrakeSystem },
-    { id: 3, name: "Battery", image: Battery },
-    { id: 4, name: "Body Parts", image: BodyParts },
-    { id: 5, name: "Accessories", image: Accessories },
-    { id: 6, name: "Electricals & Electronics", image: Electricals },
-    { id: 7, name: "Filters", image: Filters },
-    { id: 8, name: "Cables & Wires", image: Cables },
-    { id: 9, name: "Bearing", image: Bearing },
-    { id: 10, name: "Horns", image: Horns },
-    { id: 11, name: "Lubes", image: Lubes },
-    { id: 12, name: "Fluids, Coolant & Grease", image: Fluids },
-    { id: 13, name: "Glass / Comfort", image: Comfort },
-    { id: 14, name: "Clutch Systems", image: Clutch },
-    { id: 15, name: "Belts & Tensioner", image: Belts },
-    { id: 16, name: "Lighting", image: Lights },
-    { id: 17, name: "Child Parts", image: ChildParts },
-  ];
+  // Determine if we're coming from Make/Model flow or Features flow
+  const isFromMakeModel = make && model;
+
+  // Determine API endpoint based on source
+  const getApiEndpoint = () => {
+    if (isFromMakeModel) {
+      return 'parts-list'; // Use parts-list API for Make/Model flow
+    }
+    // For Features flow (Fast Movers, High Value, etc.)
+    switch(variant) {
+      case 'fm': // Fast Movers
+        return '/fastmovers/categories';
+      case 'hv': // High Value
+        return '/highvalue/categories';
+      default:
+        return '/fastmovers/categories';
+    }
+  };
+
+  // Determine cache key based on source
+  const getCacheKey = () => {
+    if (isFromMakeModel) {
+      return `categories_${make}_${model}`;
+    }
+    return `categories_${variant || 'fm'}`;
+  };
+
+  // Icon mapping based on category name
+  const iconMap = {
+    "ENGINE": Engine,
+    "BRAKE SYSTEM": BrakeSystem,
+    "BATTERY": Battery,
+    "BODY PARTS": BodyParts,
+    "ACCESSORIES": Accessories,
+    "ELECTRICALS & ELECTRONICS": Electricals,
+    "ELECTRICALS AND ELECTRONICS": Electricals,
+    "FILTERS": Filters,
+    "CABLES & WIRES": Cables,
+    "CABLES AND WIRES": Cables,
+    "BEARING": Bearing,
+    "HORNS": Horns,
+    "LUBES": Lubes,
+    "FLUIDS, COOLANT & GREASE": Fluids,
+    "FLUIDS COOLANT AND GREASE": Fluids,
+    "GLASS / COMFORT": Comfort,
+    "GLASS": Comfort,
+    "CLUTCH SYSTEMS": Clutch,
+    "BELTS & TENSIONER": Belts,
+    "BELTS AND TENSIONER": Belts,
+    "LIGHTING": Lights,
+    "CHILD PARTS": ChildParts,
+    "CHILDPARTS": ChildParts,
+  };
+
+  const getIconForCategory = (categoryName) => {
+    const upperName = categoryName.toUpperCase();
+    return iconMap[upperName] || Engine; // Default to Engine icon if not found
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, [variant, make, model]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check cache first
+      const cacheKey = getCacheKey();
+      const cachedData = localStorage.getItem(cacheKey);
+      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (cachedData && cacheTimestamp) {
+        const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+        
+        if (isCacheValid) {
+          console.log(`Loading categories from cache...`);
+          setCategories(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Fetch from API based on source
+      const endpoint = getApiEndpoint();
+      console.log(`Fetching categories from ${endpoint}...`);
+      
+      let response;
+      
+      if (isFromMakeModel) {
+        // Use parts-list API with make and model filter
+        response = await apiService.post('/parts-list', {
+          brandPriority: ["VALEO"],
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: model,
+          brand: null,
+          subAggregate: null,
+          aggregate: null,
+          make: make,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null
+        });
+
+        console.log('Parts-list API Response:', response);
+
+        // Handle response structure
+        let partsData = [];
+        if (Array.isArray(response)) {
+          partsData = response;
+        } else if (response && Array.isArray(response.data)) {
+          partsData = response.data;
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
+
+        // Extract unique aggregates (categories)
+        const uniqueCategories = [...new Set(
+          partsData
+            .map(item => item.aggregate)
+            .filter(aggregate => aggregate)
+        )];
+
+        console.log('Unique categories:', uniqueCategories);
+
+        if (uniqueCategories.length === 0) {
+          setError(`No categories found for ${make} ${model}.`);
+          setCategories([]);
+          setLoading(false);
+          return;
+        }
+
+        const formattedCategories = uniqueCategories.map((categoryName, index) => ({
+          id: index + 1,
+          name: categoryName,
+          image: getIconForCategory(categoryName)
+        }));
+
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify(formattedCategories));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        console.log(`Categories cached successfully`);
+
+        setCategories(formattedCategories);
+      } else {
+        // Use fastmovers or highvalue API
+        response = await apiService.get(endpoint);
+        
+        if (response.success && Array.isArray(response.data)) {
+          const formattedCategories = response.data.map((categoryName, index) => ({
+            id: index + 1,
+            name: categoryName,
+            image: getIconForCategory(categoryName)
+          }));
+          
+          // Cache the results
+          localStorage.setItem(cacheKey, JSON.stringify(formattedCategories));
+          localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+          console.log(`Categories cached successfully`);
+          
+          setCategories(formattedCategories);
+        } else {
+          throw new Error("Invalid response format");
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching categories:", err);
+      setError("Failed to load categories. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBack = () => navigate(-1);
 
@@ -56,6 +225,7 @@ const Category = () => {
         model,
         brand,
         category: category.name,
+        aggregateName: category.name, // Pass the aggregate name for API filtering
       },
     });
   };
@@ -67,31 +237,52 @@ const Category = () => {
         <button className="back-button" onClick={handleBack}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="category-title">Search by Category</h1>
+        <h1 className="category-title">
+          {featureLabel && `${featureLabel} - `}
+          {make && model && `${make} ${model} - `}
+          Search by Category
+        </h1>
       </div>
 
       {/* Category Grid */}
       <div className="category-content">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="category-item"
-            onClick={() => handleCategoryClick(category)}
-          >
-            <div className="category-card">
-              <div className="category-image-wrapper">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="category-image"
-                />
-              </div>
-              <div className="category-label">
-                <span title={category.name}>{category.name}</span>
+        {loading ? (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+            <p>Loading categories...</p>
+          </div>
+        ) : error ? (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px", color: "red" }}>
+            <p>{error}</p>
+            <button onClick={fetchCategories} style={{ marginTop: "10px", padding: "8px 16px", cursor: "pointer" }}>
+              Retry
+            </button>
+          </div>
+        ) : categories.length === 0 ? (
+          <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "40px" }}>
+            <p>No categories available</p>
+          </div>
+        ) : (
+          categories.map((category) => (
+            <div
+              key={category.id}
+              className="category-item"
+              onClick={() => handleCategoryClick(category)}
+            >
+              <div className="category-card">
+                <div className="category-image-wrapper">
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="category-image"
+                  />
+                </div>
+                <div className="category-label">
+                  <span title={category.name}>{category.name}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
