@@ -42,7 +42,7 @@
 
 .category-title {
   position: absolute;
-  left: 14%;
+  left: 23%;
   transform: translateX(-50%);
   font-family: 'Poppins', sans-serif;
   font-style: normal;
@@ -123,71 +123,32 @@
   object-fit: contain;
 }
 
-/* Category Label */
 .category-label {
-  position: relative;
   width: 110px;
-  height: 30px;
+  height: 32px;              /* fixed height */
   background: #F3F3F3;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 10px;
+  padding: 0 8px;
   box-sizing: border-box;
 }
 
 .category-label span {
   font-family: 'Poppins', sans-serif;
-  font-style: normal;
   font-weight: 400;
   font-size: 12px;
-  line-height: 24px;
   color: #454545;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+  white-space: nowrap;       /* ✅ single line */
+  overflow: hidden;          /* ✅ hide overflow */
+  text-overflow: ellipsis;   /* ✅ ... */
   width: 100%;
-  cursor: pointer;
-  position: relative;
+  text-align: center;
+  display: block;
 }
 
-/* Tooltip styling */
-.category-label span[title]:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  background: #333333;
-  color: #FFFFFF;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.4;
-  white-space: nowrap;
-  border-radius: 6px;
-  z-index: 1000;
-  pointer-events: none;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
-  animation: categoryTooltipFadeIn 0.2s ease-in-out;
-}
 
-/* Tooltip arrow */
-.category-label span[title]:hover::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-bottom: 2px;
-  border: 6px solid transparent;
-  border-top-color: #333333;
-  z-index: 1000;
-  pointer-events: none;
-  animation: categoryTooltipFadeIn 0.2s ease-in-out;
-}
 
 @keyframes categoryTooltipFadeIn {
   from {
@@ -200,18 +161,7 @@
   }
 }
 
-/* Special case for longer text */
-.category-item:has(.category-label span:contains("INTERIOR & COMFORTS")) .category-label span,
-.category-item:has(.category-label span:contains("FLUIDS AND GREASE")) .category-label span,
-.category-item:has(.category-label span:contains("ELECTRICALS AND")) .category-label span,
-.category-item:has(.category-label span:contains("Belt and Tensionor")) .category-label span,
-.category-item:has(.category-label span:contains("HVAC and Thermal")) .category-label span,
-.category-item:has(.category-label span:contains("PAINTS AND CON")) .category-label span,
-.category-item:has(.category-label span:contains("Cables and Wires")) .category-label span,
-.category-item:has(.category-label span:contains("CLUTCH SYSTEMS")) .category-label span,
-.category-item:has(.category-label span:contains("TRANSMISSION")) .category-label span {
-  font-size: 10px;
-}
+
 
 /* Responsive Design */
 @media screen and (max-width: 1400px) {

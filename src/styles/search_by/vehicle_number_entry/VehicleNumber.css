@@ -525,7 +525,7 @@
   flex: 3;
 }
 .Vne-right-section {
-  /* min-width: 280px; */
+  min-width: 280px;
 }
 .vne-search-key-text{
   top: -100px;

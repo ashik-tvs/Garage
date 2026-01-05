@@ -105,7 +105,6 @@ const Login = () => {
         {/* RIGHT SIDE */}
         <div className="login-form-section">
           <div className="login-intro">
-            <h1 className="login-welcome">Welcome Back To</h1>
             <div className="login-logo">
               {uiAssets.LOGO && (
                 <img
@@ -115,13 +114,14 @@ const Login = () => {
                 />
               )}
             </div>
+            <h1 className="login-heading">LOGIN</h1>
           </div>
 
           <form className="login-form" onSubmit={handleSignIn}>
             {error && <div className="login-error-message">{error}</div>}
 
             <div className="login-input-group">
-              <label className="login-label">Email</label>
+              <label className="login-label">Employee ID</label>
               <input
                 type="email"
                 className="login-input"

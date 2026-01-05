@@ -47,16 +47,19 @@ body {
   max-width: 662px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 40px;
+  align-items: flex-start;
+  gap: 30px;
+  padding-left: 40px;
 }
 
 /* Intro */
 .login-intro {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 24px;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  max-width: 405px;
 }
 
 /* Welcome Text */
@@ -70,13 +73,23 @@ body {
 /* Logo */
 .login-logo {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .logo-image-logo {
   width: 125px;
   height: auto;
   display: block;
+}
+
+/* LOGIN Heading */
+.login-heading {
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  color: #0c1421;
+  margin: 0;
+  text-align: left;
 }
 
 /* ===============================
@@ -88,6 +101,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 22px;
+  margin-top: 3%;
 }
 
 /* Error Message */

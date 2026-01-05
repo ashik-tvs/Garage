@@ -25,8 +25,8 @@ const Features = () => {
     { id: 1, label: "Fast Movers", tag: "FASTMOVERS", path: "/Category", variant: "fm" },
     { id: 2, label: "High Value", tag: "HIGHVALUE", path: "/Category", variant: "hv" },
     { id: 3, label: "CNG", tag: "CNG", path: "/MakeNew", variant: "cng" },
-    { id: 4, label: "Discontinued Model", tag: "DISCONTINUE", path: "/MakeNew", variant: "wide" },
-    { id: 5, label: "Electric", tag: "ELECTRIC", path: "/MakeNew", variant: "e" },
+    { id: 4, label: "Discontinued Model", tag: "DISCONTINUE", path: "/Model", variant: "wide" },
+    { id: 5, label: "Electric", tag: "ELECTRIC", path: "/Model", variant: "e" },
     { id: 6, label: "Only with us", tag: "ONLY WITH US", path: "/brand", variant: "logo" },
   ];
 
@@ -34,7 +34,11 @@ const Features = () => {
 
   const handleSelect = (cat) => {
     setActiveId(cat.id);
-    if (cat.path) navigate(cat.path);
+    if (cat.path) {
+      navigate(cat.path, {
+        state: { variant: cat.variant, featureLabel: cat.label }
+      });
+    }
   };
 
   const handleKey = (e, cat) => {

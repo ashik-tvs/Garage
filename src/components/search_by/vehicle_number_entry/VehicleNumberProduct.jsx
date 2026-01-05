@@ -2,91 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
-import apiService from "../../../services/apiservice"; // Adjust path
+import apiService from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import Brake_1 from "../../../assets/brake1.png";
 import Brake_2 from "../../../assets/brake2.png";
 import Brake_3 from "../../../assets/brake3.png";
-
-/* ---------------- MOCK DATA ---------------- */
-const recommendedProducts = [
-  {
-    partNumber: "207509",
-    name: "Rear Brake Pad",
-    brand: "myTVS",
-    price: 425,
-    mrp: 600,
-    stockQty: 10,
-    eta: "1-2 Days",
-    image: Brake_1,
-  },
-  {
-    partNumber: "2075019",
-    name: "Rear Brake Pad",
-    brand: "myTVS",
-    price: 425,
-    mrp: 600,
-    stockQty: 10,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-];
-
-const otherProducts = [
-  {
-    partNumber: "LF16079",
-    name: "Brake Pad for Hyundai",
-    brand: "Denso",
-    price: 425,
-    mrp: 600,
-    stockQty: 8,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-  {
-    partNumber: "LF16080",
-    name: "Brake Pad for Car (Set of 4)",
-    brand: "Bosch",
-    price: 520,
-    mrp: 700,
-    stockQty: 6,
-    eta: "1-2 Days",
-    image: Brake_3,
-  },
-];
-
-const alignedProducts = [
-  {
-    partNumber: "LF16081",
-    name: "Brake Disc Pad",
-    brand: "Valeo",
-    price: 425,
-    mrp: 600,
-    stockQty: 12,
-    eta: "1-2 Days",
-    image: Brake_1,
-  },
-  {
-    partNumber: "99000M24120-624",
-    name: "Brake Fluid",
-    brand: "Valeo",
-    price: 300,
-    mrp: 450,
-    stockQty: 15,
-    eta: "1-2 Days",
-    image: Brake_2,
-  },
-  {
-    partNumber: "T0494M81207",
-    name: "Brake Fitting Kit",
-    brand: "Valeo",
-    price: 380,
-    mrp: 520,
-    stockQty: 7,
-    eta: "1-2 Days",
-    image: Brake_3,
-  },
-];
 
 /* ---------------- COMPONENT ---------------- */
 const Product = () => {
@@ -117,10 +37,22 @@ const Product = () => {
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  
+  // Product states
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stockData, setStockData] = useState({}); // Store stock info by partNumber
+  
+  // See More/Less states
+  const [showAllRecommended, setShowAllRecommended] = useState(false);
+  const [showAllOther, setShowAllOther] = useState(false);
+  
   const isInCart = (partNumber) =>
     cartItems.some((item) => item.partNumber === partNumber);
 
-  const { vehicle, make, model, brand, category, subCategory } =
+  // Get navigation flow data from state
+  const { vehicle, make, model, brand, category, subCategory, aggregateName, subAggregateName } =
     location.state || {};
 
   const [filters, setFilters] = useState({
@@ -129,12 +61,160 @@ const Product = () => {
     eta: "",
     sortBy: "",
   });
+  
   const filterOptions = {
     brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
     price: ["Low to High", "High to Low"],
     eta: ["Same Day", "1-2 Days", "3-5 Days"],
     sortBy: ["Relevance", "Price", "Brand"],
   };
+
+  // Fetch products based on category and subcategory
+  useEffect(() => {
+    if (aggregateName && subAggregateName) {
+      fetchProducts();
+    }
+  }, [aggregateName, subAggregateName, make, model]);
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log("Fetching products for:", { 
+        aggregateName, 
+        subAggregateName, 
+        make, 
+        model 
+      });
+
+      const response = await apiService.post("/parts-list", {
+        brandPriority: ["VALEO"],
+        limit: 100,
+        offset: 0,
+        sortOrder: "ASC",
+        fieldOrder: null,
+        customerCode: "0046",
+        partNumber: null,
+        model: model || null, // Include model from navigation state
+        brand: null,
+        subAggregate: subAggregateName, // From SubCategory selection
+        aggregate: aggregateName, // From Category selection
+        make: make || null, // Include make from navigation state
+        variant: null,
+        fuelType: null,
+        vehicle: null,
+        year: null,
+      });
+
+      console.log("Products API Response:", response);
+
+      // Response structure: { success: true, message: "...", data: [...] }
+      // Since apiService.post() returns res.data, response IS the data object
+      const partsData = Array.isArray(response?.data) ? response.data : [];
+
+      // Transform API data to match component structure
+      const formattedProducts = partsData.map((item, index) => ({
+        partNumber: item.partNumber || `PART-${index}`,
+        name: item.itemDescription || "Product Name",
+        brand: item.brandName || "Brand",
+        price: parseFloat(item.listPrice) || 0,
+        mrp: parseFloat(item.mrp) || 0,
+        stockQty: 10, // Static
+        eta: "1-2 Days", // Static
+        image: getRandomImage(), // Static random image
+        // Keep original data for reference
+        originalData: item
+      }));
+
+      console.log("Formatted products:", formattedProducts);
+      setProducts(formattedProducts);
+      
+      // Fetch stock status for all products
+      fetchStockForProducts(formattedProducts);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+      
+      if (err.response?.status === 401) {
+        setError("Session expired. Please login again.");
+      } else {
+        setError(`Failed to load products: ${err.message || "Please try again."}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch stock status for all products
+  const fetchStockForProducts = async (productsList) => {
+    const stockPromises = productsList.map(async (product) => {
+      try {
+        const response = await apiService.post("/stock-list", {
+          customerCode: "0046",
+          partNumber: product.partNumber,
+          inventoryName: null,
+          entity: null,
+          software: null,
+          limit: 2,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: "lotAgeDate"
+        });
+
+        // Check if stock data exists and has quantity
+        const stockItems = Array.isArray(response?.data) ? response.data : [];
+        const totalQty = stockItems.reduce((sum, item) => sum + (item.qty || 0), 0);
+        
+        return {
+          partNumber: product.partNumber,
+          inStock: totalQty > 0,
+          quantity: totalQty
+        };
+      } catch (err) {
+        console.error(`Error fetching stock for ${product.partNumber}:`, err);
+        return {
+          partNumber: product.partNumber,
+          inStock: false,
+          quantity: 0
+        };
+      }
+    });
+
+    try {
+      const stockResults = await Promise.all(stockPromises);
+      const stockMap = {};
+      stockResults.forEach(result => {
+        stockMap[result.partNumber] = result;
+      });
+      setStockData(stockMap);
+      console.log("Stock data fetched:", stockMap);
+    } catch (err) {
+      console.error("Error fetching stock data:", err);
+    }
+  };
+
+  // Helper function to get random product image
+  const getRandomImage = () => {
+    const images = [Brake_1, Brake_2, Brake_3];
+    return images[Math.floor(Math.random() * images.length)];
+  };
+
+  // Split products into categories based on brand
+  // myTVS Recommended Products: Only myTVS brand products
+  const recommendedProducts = products.filter(product => 
+    product.brand?.toUpperCase().includes('MYTVS') || 
+    product.brand?.toUpperCase().includes('MY TVS')
+  );
+  
+  // Other Products: All brands except myTVS
+  const otherProducts = products.filter(product => 
+    !(product.brand?.toUpperCase().includes('MYTVS') || 
+      product.brand?.toUpperCase().includes('MY TVS'))
+  );
+  
+  // Aligned Products: Can keep same logic or remove if not needed
+  const alignedProducts = [];
+  
   useEffect(() => {
     const close = () => setOpenFilter(null);
     window.addEventListener("click", close);
@@ -155,7 +235,11 @@ const Product = () => {
     }
   };
 
-  const renderProductCard = (product) => (
+  const renderProductCard = (product) => {
+    const stockInfo = stockData[product.partNumber];
+    const isInStock = stockInfo?.inStock ?? true; // Default to true while loading
+    
+    return (
     <div className="vnp-card" key={product.partNumber}>
       <div className="vnp-image-placeholder">
         <img src={product.image || NoImage} alt={product.name} width="100" />
@@ -163,10 +247,18 @@ const Product = () => {
 
       <div className="vnp-details">
         <div className="vnp-badges">
-          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}>
+          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`} title={product.brand}>
             {product.brand}
+           </span>
+          <span 
+            className="vnp-badge vnp-badge-stock" 
+            style={{ 
+              backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
+              color: isInStock ? '#16a34a' : '#c3111e'
+            }}
+          >
+            {isInStock ? 'In Stock' : 'Out of Stock'}
           </span>
-          <span className="vnp-badge vnp-badge-stock">In stock</span>
           <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
         </div>
 
@@ -186,7 +278,9 @@ const Product = () => {
         </div>
       </div>
     </div>
-  );
+    );
+  };
+  
 
   return (
     <div className="vnp-container">
@@ -327,23 +421,85 @@ const Product = () => {
       )}
 
       {/* ---------- CONTENT ---------- */}
-      <div className="vnp-content-wrapper">
-        <div className="vnp-left-section">
-          <div className="vnp-section">
-            <h2 className="vnp-section-title">myTVS Recommended Products</h2>
-            <div className="vnp-cards-grid">{recommendedProducts.map(renderProductCard)}</div>
-          </div>
-
-          <div className="vnp-section">
-            <h2 className="vnp-section-title">Other Products</h2>
-            <div className="vnp-cards-grid">{otherProducts.map(renderProductCard)}</div>
-          </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px' }}>
+          Loading products...
         </div>
+      ) : error ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <p style={{ color: 'red', fontSize: '16px', marginBottom: '20px' }}>{error}</p>
+          <button 
+            onClick={fetchProducts}
+            style={{
+              padding: '10px 20px',
+              fontSize: '16px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <div className="vnp-content-wrapper">
+          <div className="vnp-left-section">
+            <div className="vnp-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+                {recommendedProducts.length > 2 && (
+                  <span 
+                    className="see-more" 
+                    onClick={() => setShowAllRecommended(!showAllRecommended)}
+                    style={{ cursor: 'pointer', color: '#e55a2b', fontSize: '14px', marginRight: '35px' }}
+                  >
+                    {showAllRecommended ? 'See Less' : 'See More'}
+                  </span>
+                )}
+              </div>
+              <div className="vnp-cards-grid">
+                {recommendedProducts.length > 0 ? (
+                  (showAllRecommended ? recommendedProducts : recommendedProducts.slice(0, 2)).map(renderProductCard)
+                ) : (
+                  <p>No recommended products found.</p>
+                )}
+              </div>
+            </div>
 
-        <div className="vnp-right-section">
-          <div className="vnp-section-right">
-            <h2 className="vnp-section-title">Aligned Products</h2>
-            {alignedProducts.map((product) => (
+            <div className="vnp-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h2 className="vnp-section-title">Other Products</h2>
+                {otherProducts.length > 2 && (
+                  <span 
+                    className="see-more" 
+                    onClick={() => setShowAllOther(!showAllOther)}
+                    style={{ cursor: 'pointer', color: '#e55a2b', fontSize: '14px', marginRight: '35px' }}
+                  >
+                    {showAllOther ? 'See Less' : 'See More'}
+                  </span>
+                )}
+              </div>
+              <div className="vnp-cards-grid">
+                {otherProducts.length > 0 ? (
+                  (showAllOther ? otherProducts : otherProducts.slice(0, 2)).map(renderProductCard)
+                ) : (
+                  <p>No other products found.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="vnp-right-section">
+            <div className="vnp-section-right">
+              <h2 className="vnp-section-title">Aligned Products</h2>
+
+              {alignedProducts.length > 0 ? (
+                alignedProducts.map((product) => {
+                  const stockInfo = stockData[product.partNumber];
+                  const isInStock = stockInfo?.inStock ?? true;
+                  return (
               <div className="vnp-aligned-card" key={product.partNumber}>
                 <div className="vnp-image-placeholder-small">
                   <img src={product.image || NoImage} alt={product.name} width="100" />
@@ -351,8 +507,16 @@ const Product = () => {
 
                 <div className="vnp-aligned-details">
                   <div className="vnp-badges">
-                    <span className="vnp-badge vnp-badge-valeo">{product.brand}</span>
-                    <span className="vnp-badge vnp-badge-stock">In stock</span>
+                    <span className="vnp-badge vnp-badge-valeo" title={product.brand}>{product.brand}</span>
+                    <span 
+                      className="vnp-badge vnp-badge-stock"
+                      style={{ 
+                        backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
+                        color: isInStock ? '#16a34a' : '#c3111e'
+                      }}
+                    >
+                      {isInStock ? 'In Stock' : 'Out of Stock'}
+                    </span>
                     <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
                   </div>
 
@@ -374,10 +538,15 @@ const Product = () => {
                   </div>
                 </div>
               </div>
-            ))}
+                  );
+                })
+              ) : (
+              <p>No aligned products found.</p>
+            )}
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

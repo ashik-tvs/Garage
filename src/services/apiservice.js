@@ -7,7 +7,7 @@ const BASE_URL = "http://localhost:5000/api";
 // Create axios instance
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 60000,
+  timeout: 120000, // Increased to 120 seconds for slow external APIs
   headers: {
     "Content-Type": "application/json",
   },
@@ -15,19 +15,37 @@ const apiClient = axios.create({
 
 // Attach retry logic
 axiosRetry(apiClient, {
-  retries: 3,
-  retryDelay: (retryCount) => retryCount * 2000,
-  retryCondition: (error) =>
-    axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-    error.code === "ECONNABORTED" ||
-    (error.response && error.response.status >= 500),
+  retries: 1, // Only retry once to avoid long waits
+  retryDelay: (retryCount) => {
+    console.log(`⏳ Retry attempt ${retryCount}`);
+    return retryCount * 2000; // 2 seconds between retries
+  },
+  retryCondition: (error) => {
+    // Don't retry on 502, 503, 504, or timeout errors - these indicate upstream issues
+    if (error.code === 'ECONNABORTED') return false; // No retry on timeout
+    if (error.response) {
+      const status = error.response.status;
+      // Don't retry on gateway errors or service unavailable
+      if (status === 502 || status === 503 || status === 504) return false;
+      // Only retry on temporary server errors
+      return status === 500;
+    }
+    // Retry on network errors only
+    return axiosRetry.isNetworkError(error);
+  },
 });
 
-// Attach token automatically
+// Attach token automatically (but NOT for public external API endpoints)
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    // ❌ Do NOT attach JWT token for external API proxy endpoints
+    const publicEndpoints = ['/vehicle-list', '/parts-list', '/related', '/stock-list', '/filter', '/search'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
+    
+    if (!isPublicEndpoint) {
+      const token = localStorage.getItem("token");
+      if (token) config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => Promise.reject(error)

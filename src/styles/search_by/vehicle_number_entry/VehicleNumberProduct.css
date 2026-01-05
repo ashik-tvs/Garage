@@ -385,7 +385,7 @@ padding: 6px 12px;
 .vnp-card {
   display: flex;
   gap: 16px;
-  padding: 16px;
+  padding: 14px;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -409,53 +409,130 @@ padding: 6px 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden;
 }
 .vnp-badges{
   display: flex;
   align-items: center;
   gap: 5px;
+  flex-wrap: nowrap;
+  min-height: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 .vnp-details .vnp-badges {
   gap: 5px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .vnp-badge {
-  padding: 4px 12px;
+  padding: 4px 8px;
   border-radius: 4px;
   font-family: "Poppins", sans-serif;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 400;
+  max-width: 85px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  display: inline-block;
+  Background: #e8f1ff;
+   color: #2563eb;
+}
+
+/* Brand badge tooltip */
+.vnp-badge[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: #333333;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  border-radius: 4px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tooltip arrow */
+.vnp-badge[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 5px solid transparent;
+  border-top-color: #333333;
+  z-index: 1000;
+  pointer-events: none;
 }
 
 .vnp-badge-mytvs {
   background: #e8f4ff;
   color: #2563eb;
+  min-width: 85px;
+  max-width: 85px;
+  text-align: center;
 }
 
 .vnp-badge-denso {
-  background: #e8f4ff;
+  background: #e8f1ff;
   color: #2563eb;
+  min-width: 85px;
+  max-width: 85px;
 }
 
 .vnp-badge-bosch {
-  background: #fee;
-  color: #dc2626;
+  background: #e8f1ff;
+  color: #2563eb;
+  min-width: 85px;
+  max-width: 85px;
 }
 
 .vnp-badge-valeo {
-  background: #e8f4ff;
+  background: #e8f1ff;
   color: #2563eb;
+  min-width: 65px;
+  max-width: 65px;
 }
 
 .vnp-badge-stock {
-  background: #f0fdf4;
+  background: #e7f7ee;
   color: #16a34a;
+  min-width: 10%;
+  max-width: 32%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.vnp-badge-stock.in-stock {
+  background: #e7f7ee;
+  color: #16a34a;
+}
+
+.vnp-badge-stock.out-of-stock {
+  background: #f2d5d7;
+  color: #c3111e;
 }
 
 .vnp-badge-eta {
   background: #f5f6fa;
   color: #666;
+  min-width: 10%;
+  max-width: 16%;
+  text-align: center;
 }
 
 .vnp-code {
@@ -468,7 +545,7 @@ padding: 6px 12px;
 
 .vnp-name {
   font-family: "Poppins", sans-serif;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 400;
   color: #333;
   margin: 0;
