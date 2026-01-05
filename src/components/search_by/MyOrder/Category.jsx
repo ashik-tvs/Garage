@@ -1,61 +1,61 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Category.css";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
-
-// Category Images
-import BrakeSystem from "../../../assets/Categories/BRAKE SYSTEM.png";
-import Accessories from "../../../assets/Categories/ACCESSORIES.png";
-import Battery from "../../../assets/Categories/BATTERY.png";
-import Bearing from "../../../assets/Categories/BEARING.png";
-import Belts from "../../../assets/Categories/BELTS AND TENSIONER.png";
-import BodyParts from "../../../assets/Categories/BODY PARTS.png";
-import Cables from "../../../assets/Categories/CABLES AND WIRES.png";
-import ChildParts from "../../../assets/Categories/CHILD PARTS.png";
-import Clutch from "../../../assets/Categories/CLUTCH SYSTEMS.png";
-import Comfort from "../../../assets/Categories/GLASS.png";
-import Electricals from "../../../assets/Categories/ELECTRICALS AND ELECTRONICS.png";
-import Engine from "../../../assets/Categories/ENGINE.png";
-import Filters from "../../../assets/Categories/FILTERS.png";
-import Fluids from "../../../assets/Categories/FLUIDS COOLANT AND GREASE.png";
-import Horns from "../../../assets/Categories/HORNS.png";
-import Lubes from "../../../assets/Categories/LUBES.png";
-import Lights from "../../../assets/Categories/LIGHTING.png";
+import apiService from "../../../services/apiservice";
+import Image from "../../oci_image/ociImages";
 
 const Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand } = location.state || {};
+  const { featureLabel } = location.state || {};
 
-  const categories = [
-    { id: 1, name: "Engine", image: Engine },
-    { id: 2, name: "Brake System", image: BrakeSystem },
-    { id: 3, name: "Battery", image: Battery },
-    { id: 4, name: "Body Parts", image: BodyParts },
-    { id: 5, name: "Accessories", image: Accessories },
-    { id: 6, name: "Electricals & Electronics", image: Electricals },
-    { id: 7, name: "Filters", image: Filters },
-    { id: 8, name: "Cables & Wires", image: Cables },
-    { id: 9, name: "Bearing", image: Bearing },
-    { id: 10, name: "Horns", image: Horns },
-    { id: 11, name: "Lubes", image: Lubes },
-    { id: 12, name: "Fluids, Coolant & Grease", image: Fluids },
-    { id: 13, name: "Glass / Comfort", image: Comfort },
-    { id: 14, name: "Clutch Systems", image: Clutch },
-    { id: 15, name: "Belts & Tensioner", image: Belts },
-    { id: 16, name: "Lighting", image: Lights },
-    { id: 17, name: "Child Parts", image: ChildParts },
-  ];
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleBack = () => navigate(-1);
+  /* ===============================
+     FETCH FASTMOVER CATEGORIES
+     =============================== */
+  const fetchCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await apiService.get("/fastmovers");
+
+      if (!response?.success || !Array.isArray(response.data)) {
+        throw new Error("Invalid API response");
+      }
+
+      // ✅ Deduplicate aggregate values
+      const uniqueAggregates = [
+        ...new Set(response.data.map((item) => item.aggregate)),
+      ];
+
+      const formatted = uniqueAggregates.map((name, index) => ({
+        id: index + 1,
+        name,
+      }));
+
+      setCategories(formatted);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load categories");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleCategoryClick = (category) => {
     navigate("/sub_category", {
       state: {
-        make,
-        model,
-        brand,
-        category: category.name,
+        aggregate: category.name,
+        featureLabel,
       },
     });
   };
@@ -64,34 +64,50 @@ const Category = () => {
     <div className="category-container">
       {/* Header */}
       <div className="category-header">
-        <button className="back-button" onClick={handleBack}>
+        <button className="back-button" onClick={() => navigate(-1)}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="category-title">Search by Category</h1>
+        <h1 className="category-title">
+          {featureLabel ? `${featureLabel} - ` : ""}
+          Search by Category
+        </h1>
       </div>
 
-      {/* Category Grid */}
+      {/* Content */}
       <div className="category-content">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="category-item"
-            onClick={() => handleCategoryClick(category)}
-          >
-            <div className="category-card">
-              <div className="category-image-wrapper">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="category-image"
-                />
-              </div>
-              <div className="category-label">
-                <span title={category.name}>{category.name}</span>
+        {loading && <p>Loading categories...</p>}
+        {error && <p style={{ color: "red" }}>{error}</p>}
+
+        {!loading && !error && categories.length === 0 && (
+          <p>No categories available</p>
+        )}
+
+        {!loading &&
+          !error &&
+          categories.map((category) => (
+            <div
+              key={category.id}
+              className="category-item"
+              onClick={() => handleCategoryClick(category)}
+            >
+              <div className="category-card">
+                {/* Image Wrapper */}
+                <div className="category-image-wrapper">
+                  <Image
+                    partNumber={category.name}
+                    folder="categories"
+                    className="category-image"
+                    alt={category.name}
+                  />
+                </div>
+
+                {/* Label */}
+                <div className="category-label">
+                  <span title={category.name}>{category.name}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
     </div>
   );

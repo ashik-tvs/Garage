@@ -1,10 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
-import Logo from "../../assets/header/Logo.png";
-import CartIcon from "../../assets/header/Cart.png";
-import UserIcon from "../../assets/header/User.png";
-import ChecklistIcon from "../../assets/header/checklist.png";
+import apiService from "../../services/apiservice";
 import Profile from "./Profile";
 import "../../styles/header/Header.css";
 
@@ -12,43 +9,68 @@ const Header = () => {
   const navigate = useNavigate();
   const { cartItems } = useCart();
   const [showProfile, setShowProfile] = useState(false);
+  const [uiAssets, setUiAssets] = useState({});
 
   // ✅ Total quantity
-  const cartCount = cartItems.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets"); // returns { success: true, data: {...} }
+        setUiAssets(assets.data); // use 'data' from backend
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
+      }
+    };
+
+    fetchUiAssets();
+  }, []);
 
   return (
     <header className="header-body">
       <div className="header-container">
-
         {/* LEFT LOGO */}
         <div className="header-left" onClick={() => navigate("/home")}>
-          <img src={Logo} alt="myTVS Logo" className="header-logo" />
+          {uiAssets.LOGO && (
+            <img
+              src={apiService.getAssetUrl(uiAssets.LOGO)}
+              alt="myTVS Logo"
+              className="header-logo"
+            />
+          )}
         </div>
 
         {/* RIGHT ICONS */}
         <div className="header-right">
-
           <div
             className="header-item"
             onClick={() => navigate("/my-orders")}
             style={{ cursor: "pointer" }}
           >
-            <img src={ChecklistIcon} alt="Orders" className="header-icon" />
+            {uiAssets.ORDER && (
+              <img
+                src={apiService.getAssetUrl(uiAssets.ORDER)}
+                alt="Orders"
+                className="header-icon"
+              />
+            )}
             <span className="header-text">My Orders</span>
           </div>
 
           {/* CART */}
           <div
-           
             className="header-item header-cart"
             onClick={() => navigate("/cart")}
             style={{ cursor: "pointer" }}
-          
           >
-            <img src={CartIcon} alt="Cart" className="header-icon" />
+            {uiAssets.CART && (
+              <img
+                src={apiService.getAssetUrl(uiAssets.CART)}
+                alt="Cart"
+                className="header-icon"
+              />
+            )}
             <span className="header-text">Cart</span>
 
             {/* 🔴 Cart Count Badge */}
@@ -57,14 +79,19 @@ const Header = () => {
             )}
           </div>
 
-          <div 
+          <div
             className="header-item"
             onClick={() => setShowProfile(!showProfile)}
             style={{ cursor: "pointer" }}
           >
-            <img src={UserIcon} alt="User" className="header-icon" />
+            {uiAssets.USER && (
+              <img
+                src={apiService.getAssetUrl(uiAssets.USER)}
+                alt="User"
+                className="header-icon"
+              />
+            )}
           </div>
-
         </div>
       </div>
 

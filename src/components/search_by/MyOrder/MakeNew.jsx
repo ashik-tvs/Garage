@@ -1,6 +1,8 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/MakeNew.css";
+import apiService from "../../../services/apiservice";
+import OciImage from "../../oci_image/ociImages";
 import noImage from "../../../assets/No Image.png";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import Maruti from "../../../assets/Make/MARUTI SUZUKI.png";
@@ -16,22 +18,190 @@ import Jeep from "../../../assets/Make/JEEP.png";
 
 const MakeNew = () => {
   const navigate = useNavigate();
-  const makes = [
-    { id: 6, name: "AUDI", image: Audi },
+  const location = useLocation();
+  const { variant, featureLabel } = location.state || {};
+  
+  const [makes, setMakes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    { id: 1, name: "MARUTHI", image: Maruti },
-    { id: 2, name: "HYUNDAI", image: Hyundai },
-    { id: 3, name: "TATA", image: Tata },
-    { id: 4, name: "MAHINDRA", image: Mahindra },
-    { id: 5, name: "ABARTH", image: Abarth },
-    { id: 7, name: "FORD", image: Ford },
-    { id: 8, name: "BENTLEY", image: Bently },
-    { id: 9, name: "BMW", image: Bmw },
-    { id: 10, name: "JEEP", image: Jeep },
-  ];
+  // Icon mapping for make images
+  const makeIconMap = {
+    "MARUTI SUZUKI": Maruti,
+    "MARUTI": Maruti,
+    "HYUNDAI": Hyundai,
+    "TATA": Tata,
+    "MAHINDRA": Mahindra,
+    "ABARTH": Abarth,
+    "AUDI": Audi,
+    "FORD": Ford,
+    "BENTLEY": Bently,
+    "BMW": Bmw,
+    "JEEP": Jeep,
+  };
 
-  const handleMakeClick = (make) => {
-    navigate("/Model", { state: { make: make.name } });
+  const getMakeIcon = (makeName) => {
+    const upperName = makeName.toUpperCase();
+    return makeIconMap[upperName] || noImage;
+  };
+
+  useEffect(() => {
+    fetchMakes();
+  }, [variant]);
+
+  const fetchMakes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Determine cache key based on variant
+      const cacheKey = variant ? `makes_${variant}` : 'makes_list';
+      const cachedData = localStorage.getItem(cacheKey);
+      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+
+      if (cachedData && cacheTimestamp) {
+        const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+        
+        if (isCacheValid) {
+          console.log(`Loading makes for ${variant || 'default'} from cache...`);
+          setMakes(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
+      }
+
+      let response;
+      let uniqueMakes = [];
+
+      // Fetch based on variant
+      if (variant === 'cng') {
+        // Fetch from CNG API
+        console.log('Fetching makes from CNG API...');
+        response = await apiService.get('/cng');
+        
+        console.log('CNG API Response:', response);
+
+        // Handle response structure
+        let cngData = [];
+        if (response.success && Array.isArray(response.data)) {
+          cngData = response.data;
+        } else if (Array.isArray(response)) {
+          cngData = response;
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
+
+        // Extract unique makes from CNG data
+        uniqueMakes = [...new Set(
+          cngData
+            .map(item => item.make)
+            .filter(make => make)
+        )];
+
+      } else if (variant === 'e') {
+        // Fetch from Electric API
+        console.log('Fetching makes from Electric API...');
+        response = await apiService.get('/electric');
+        
+        console.log('Electric API Response:', response);
+
+        // Handle response structure
+        let electricData = [];
+        if (response.success && Array.isArray(response.data)) {
+          electricData = response.data;
+        } else if (Array.isArray(response)) {
+          electricData = response;
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
+
+        // Extract unique makes from Electric data
+        uniqueMakes = [...new Set(
+          electricData
+            .map(item => item.make)
+            .filter(make => make)
+        )];
+
+      } else {
+        // Default: Fetch from vehicle-list API
+        console.log('Fetching makes from vehicle-list API...');
+        response = await apiService.post('/vehicle-list', {
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          customerCode: "0046",
+          brand: null,
+          partNumber: null,
+          aggregate: null,
+          subAggregate: null,
+          make: null,
+          model: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null
+        });
+
+        console.log('Vehicle-list API Response:', response);
+
+        // Handle different response structures
+        let vehicleData = [];
+        if (Array.isArray(response)) {
+          vehicleData = response;
+        } else if (response && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else {
+          console.error("Unexpected response structure:", response);
+          throw new Error("Invalid response format");
+        }
+
+        // Extract unique makes
+        uniqueMakes = [...new Set(
+          vehicleData
+            .map(item => item.make)
+            .filter(make => make)
+        )];
+      }
+
+      console.log('Unique makes:', uniqueMakes);
+
+      if (uniqueMakes.length === 0) {
+        setError(`No makes found for ${featureLabel || 'this category'}.`);
+        setMakes([]);
+        setLoading(false);
+        return;
+      }
+
+      // Format makes with icons
+      const formattedMakes = uniqueMakes.map((makeName, index) => ({
+        id: index + 1,
+        name: makeName,
+        image: getMakeIcon(makeName)
+      }));
+
+      // Cache the results
+      localStorage.setItem(cacheKey, JSON.stringify(formattedMakes));
+      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+      console.log(`Makes for ${variant || 'default'} cached successfully`);
+
+      setMakes(formattedMakes);
+    } catch (err) {
+      console.error("Error fetching makes:", err);
+      setError("Failed to load makes. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };  const handleMakeClick = (make) => {
+    navigate("/Model", { 
+      state: { 
+        make: make.name,
+        variant,
+        featureLabel
+      } 
+    });
   };
 
   return (
@@ -40,35 +210,66 @@ const MakeNew = () => {
         <button className="make-back-button" onClick={() => navigate(-1)}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="make-title">Make</h1>
+        <h1 className="make-title">
+          {featureLabel ? `${featureLabel} - ` : ''}Make
+        </h1>
       </div>
 
       <div className="make-grid-wrapper">
-        <div className="make-row">
-          <div className="make-row-inner">
-            {makes.map((make) => (
-              <div
-                key={make.id}
-                className="make-card"
-                onClick={() => handleMakeClick(make)}
-              >
-                <div className="make-img-wrapper">
-                  <img
-                    src={make.image}
-                    alt={make.name}
-                    className="make-img"
-                    loading="lazy"
-                  />
-                </div>
-                <div className="make-text">
-                  <p className="make-name" title={make.name}>
-                    {make.name}
-                  </p>
-                </div>
-              </div>
-            ))}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <p>Loading makes...</p>
           </div>
-        </div>
+        ) : error ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "red" }}>
+            <p>{error}</p>
+            <button 
+              onClick={fetchMakes} 
+              style={{ 
+                marginTop: "10px", 
+                padding: "8px 16px", 
+                cursor: "pointer",
+                backgroundColor: "#007bff",
+                color: "white",
+                border: "none",
+                borderRadius: "5px"
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : makes.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <p>No makes available</p>
+          </div>
+        ) : (
+          <div className="make-row">
+            <div className="make-row-inner">
+              {makes.map((make) => (
+                <div
+                  key={make.id}
+                  className="make-card"
+                  onClick={() => handleMakeClick(make)}
+                >
+                  <div className="make-img-wrapper">
+                    <OciImage
+                      partNumber={make.name}
+                      folder="make"
+                      fallbackImage={make.image}
+                      className="make-img"
+                      alt={make.name}
+                    />
+                  </div>
+                  <div className="make-text">
+                    <p className="make-name" title={make.name}>
+                      {make.name}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

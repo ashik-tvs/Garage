@@ -125,6 +125,27 @@
   object-fit: contain;
 }
 
+/* Loading and Error States */
+.brands-loading,
+.brands-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  width: 100%;
+  font-family: 'Poppins', sans-serif;
+}
+
+.brands-loading p {
+  font-size: 18px;
+  color: #666;
+}
+
+.brands-error p {
+  font-size: 18px;
+  color: #d32f2f;
+}
+
 /* Responsive Design */
 @media (max-width: 1400px) {
   .brands-grid {

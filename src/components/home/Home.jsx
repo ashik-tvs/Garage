@@ -7,7 +7,7 @@ import "../../styles/home/Home.css";
 
 const Home = () => {
   return (
-    <div>
+    <div className="home-container">
       <Search />
       <Features />
       <Category />
