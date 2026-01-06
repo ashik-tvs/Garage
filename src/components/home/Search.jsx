@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { AiOutlineCamera } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
@@ -13,25 +14,147 @@ const Search = () => {
   const [bannerUrl, setBannerUrl] = useState(""); // Only banner
   const [searchValue, setSearchValue] = useState("");
   const [showImageUpload, setShowImageUpload] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({
+    top: 0,
+    left: 0,
+    width: 0,
+  });
+  const searchRef = useRef(null);
+  const inputRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Vehicle number validation
-  const isVehicleNumber = (value) => /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i.test(value);
+  const isVehicleNumber = (value) =>
+    /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i.test(value);
   const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
   const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
 
+  // Fetch autocomplete suggestions
+  const fetchSuggestions = async (searchKey) => {
+    if (searchKey.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await apiService.post("/search", {
+        customerCode: "0046",
+        searchKey: searchKey,
+      });
+
+      console.log("Search API Response:", response);
+
+      // Handle API response structure: { success, message, data: [...] }
+      let data = [];
+      if (response?.success && response?.data && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response?.data && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (Array.isArray(response)) {
+        data = response;
+      }
+
+      console.log("Parsed suggestions:", data);
+
+      if (data.length > 0) {
+        setSuggestions(data);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error("Search suggestions error:", error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle input change
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    fetchSuggestions(value);
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion, e) => {
+    console.log("=== SUGGESTION CLICKED ===");
+    console.log("Full suggestion object:", suggestion);
+
+    // If user typed numbers and clicked a suggestion, use partNumber
+    // If user typed text/description, use itemName
+    const isNumberSearch = /\d/.test(searchValue);
+    const searchTerm = isNumberSearch
+      ? suggestion.partNumber || suggestion.searchValue || suggestion.itemName
+      : suggestion.itemName || suggestion.partNumber || suggestion.searchValue;
+
+    console.log("Setting search value to:", searchTerm);
+
+    // Set the value immediately
+    setSearchValue(searchTerm);
+
+    // Hide suggestions immediately
+    setShowSuggestions(false);
+    setSuggestions([]);
+
+    // Navigate to PartNumber page with the search term
+    navigate("/search-by-part-number", { state: { partNumber: searchTerm } });
+  };
+
+  // Calculate dropdown position
+  useEffect(() => {
+    if (showSuggestions && inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [showSuggestions]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleSearch = (e) => {
     if (e.key !== "Enter") return;
+
+    // Hide suggestions when Enter is pressed
+    setShowSuggestions(false);
+    setSuggestions([]);
 
     const rawValue = searchValue.trim();
     if (!rawValue) return;
     const noSpaceValue = rawValue.replace(/\s+/g, "").toUpperCase();
 
     if (isVehicleNumber(noSpaceValue)) {
-      navigate("/search-by-vehicle-number", { state: { vehicleNumber: noSpaceValue } });
+      navigate("/search-by-vehicle-number", {
+        state: { vehicleNumber: noSpaceValue },
+      });
     } else if (isPartNumber(noSpaceValue)) {
-      navigate("/search-by-part-number", { state: { partNumber: noSpaceValue } });
+      navigate("/search-by-part-number", {
+        state: { partNumber: noSpaceValue },
+      });
     } else {
-      navigate("/search-by-service-type", { state: { serviceType: rawValue.toLowerCase() } });
+      // Item name search - navigate to PartNumber page with item name
+      navigate("/search-by-part-number", { state: { partNumber: rawValue } });
     }
   };
 
@@ -71,9 +194,13 @@ const Search = () => {
 
     fetchBanner();
   }, []);
+  // Detect if current search is a part number search
+  const isPartNumberSearch = /^(?=.*\d)[A-Z0-9]+$/i.test(
+    searchValue.trim().replace(/\s+/g, "")
+  );
 
   return (
-    <div className="search-wrapper">
+    <div className="search-wrapper" ref={searchRef}>
       <div
         className="search-banner-container"
         style={{
@@ -87,35 +214,40 @@ const Search = () => {
             Looking for parts? Just enter your vehicle number to get started
           </h2>
 
-          <div className="search-box">
-            <img src={SearchIcon} className="search-s-icon" alt="search" />
+          <div className="search-box-wrapper">
+            <div className="search-box" ref={inputRef}>
+              <img src={SearchIcon} className="search-s-icon" alt="search" />
 
-            <input
-              type="text"
-              placeholder="Search in Garage"
-              className="search-s-input"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={handleSearch}
-            />
+              <input
+                type="text"
+                placeholder="Search in Garage"
+                className="search-s-input"
+                ref={searchInputRef}
+                value={searchValue}
+                onChange={handleInputChange}
+                onKeyDown={handleSearch}
+              />
 
-            <HiOutlineMicrophone
-              className="search-mic"
-              onClick={() => alert("Voice search coming soon")}
-            />
+              {loading && <div className="search-loader">...</div>}
 
-            <AiOutlineCamera
-              className="search-upload"
-              onClick={() => setShowImageUpload(true)}
-            />
+              <HiOutlineMicrophone
+                className="search-mic"
+                onClick={() => alert("Voice search coming soon")}
+              />
 
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              style={{ display: "none" }}
-              onChange={handleImageSelect}
-            />
+              <AiOutlineCamera
+                className="search-upload"
+                onClick={() => setShowImageUpload(true)}
+              />
+
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                onChange={handleImageSelect}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -126,6 +258,45 @@ const Search = () => {
           onImageSelect={handleImageUploadSelect}
         />
       )}
+
+      {showSuggestions &&
+        suggestions.length > 0 &&
+        ReactDOM.createPortal(
+          <div
+            className="search-suggestions-portal"
+            style={{
+              position: "fixed",
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+              width: `${dropdownPosition.width}px`,
+              zIndex: 999999,
+            }}
+          >
+            {suggestions.map((suggestion, index) => (
+              <div
+                key={index}
+                className="search-suggestion-item"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSuggestionClick(suggestion, e);
+                }}
+              >
+                <div className="suggestion-part-number">
+                  {suggestion.partNumber || suggestion.searchValue}
+                </div>
+                {!isPartNumberSearch && (
+                  <div className="suggestion-item-name">
+                    {suggestion.itemName ||
+                      (suggestion.aggregate && suggestion.subAggregate
+                        ? `${suggestion.aggregate} - ${suggestion.subAggregate}`
+                        : suggestion.aggregate || suggestion.subAggregate)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

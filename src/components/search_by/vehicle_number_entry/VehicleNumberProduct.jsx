@@ -37,23 +37,31 @@ const Product = () => {
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
-  
+
   // Product states
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stockData, setStockData] = useState({}); // Store stock info by partNumber
-  
+
   // See More/Less states
   const [showAllRecommended, setShowAllRecommended] = useState(false);
   const [showAllOther, setShowAllOther] = useState(false);
-  
+
   const isInCart = (partNumber) =>
     cartItems.some((item) => item.partNumber === partNumber);
 
   // Get navigation flow data from state
-  const { vehicle, make, model, brand, category, subCategory, aggregateName, subAggregateName } =
-    location.state || {};
+  const {
+    vehicle,
+    make,
+    model,
+    brand,
+    category,
+    subCategory,
+    aggregateName,
+    subAggregateName,
+  } = location.state || {};
 
   const [filters, setFilters] = useState({
     brakeSystem: "",
@@ -61,7 +69,7 @@ const Product = () => {
     eta: "",
     sortBy: "",
   });
-  
+
   const filterOptions = {
     brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
     price: ["Low to High", "High to Low"],
@@ -81,11 +89,11 @@ const Product = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching products for:", { 
-        aggregateName, 
-        subAggregateName, 
-        make, 
-        model 
+      console.log("Fetching products for:", {
+        aggregateName,
+        subAggregateName,
+        make,
+        model,
       });
 
       const response = await apiService.post("/parts-list", {
@@ -124,21 +132,23 @@ const Product = () => {
         eta: "1-2 Days", // Static
         image: getRandomImage(), // Static random image
         // Keep original data for reference
-        originalData: item
+        originalData: item,
       }));
 
       console.log("Formatted products:", formattedProducts);
       setProducts(formattedProducts);
-      
+
       // Fetch stock status for all products
       fetchStockForProducts(formattedProducts);
     } catch (err) {
       console.error("Error fetching products:", err);
-      
+
       if (err.response?.status === 401) {
         setError("Session expired. Please login again.");
       } else {
-        setError(`Failed to load products: ${err.message || "Please try again."}`);
+        setError(
+          `Failed to load products: ${err.message || "Please try again."}`
+        );
       }
     } finally {
       setLoading(false);
@@ -158,24 +168,27 @@ const Product = () => {
           limit: 2,
           offset: 0,
           sortOrder: "ASC",
-          fieldOrder: "lotAgeDate"
+          fieldOrder: "lotAgeDate",
         });
 
         // Check if stock data exists and has quantity
         const stockItems = Array.isArray(response?.data) ? response.data : [];
-        const totalQty = stockItems.reduce((sum, item) => sum + (item.qty || 0), 0);
-        
+        const totalQty = stockItems.reduce(
+          (sum, item) => sum + (item.qty || 0),
+          0
+        );
+
         return {
           partNumber: product.partNumber,
           inStock: totalQty > 0,
-          quantity: totalQty
+          quantity: totalQty,
         };
       } catch (err) {
         console.error(`Error fetching stock for ${product.partNumber}:`, err);
         return {
           partNumber: product.partNumber,
           inStock: false,
-          quantity: 0
+          quantity: 0,
         };
       }
     });
@@ -183,7 +196,7 @@ const Product = () => {
     try {
       const stockResults = await Promise.all(stockPromises);
       const stockMap = {};
-      stockResults.forEach(result => {
+      stockResults.forEach((result) => {
         stockMap[result.partNumber] = result;
       });
       setStockData(stockMap);
@@ -201,20 +214,24 @@ const Product = () => {
 
   // Split products into categories based on brand
   // myTVS Recommended Products: Only myTVS brand products
-  const recommendedProducts = products.filter(product => 
-    product.brand?.toUpperCase().includes('MYTVS') || 
-    product.brand?.toUpperCase().includes('MY TVS')
+  const recommendedProducts = products.filter(
+    (product) =>
+      product.brand?.toUpperCase().includes("MYTVS") ||
+      product.brand?.toUpperCase().includes("MY TVS")
   );
-  
+
   // Other Products: All brands except myTVS
-  const otherProducts = products.filter(product => 
-    !(product.brand?.toUpperCase().includes('MYTVS') || 
-      product.brand?.toUpperCase().includes('MY TVS'))
+  const otherProducts = products.filter(
+    (product) =>
+      !(
+        product.brand?.toUpperCase().includes("MYTVS") ||
+        product.brand?.toUpperCase().includes("MY TVS")
+      )
   );
-  
+
   // Aligned Products: Can keep same logic or remove if not needed
   const alignedProducts = [];
-  
+
   useEffect(() => {
     const close = () => setOpenFilter(null);
     window.addEventListener("click", close);
@@ -238,49 +255,63 @@ const Product = () => {
   const renderProductCard = (product) => {
     const stockInfo = stockData[product.partNumber];
     const isInStock = stockInfo?.inStock ?? true; // Default to true while loading
-    
+
     return (
-    <div className="vnp-card" key={product.partNumber}>
-      <div className="vnp-image-placeholder">
-        <img src={product.image || NoImage} alt={product.name} width="100" />
-      </div>
+      <div className="vnp-card" key={product.partNumber}>
+        <div className="vnp-details">
+          <div className="vnp-badges">
+            <span
+              className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`}
+              title={product.brand}
+            >
+              {product.brand}
+            </span>
+            <span
+              className="vnp-badge vnp-badge-stock"
+              style={{
+                backgroundColor: isInStock ? "#e7f7ee" : "#f2d5d7",
+                color: isInStock ? "#16a34a" : "#c3111e",
+              }}
+            >
+              {isInStock ? "In Stock" : "Out of Stock"}
+            </span>
+            <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
+          </div>
 
-      <div className="vnp-details">
-        <div className="vnp-badges">
-          <span className={`vnp-badge vnp-badge-${product.brand.toLowerCase()}`} title={product.brand}>
-            {product.brand}
-           </span>
-          <span 
-            className="vnp-badge vnp-badge-stock" 
-            style={{ 
-              backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
-              color: isInStock ? '#16a34a' : '#c3111e'
-            }}
-          >
-            {isInStock ? 'In Stock' : 'Out of Stock'}
-          </span>
-          <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
+          <p className="vnp-code">{product.partNumber}</p>
+          <p className="vnp-name" title={product.name}>
+            {product.name}
+          </p>
+
+          <div className="vnp-price-row">
+            <span className="vnp-price-current">₹ {product.price}.00</span>
+            <span className="vnp-price-original">₹ {product.mrp}.00</span>
+          </div>
         </div>
+<div className="vnp-image-placeholder">
+  <div className="vnp-image-wrapper">
+    <img
+      src={product.image || NoImage}
+      alt={product.name}
+      className="vnp-product-image"
+    />
+  </div>
+  <div className="vnp-btn-wrapper">
+    <button
+      className={`vnp-btn-add ${
+        isInCart(product.partNumber) ? "added" : ""
+      }`}
+      onClick={() => handleToggleCart(product)}
+    >
+      {isInCart(product.partNumber) ? "Added" : "Add"}
+    </button>
+  </div>
+</div>
 
-        <p className="vnp-code">{product.partNumber}</p>
-        <p className="vnp-name" title={product.name}>{product.name}</p>
 
-        <div className="vnp-price-row">
-          <span className="vnp-price-current">₹ {product.price}.00</span>
-          <span className="vnp-price-original">₹ {product.mrp}.00</span>
-
-          <button
-            className={`vnp-btn-add ${isInCart(product.partNumber) ? "added" : ""}`}
-            onClick={() => handleToggleCart(product)}
-          >
-            {isInCart(product.partNumber) ? "Added" : "Add"}
-          </button>
-        </div>
       </div>
-    </div>
     );
   };
-  
 
   return (
     <div className="vnp-container">
@@ -296,25 +327,45 @@ const Product = () => {
           {brand && (
             <>
               <span>{brand}</span>
-              <img src={getAssetUrl("RIGHT ARROW")} alt="" width="15" height="15" />
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="15"
+                height="15"
+              />
             </>
           )}
           {make && (
             <>
               <span>{make}</span>
-              <img src={getAssetUrl("RIGHT ARROW")} alt="" width="15" height="15" />
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="15"
+                height="15"
+              />
             </>
           )}
           {model && (
             <>
               <span>{model}</span>
-              <img src={getAssetUrl("RIGHT ARROW")} alt="" width="10" height="10" />
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="10"
+                height="10"
+              />
             </>
           )}
           {category && (
             <>
               <span>{category}</span>
-              <img src={getAssetUrl("RIGHT ARROW")} alt="" width="15" height="15" />
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="15"
+                height="15"
+              />
             </>
           )}
           {subCategory && <span>{subCategory.name || subCategory}</span>}
@@ -368,7 +419,10 @@ const Product = () => {
                   <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
                 </div>
                 {openFilter === key && (
-                  <div className="vnp-filter-dropdown" onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="vnp-filter-dropdown"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {filterOptions[key].map((option) => (
                       <div
                         key={option}
@@ -422,22 +476,24 @@ const Product = () => {
 
       {/* ---------- CONTENT ---------- */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px' }}>
+        <div style={{ textAlign: "center", padding: "50px", fontSize: "18px" }}>
           Loading products...
         </div>
       ) : error ? (
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <p style={{ color: 'red', fontSize: '16px', marginBottom: '20px' }}>{error}</p>
-          <button 
+        <div style={{ textAlign: "center", padding: "50px" }}>
+          <p style={{ color: "red", fontSize: "16px", marginBottom: "20px" }}>
+            {error}
+          </p>
+          <button
             onClick={fetchProducts}
             style={{
-              padding: '10px 20px',
-              fontSize: '16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
+              padding: "10px 20px",
+              fontSize: "16px",
+              backgroundColor: "#007bff",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
             }}
           >
             Retry
@@ -447,21 +503,37 @@ const Product = () => {
         <div className="vnp-content-wrapper">
           <div className="vnp-left-section">
             <div className="vnp-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <h2 className="vnp-section-title">
+                  myTVS Recommended Products
+                </h2>
                 {recommendedProducts.length > 2 && (
-                  <span 
-                    className="see-more" 
+                  <span
+                    className="see-more"
                     onClick={() => setShowAllRecommended(!showAllRecommended)}
-                    style={{ cursor: 'pointer', color: '#e55a2b', fontSize: '14px', marginRight: '35px' }}
+                    style={{
+                      cursor: "pointer",
+                      color: "#e55a2b",
+                      fontSize: "14px",
+                      marginRight: "35px",
+                    }}
                   >
-                    {showAllRecommended ? 'See Less' : 'See More'}
+                    {showAllRecommended ? "See Less" : "See More"}
                   </span>
                 )}
               </div>
               <div className="vnp-cards-grid">
                 {recommendedProducts.length > 0 ? (
-                  (showAllRecommended ? recommendedProducts : recommendedProducts.slice(0, 2)).map(renderProductCard)
+                  (showAllRecommended
+                    ? recommendedProducts
+                    : recommendedProducts.slice(0, 2)
+                  ).map(renderProductCard)
                 ) : (
                   <p>No recommended products found.</p>
                 )}
@@ -469,21 +541,35 @@ const Product = () => {
             </div>
 
             <div className="vnp-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <h2 className="vnp-section-title">Other Products</h2>
                 {otherProducts.length > 2 && (
-                  <span 
-                    className="see-more" 
+                  <span
+                    className="see-more"
                     onClick={() => setShowAllOther(!showAllOther)}
-                    style={{ cursor: 'pointer', color: '#e55a2b', fontSize: '14px', marginRight: '35px' }}
+                    style={{
+                      cursor: "pointer",
+                      color: "#e55a2b",
+                      fontSize: "14px",
+                      marginRight: "35px",
+                    }}
                   >
-                    {showAllOther ? 'See Less' : 'See More'}
+                    {showAllOther ? "See Less" : "See More"}
                   </span>
                 )}
               </div>
               <div className="vnp-cards-grid">
                 {otherProducts.length > 0 ? (
-                  (showAllOther ? otherProducts : otherProducts.slice(0, 2)).map(renderProductCard)
+                  (showAllOther
+                    ? otherProducts
+                    : otherProducts.slice(0, 2)
+                  ).map(renderProductCard)
                 ) : (
                   <p>No other products found.</p>
                 )}
@@ -500,52 +586,71 @@ const Product = () => {
                   const stockInfo = stockData[product.partNumber];
                   const isInStock = stockInfo?.inStock ?? true;
                   return (
-              <div className="vnp-aligned-card" key={product.partNumber}>
-                <div className="vnp-image-placeholder-small">
-                  <img src={product.image || NoImage} alt={product.name} width="100" />
-                </div>
+                    <div className="vnp-aligned-card" key={product.partNumber}>
+                      <div className="vnp-image-placeholder-small">
+                        <img
+                          src={product.image || NoImage}
+                          alt={product.name}
+                          width="100"
+                        />
+                      </div>
 
-                <div className="vnp-aligned-details">
-                  <div className="vnp-badges">
-                    <span className="vnp-badge vnp-badge-valeo" title={product.brand}>{product.brand}</span>
-                    <span 
-                      className="vnp-badge vnp-badge-stock"
-                      style={{ 
-                        backgroundColor: isInStock ? '#e7f7ee' : '#f2d5d7',
-                        color: isInStock ? '#16a34a' : '#c3111e'
-                      }}
-                    >
-                      {isInStock ? 'In Stock' : 'Out of Stock'}
-                    </span>
-                    <span className="vnp-badge vnp-badge-eta">{product.eta}</span>
-                  </div>
+                      <div className="vnp-aligned-details">
+                        <div className="vnp-badges">
+                          <span
+                            className="vnp-badge vnp-badge-valeo"
+                            title={product.brand}
+                          >
+                            {product.brand}
+                          </span>
+                          <span
+                            className="vnp-badge vnp-badge-stock"
+                            style={{
+                              backgroundColor: isInStock
+                                ? "#e7f7ee"
+                                : "#f2d5d7",
+                              color: isInStock ? "#16a34a" : "#c3111e",
+                            }}
+                          >
+                            {isInStock ? "In Stock" : "Out of Stock"}
+                          </span>
+                          <span className="vnp-badge vnp-badge-eta">
+                            {product.eta}
+                          </span>
+                        </div>
 
-                  <p className="vnp-code">{product.partNumber}</p>
-                  <p className="vnp-name" title={product.name}>
-                    {product.name}
-                  </p>
+                        <p className="vnp-code">{product.partNumber}</p>
+                        <p className="vnp-name" title={product.name}>
+                          {product.name}
+                        </p>
 
-                  <div className="vnp-price-row">
-                    <span className="vnp-price-current">₹ {product.price}.00</span>
-                    <span className="vnp-price-original">₹ {product.mrp}.00</span>
+                        <div className="vnp-price-row">
+                          <span className="vnp-price-current">
+                            ₹ {product.price}.00
+                          </span>
+                          <span className="vnp-price-original">
+                            ₹ {product.mrp}.00
+                          </span>
 
-                    <button
-                      className={`vnp-btn-add ${isInCart(product.partNumber) ? "added" : ""}`}
-                      onClick={() => handleToggleCart(product)}
-                    >
-                      {isInCart(product.partNumber) ? "Added" : "Add"}
-                    </button>
-                  </div>
-                </div>
-              </div>
+                          <button
+                            className={`vnp-btn-add ${
+                              isInCart(product.partNumber) ? "added" : ""
+                            }`}
+                            onClick={() => handleToggleCart(product)}
+                          >
+                            {isInCart(product.partNumber) ? "Added" : "Add"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })
               ) : (
-              <p>No aligned products found.</p>
-            )}
+                <p>No aligned products found.</p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

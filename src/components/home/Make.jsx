@@ -4,16 +4,6 @@ import apiService from "../../services/apiservice";
 import OciImage from "../oci_image/ociImages.jsx";
 import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Make.css";
-import Maruti from "../../assets/Make/MARUTI SUZUKI.png";
-import Tata from "../../assets/Make/TATA.png";
-import Hyundai from "../../assets/Make/HYUNDAI.png";
-import Mahindra from "../../assets/Make/MAHINDRA.png";
-import Abarth from "../../assets/Make/ABARTH.png";
-import Audi from "../../assets/Make/AUDI.png";
-import Ford from "../../assets/Make/FORD.png";
-import Bently from "../../assets/Make/BENTLEY.png";
-import Bmw from "../../assets/Make/BMW.png";
-import Jeep from "../../assets/Make/JEEP.png";
 
 const Make = () => {
   const navigate = useNavigate();
@@ -23,25 +13,9 @@ const Make = () => {
   const [error, setError] = useState(null);
   const [usingFallback, setUsingFallback] = useState(false);
 
-  // Icon mapping for makes
-  const makeIconMap = {
-    "MARUTI SUZUKI": Maruti,
-    "MARUTI": Maruti,
-    "SUZUKI": Maruti,
-    "TATA": Tata,
-    "HYUNDAI": Hyundai,
-    "MAHINDRA": Mahindra,
-    "ABARTH": Abarth,
-    "AUDI": Audi,
-    "FORD": Ford,
-    "BENTLEY": Bently,
-    "BMW": Bmw,
-    "JEEP": Jeep,
-  };
-
   const getIconForMake = (makeName) => {
     const upperName = makeName.toUpperCase();
-    return makeIconMap[upperName] || NoImage;
+    return [upperName] || NoImage;
   };
 
   useEffect(() => {
@@ -74,7 +48,7 @@ const Make = () => {
       console.log("Fetching makes from API...");
 
       const response = await apiService.post("/vehicle-list", {
-        limit: 5000,
+        limit: 50000,
         offset: 0,
         sortOrder: "ASC",
         customerCode: "0046",

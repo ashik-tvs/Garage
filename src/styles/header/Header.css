@@ -46,16 +46,19 @@
   align-items: center;
   position: relative;
   cursor: pointer;
+  background-color: #1111830e;
+  padding: 6px 10px;
+  border-radius: 4px;
+  gap: 10px;
 }
 
 .header-icon {
   height: 22px;
-  margin-right: 6px;
 }
 
 .header-text {
-  font-size: 14px;
-  color: #5c5c5c;
+  font-size: 12px;
+  color: #111183;
   font-weight: 500;
 }
 
