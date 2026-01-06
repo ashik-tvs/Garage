@@ -4,11 +4,12 @@
     align-items: center;
     justify-content: center;
     display: flex;
+    position: relative;
 }
 
 /* 🔥 FIXED BANNER FULL SIZE */
 .search-banner-container {
-    width: 89%;
+    width: 96%;
     height: 150px;
   background-size: cover !important;   /* ensure full stretch */
   background-position: left center !important; /* car visible */
@@ -18,7 +19,7 @@
   align-items: center;
 
   /* Reduce cutting on big screens */
-  padding: 0 50px;
+  /* padding: 0 50px; */
 }
 
 /* Content box on right */
@@ -28,6 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  position: relative;
 }
 
 /* Title */
@@ -38,9 +40,16 @@
   margin: 0;
 }
 
+/* Search box wrapper for positioning */
+.search-box-wrapper {
+  width: 60%;
+  margin-left: 31%;
+  position: relative;
+}
+
 /* Search box */
 .search-box {
-  width: 60%;
+  width: 90%;
   height: 42px;
   background: #fff;
   border-radius: 4px;
@@ -48,7 +57,6 @@
   align-items: center;
   padding: 0 14px;
   gap: 12px;
-  margin-left: auto;
 }
 
 .search-s-icon {
@@ -61,6 +69,52 @@
   border: none;
   font-size: 14px;
   outline: none;
+}
+
+.search-loader {
+  position: absolute;
+  right: 60px;
+  font-size: 14px;
+  color: #ff6a00;
+}
+
+/* Autocomplete Suggestions Dropdown - Portal Style */
+.search-suggestions-portal {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-top: 4px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.search-suggestion-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.2s ease;
+}
+
+.search-suggestion-item:hover {
+  background: #f9f9f9;
+}
+
+.search-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-part-number {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.suggestion-item-name {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
 }
 
 .search-mic {

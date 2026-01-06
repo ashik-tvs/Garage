@@ -1,8 +1,12 @@
 .pn-wrapper {
-  padding: 0px;
+  padding: 0px 20px;
+  position: relative;
+  z-index: 1;
 }
 .pn-body {
   padding: 0px 20px 20px 20px;
+  position: relative;
+  z-index: 1;
 }
 /* TOP AREA */
 .pn-top {
@@ -12,6 +16,7 @@
   flex-direction: row;
   padding: 12px;
   border-radius: 8px;
+  margin-top: 1%;
 }
 
 .pn-search-key {
@@ -35,14 +40,17 @@
 }
 
 .pn-filter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 15px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 12px;
-  background: #fff;
+
+}
+.pn-filter-select{
+      display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #F2F4F7;
 }
 .pn-filter img {
   width: 10px;
@@ -50,7 +58,7 @@
 }
 
 .pn-compat-btn {
-  background: #ff6a00;
+  background: #29318A;
   color: #fff;
   border: none;
   padding: 6px 14px;
@@ -66,7 +74,7 @@
 /* CONTENT */
 .pn-content {
   display: flex;
-  gap: 50px;
+  gap: 25px;
   justify-content: center;
 }
 
@@ -115,7 +123,7 @@
 
 .pn-card-body {
   margin-left: 12px;
-  flex: 1;
+  width: 240px;
 }
 
 .pn-tags span {
@@ -179,9 +187,14 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
-
+.pn-card-actions{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+}
 .pn-add-btn {
-  margin-left: auto;
+  margin: auto;
   background: #ff6a00;
   color: #fff;
   border: none;
@@ -340,4 +353,30 @@
 }
 .pn-modal-row:hover {
   background: #f9f9f9;
+}
+
+/* Loading and Error States */
+.pn-loading,
+.pn-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  width: 100%;
+}
+
+.pn-loading p {
+  font-size: 16px;
+  color: #666;
+}
+
+.pn-error p {
+  font-size: 16px;
+  color: #dc2626;
+  font-weight: 500;
+}
+.pn-no-results{
+  font-size: 14px;
+  color: #666;
+  text-align: center;
 }

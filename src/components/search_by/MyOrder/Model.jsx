@@ -29,6 +29,18 @@ const Model = () => {
     variant,
     featureLabel,
   });
+  const getOciModelFileName = (modelName) => {
+    if (!modelName) return null;
+
+    // Convert "AUDI A3" → "Audi - A3"
+    const parts = modelName.split(" ");
+    if (parts.length < 2) return modelName;
+
+    const brand = parts[0].charAt(0) + parts[0].slice(1).toLowerCase();
+    const model = parts.slice(1).join(" ");
+
+    return `${brand} - ${model}`;
+  };
 
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -404,9 +416,9 @@ const Model = () => {
               >
                 <div className="model-card-content">
                   <OciImage
-                    partNumber={model.name}
-                    folder="model"
-                    fallbackImage={model.image}
+                    partNumber={model.name} // raw model name
+                    folder="model" // dynamic resolution
+                    fallbackImage={noImage} // optional
                     className="model-image"
                     alt={model.name}
                   />

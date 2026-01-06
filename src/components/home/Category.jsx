@@ -4,15 +4,6 @@ import axios from "axios";
 // import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
 import OciImage from "../oci_image/ociImages";
-import Accessories from "../../assets/Categories/ACCESSORIES.png"
-import Battery from "../../assets/Categories/BATTERY.png"
-import Bearing from "../../assets/Categories/BEARING.png"
-import Belts from "../../assets/Categories/BELTS AND TENSIONER.png"
-import BodyParts from "../../assets/Categories/BODY PARTS.png"
-import BrakeSystem from "../../assets/Categories/BRAKE SYSTEM.png"
-import Cables from "../../assets/Categories/CABLES AND WIRES.png"
-import ChildParts from "../../assets/Categories/CHILD PARTS.png"
-import Filters from "../../assets/Categories/FILTERS.png"
 
 
 const Category = () => {
@@ -22,25 +13,10 @@ const Category = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Icon mapping based on aggregate name
-  const iconMap = {
-    "ACCESSORIES": Accessories,
-    "BEARING": Bearing,
-    "BATTERY": Battery,
-    "BELTS AND TENSIONER": Belts,
-    "BEALTS & TENSIONER": Belts,
-    "BRAKE SYSTEM": BrakeSystem,
-    "BODY PARTS": BodyParts,
-    "CABLES": Cables,
-    "CABLES AND WIRES": Cables,
-    "CHILD PARTS": ChildParts,
-    "CHILDPARTS": ChildParts,
-    "FILTERS": Filters,
-  };
 
   const getIconForCategory = (aggregateName) => {
     const upperName = aggregateName.toUpperCase();
-    return iconMap[upperName]  ;
+    return [upperName]  ;
   };
 
   useEffect(() => {
@@ -230,7 +206,7 @@ const Category = () => {
                   folder="categories"
                   fallbackImage={cat.icon}
                   className="cat-img"
-                  style={{ width: '100%', height: '90px', objectFit: 'contain' }}
+                  style={{ objectFit: 'contain' }}
                 />
               </div>
               

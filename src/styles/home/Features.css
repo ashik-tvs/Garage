@@ -28,16 +28,15 @@
   max-width: 190px;
   height: 75px;
   background: #ffffff;
-  border: 2px solid #20409a;
   border-radius: 8px;
-
+  box-shadow: 3px 4px 12px rgba(32, 64, 154, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-
+  margin: 10px 0px;
   padding: 0 12px;
   box-sizing: border-box;
-
+border: 1px solid #e0e0e0;
   cursor: pointer;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
   will-change: transform;
@@ -79,7 +78,7 @@
   width: 50px;
   height: 50px;
 }
-.sixcat-icon--fm{
+.sixcat-icon--fm {
   width: 50px;
   height: auto;
 }
