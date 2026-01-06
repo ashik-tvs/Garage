@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import NoImage from "../../assets/No Image.png";
 import { getOciImage } from "../../utils/ociImage";
 
-const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr-image", alt }) => {
+const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr-image", alt, style }) => {
   const [imgUrl, setImgUrl] = useState(fallbackImage || NoImage);
 
   useEffect(() => {
@@ -26,11 +26,7 @@ const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr
       src={imgUrl}
       alt={alt || partNumber}
       className={className}
-      style={{
-        width: "100%",
-        height: "150px",
-        objectFit: "contain",
-      }}
+      style={{ width: "100%", height: "60px", objectFit: "contain", ...style }}
     />
   );
 };

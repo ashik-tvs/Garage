@@ -35,6 +35,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   cursor: pointer;
   overflow: hidden;              /* ✅ keeps rounded corners clean */
 }
@@ -61,20 +62,23 @@
 
 /* Image */
 .cat-img {
-  width: 70px;
-  height: 70px;
+  width: 55px;
+  height: 58px;
   object-fit: contain;
 }
 
 /* Text */
 .cat-label {
   width: 100%;
-  padding: 8px 6px;
-
+  padding: 6px 6px;
+  margin: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   font-size: 14px;
   font-weight: 500;
-
   background: #f3f3f3;
 }
 

@@ -13,6 +13,7 @@
   height: 74px;
   display: flex;
   align-items: center;
+  /* justify-content: flex-start; (default) */
   padding: 0 20px;
 }
 
@@ -41,9 +42,7 @@
 }
 
 .category-title {
-  position: absolute;
-  left: 23%;
-  transform: translateX(-50%);
+  position: static;
   font-family: 'Poppins', sans-serif;
   font-style: normal;
   font-weight: 500;
@@ -51,7 +50,7 @@
   line-height: 48px;
   letter-spacing: 0.04em;
   color: #454545;
-  margin: 0;
+  margin-left: 16px;
 }
 
 /* Category Content */
