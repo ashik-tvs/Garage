@@ -21,14 +21,10 @@ const CartTotal = () => {
     try {
       setLoading(true);
 
-      /* ============================
-         1️⃣ Generate SOURCE ORDER ID
-      ============================ */
+      // 1️⃣ Generate SOURCE ORDER ID
       const sourceOrderId = "MOF" + Date.now();
 
-      /* ============================
-         2️⃣ CREATE ORDER PAYLOAD
-      ============================ */
+      // 2️⃣ Create order payload
       const payload = [
         {
           BATCH: "20241022",
@@ -67,55 +63,26 @@ const CartTotal = () => {
         },
       ];
 
-      /* ============================
-         3️⃣ CREATE ORDER IN ERP
-      ============================ */
+      // 3️⃣ Create order in ERP
       await apiService.post("/create-sale-order", payload);
 
       /* ============================
-         4️⃣ SAVE PENDING ORDER
-      ============================ */
-      localStorage.setItem(
-        "pendingOrder",
-        JSON.stringify({
-          sourceOrderId,
-          status: "PENDING",
-          date: new Date().toISOString(),
-        })
-      );
+   SAVE ORDER TO ORDER LIST
+============================ */
+      const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
 
-      /* ============================
-         5️⃣ WAIT (ERP ASYNC)
-      ============================ */
-      await new Promise((r) => setTimeout(r, 3000));
+      const newOrder = {
+        orderNumber: sourceOrderId, // ERP will update later
+        sourceOrderId,
+        date: new Date().toISOString().split("T")[0],
+        quantity: cartItems.length,
+        status: "PENDING",
+        location: "Chennai",
+      };
 
-      /* ============================
-         6️⃣ CALL STATUS API
-      ============================ */
-// CartTotal.jsx
-const statusResponse = await apiService.get("/order/status", {
-  params: { source_order_id: sourceOrderId }, // send directly, NOT nested
-});
+      existingOrders.unshift(newOrder); // latest order first
 
-
-
-      const erpOrderNumber =
-        statusResponse.data?.SalesOrder_number || sourceOrderId; // fallback
-
-      /* ============================
-         7️⃣ SAVE FINAL ORDER
-      ============================ */
-      localStorage.setItem(
-        "lastOrder",
-        JSON.stringify({
-          orderNumber: erpOrderNumber,
-          sourceOrderId,
-          date: new Date().toISOString().split("T")[0],
-          quantity: cartItems.length,
-          status: "CREATED",
-          location: "Chennai",
-        })
-      );
+      localStorage.setItem("orders", JSON.stringify(existingOrders));
 
       setShowSuccess(true);
     } catch (error) {
