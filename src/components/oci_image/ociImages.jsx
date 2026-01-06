@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import NoImage from "../../assets/No Image.png";
 import { getOciImage } from "../../utils/ociImage";
 
-const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr-image", alt }) => {
+const Image = ({ partNumber, folder = "products", fallbackImage, className = "pr-image", alt, style }) => {
   const [imgUrl, setImgUrl] = useState(fallbackImage || NoImage);
 
   useEffect(() => {

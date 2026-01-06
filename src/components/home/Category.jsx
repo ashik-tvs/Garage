@@ -230,6 +230,7 @@ const Category = () => {
                   folder="categories"
                   fallbackImage={cat.icon}
                   className="cat-img"
+                  style={{ width: '100%', height: '90px', objectFit: 'contain' }}
                 />
               </div>
               
