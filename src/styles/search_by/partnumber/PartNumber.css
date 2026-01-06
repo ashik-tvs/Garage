@@ -1,8 +1,12 @@
 .pn-wrapper {
-  padding: 0px;
+  padding: 0px 20px;
+  position: relative;
+  z-index: 1;
 }
 .pn-body {
   padding: 0px 20px 20px 20px;
+  position: relative;
+  z-index: 1;
 }
 /* TOP AREA */
 .pn-top {
