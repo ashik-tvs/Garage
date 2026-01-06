@@ -84,8 +84,13 @@ const Search = () => {
     console.log('=== SUGGESTION CLICKED ===');
     console.log('Full suggestion object:', suggestion);
     
-    // Priority: partNumber > searchValue > itemName
-    const searchTerm = suggestion.partNumber || suggestion.searchValue || suggestion.itemName;
+    // If user typed numbers and clicked a suggestion, use partNumber
+    // If user typed text/description, use itemName
+    const isNumberSearch = /\d/.test(searchValue);
+    const searchTerm = isNumberSearch 
+      ? (suggestion.partNumber || suggestion.searchValue || suggestion.itemName)
+      : (suggestion.itemName || suggestion.partNumber || suggestion.searchValue);
+    
     console.log('Setting search value to:', searchTerm);
     
     // Set the value immediately
@@ -95,10 +100,8 @@ const Search = () => {
     setShowSuggestions(false);
     setSuggestions([]);
     
-    // Focus input
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
+    // Navigate to PartNumber page with the search term
+    navigate("/search-by-part-number", { state: { partNumber: searchTerm } });
   };
 
   // Calculate dropdown position
@@ -141,7 +144,8 @@ const Search = () => {
     } else if (isPartNumber(noSpaceValue)) {
       navigate("/search-by-part-number", { state: { partNumber: noSpaceValue } });
     } else {
-      navigate("/search-by-service-type", { state: { serviceType: rawValue.toLowerCase() } });
+      // Item name search - navigate to PartNumber page with item name
+      navigate("/search-by-part-number", { state: { partNumber: rawValue } });
     }
   };
 

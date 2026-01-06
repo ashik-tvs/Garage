@@ -16,6 +16,7 @@
   flex-direction: row;
   padding: 12px;
   border-radius: 8px;
+  margin-top: 1%;
 }
 
 .pn-search-key {
@@ -46,7 +47,7 @@
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 12px;
-  background: #fff;
+  background: #F2F4F7;
 }
 .pn-filter img {
   width: 10px;
@@ -54,7 +55,7 @@
 }
 
 .pn-compat-btn {
-  background: #ff6a00;
+  background: #29318A;
   color: #fff;
   border: none;
   padding: 6px 14px;
@@ -70,7 +71,7 @@
 /* CONTENT */
 .pn-content {
   display: flex;
-  gap: 50px;
+  gap: 25px;
   justify-content: center;
 }
 
@@ -344,4 +345,25 @@
 }
 .pn-modal-row:hover {
   background: #f9f9f9;
+}
+
+/* Loading and Error States */
+.pn-loading,
+.pn-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  width: 100%;
+}
+
+.pn-loading p {
+  font-size: 16px;
+  color: #666;
+}
+
+.pn-error p {
+  font-size: 16px;
+  color: #dc2626;
+  font-weight: 500;
 }

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Search from "../../home/Search";
 import { useCart } from "../../../context/CartContext";
+import { fetchPartsListByPartNumber, fetchPartsListByItemName } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
@@ -271,27 +272,93 @@ const CompatibilityModal = ({ onClose }) => {
 
 const PartNumber = () => {
   const { state } = useLocation();
-  const searchKey = (state?.partNumber || "").toUpperCase();
+  const rawSearchKey = state?.partNumber || "";
+  
+  // Detection functions
+  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+  const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
+  
+  // Keep original case for item name, uppercase for part number
+  const searchKey = isPartNumber(rawSearchKey.replace(/\s+/g, '')) 
+    ? rawSearchKey.toUpperCase() 
+    : rawSearchKey;
 
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showCompatibility, setShowCompatibility] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [otherBrandProducts, setOtherBrandProducts] = useState([]);
 
-  const filterByPartNumber = (list, key) => {
-    if (!key) return list;
+  // Fetch parts data from API
+  useEffect(() => {
+    const fetchPartsData = async () => {
+      if (!searchKey) {
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+        return;
+      }
 
-    return list.filter((item) => item.partNo.toUpperCase().includes(key));
-  };
-  const partMatchedProducts = filterByPartNumber(products, searchKey);
+      setLoading(true);
+      setError(null);
 
-const recommendedProducts = products.filter(
-  (item) =>
-    item.brand.toUpperCase() === "MYTVS" &&
-    item.partNo.toUpperCase().includes(searchKey)
-);
+      try {
+        // Detect if searchKey is part number (alphanumeric with at least one digit) or item name (letters and spaces only)
+        const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+        const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ''));
+        
+        let response;
+        if (isPartNumberSearch) {
+          // Search by part number
+          response = await fetchPartsListByPartNumber(searchKey);
+        } else {
+          // Search by item name/description
+          response = await fetchPartsListByItemName(searchKey);
+        }
+        
+        const partsData = response?.data || [];
 
-const otherBrandProducts = products.filter(
-  (item) => item.brand.toUpperCase() !== "MYTVS"
-);
+        // Transform API data to match component structure
+        const transformedParts = partsData.map((part, index) => ({
+          id: index + 1,
+          brand: part.brandName || "Unknown",
+          partNo: part.partNumber,
+          description: part.itemDescription,
+          price: parseFloat(part.listPrice) || 0,
+          mrp: parseFloat(part.mrp) || 0,
+          eta: "1-2 Days",
+          stock: "In stock",
+          vehicles: 12, // Default value, update if API provides this
+          imageUrl: NoImage,
+          lineCode: part.lineCode,
+          hsnCode: part.hsnCode,
+          aggregate: part.aggregate,
+          subAggregate: part.subAggregate,
+          taxPercent: part.taxpercent,
+        }));
+
+        // Separate myTVS and other brands
+        const myTvsProducts = transformedParts.filter(
+          (item) => item.brand.toUpperCase() === "MYTVS"
+        );
+        const otherProducts = transformedParts.filter(
+          (item) => item.brand.toUpperCase() !== "MYTVS"
+        );
+
+        setRecommendedProducts(myTvsProducts);
+        setOtherBrandProducts(otherProducts);
+      } catch (err) {
+        console.error("Error fetching parts data:", err);
+        setError("Failed to load parts. Please try again.");
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPartsData();
+  }, [searchKey]);
 
 
   return (
@@ -324,51 +391,70 @@ const otherBrandProducts = products.filter(
 
         {/* CONTENT */}
         <div className="pn-content">
-          {/* LEFT */}
-          <div className="pn-left">
-            <h4 className="pn-section-title">myTVS Recommended Products</h4>
-
-            <div className="pn-grid">
-              {recommendedProducts.length > 0 ? (
-                recommendedProducts.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    item={item}
-                    onOpenCompatibility={() => setShowCompatibility(true)}
-                  />
-                ))
-              ) : (
-                <div className="pn-no-results">
-                  No myTVS products found for <b>{searchKey}</b>
-                </div>
-              )}
+          {/* Loading State */}
+          {loading && (
+            <div className="pn-loading">
+              <p>Loading parts data...</p>
             </div>
+          )}
 
-            <h4 className="pn-section-title">Other Products</h4>
-
-            <div className="pn-grid">
-              {otherBrandProducts.length > 0 ? (
-                otherBrandProducts.map((item) => (
-                  <ProductCard
-                    key={item.id}
-                    item={item}
-                    onOpenCompatibility={() => setShowCompatibility(true)}
-                  />
-                ))
-              ) : (
-                <div className="pn-no-results">
-                  No other brand products found for <b>{searchKey}</b>
-                </div>
-              )}
+          {/* Error State */}
+          {error && (
+            <div className="pn-error">
+              <p>{error}</p>
             </div>
-          </div>
+          )}
 
-          {/* RIGHT */}
-          <div className="pn-right">
-            <h4 className="pn-section-title">Aligned Products</h4>
+          {/* Products Display */}
+          {!loading && !error && (
+            <>
+              {/* LEFT */}
+              <div className="pn-left">
+                <h4 className="pn-section-title">myTVS Recommended Products</h4>
 
-            <div className="pn-aligned">
-              {alignedProducts.map((item) => {
+                <div className="pn-grid">
+                  {recommendedProducts.length > 0 ? (
+                    recommendedProducts.map((item) => (
+                      <div className="pn-card" key={item.id}>
+                        <ProductCard
+                          item={item}
+                          onOpenCompatibility={() => setShowCompatibility(true)}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="pn-no-results">
+                      No myTVS products found for <b>{searchKey}</b>
+                    </div>
+                  )}
+                </div>
+
+                <h4 className="pn-section-title">Other Products</h4>
+
+                <div className="pn-grid">
+                  {otherBrandProducts.length > 0 ? (
+                    otherBrandProducts.map((item) => (
+                      <div className="pn-card" key={item.id}>
+                        <ProductCard
+                          item={item}
+                          onOpenCompatibility={() => setShowCompatibility(true)}
+                        />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="pn-no-results">
+                      No other brand products found for <b>{searchKey}</b>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT */}
+              <div className="pn-right">
+                <h4 className="pn-section-title">Aligned Products</h4>
+
+                <div className="pn-aligned">
+                  {alignedProducts.map((item) => {
                 const partNumber = `ALIGNED-${item.id}`;
                 const isAdded = cartItems.some(
                   (cartItem) => cartItem.partNumber === partNumber
@@ -418,9 +504,11 @@ const otherBrandProducts = products.filter(
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          </div>
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

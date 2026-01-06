@@ -74,4 +74,64 @@ const apiService = {
   getAssetUrl: (filePath) => `http://localhost:5000${filePath}`,
 };
 
+// Fetch parts list by part number
+export const fetchPartsListByPartNumber = async (partNumber) => {
+  const requestBody = {
+    brandPriority: ["VALEO"],
+    limit: 50,
+    offset: 0,
+    sortOrder: "ASC",
+    fieldOrder: null,
+    customerCode: "0046",
+    partNumber: partNumber,
+    model: null,
+    brand: null,
+    subAggregate: null,
+    aggregate: null,
+    make: null,
+    variant: null,
+    fuelType: null,
+    vehicle: null,
+    year: null,
+  };
+
+  return apiService.post("/parts-list", requestBody);
+};
+
+// Fetch parts list by item description (item name search)
+// Note: API doesn't have itemDescription in request body, so we search with broad filters
+// and filter by itemDescription on the client side
+export const fetchPartsListByItemName = async (itemName) => {
+  const requestBody = {
+    brandPriority: ["VALEO"],
+    limit: 1000, // Increased limit to get more results for filtering
+    offset: 0,
+    sortOrder: "ASC",
+    fieldOrder: null,
+    customerCode: "0046",
+    partNumber: null,
+    model: null,
+    brand: null,
+    subAggregate: null, // Can't filter by itemDescription in API
+    aggregate: null,
+    make: null,
+    variant: null,
+    fuelType: null,
+    vehicle: null,
+    year: null,
+  };
+
+  const response = await apiService.post("/parts-list", requestBody);
+  
+  // Filter results by itemDescription on client side
+  if (response?.data && Array.isArray(response.data)) {
+    const filtered = response.data.filter(item => 
+      item.itemDescription?.toLowerCase().includes(itemName.toLowerCase())
+    );
+    return { ...response, data: filtered };
+  }
+  
+  return response;
+};
+
 export default apiService;
