@@ -14,8 +14,8 @@ const Make = () => {
   const [usingFallback, setUsingFallback] = useState(false);
 
   const getIconForMake = (makeName) => {
-    const upperName = makeName.toUpperCase();
-    return [upperName] || NoImage;
+    // No longer needed - will use OciImage component
+    return makeName;
   };
 
   useEffect(() => {
@@ -104,7 +104,6 @@ const Make = () => {
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' '),
         makeName: make,
-        icon: getIconForMake(make),
       }));
 
       console.log("Formatted makes:", formattedMakes);
@@ -213,7 +212,13 @@ const Make = () => {
               className="brand-card"
               onClick={() => handleMakeClick(make)}
             >
-              <img src={make.icon} alt={make.name} className="brand-img" />
+              <OciImage
+                partNumber={make.makeName}
+                folder="make"
+                fallbackImage={NoImage}
+                className="brand-img"
+                alt={make.name}
+              />
               <p className="brand-label" title={make.name}>
                 {make.name}
               </p>

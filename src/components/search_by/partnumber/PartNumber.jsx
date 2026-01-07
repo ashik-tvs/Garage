@@ -6,6 +6,7 @@ import { useCart } from "../../../context/CartContext";
 import {
   fetchPartsListByPartNumber,
   fetchPartsListByItemName,
+  fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
@@ -79,7 +80,7 @@ const Filter = ({
 
 /* ---------------- PRODUCT CARD ---------------- */
 
-const ProductCard = ({ item, onOpenCompatibility }) => {
+const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
   const { cartItems, addToCart, removeFromCart } = useCart();
   const localPartNumber =
     item.localPartNumber || `${item.partNo}_${item.brand}`;
@@ -140,7 +141,7 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
         <div>
           {" "}
           Compatible with <b className="pn-count-vehicle">
-            {item.vehicles}
+            {vehicleCount || 0}
           </b>{" "}
           vehicles
         </div>
@@ -149,72 +150,29 @@ const ProductCard = ({ item, onOpenCompatibility }) => {
     </div>
   );
 };
-const CompatibilityModal = ({ onClose }) => {
-  const vehicles = [
-    {
-      make: "Hyundai",
-      model: "Grand i10",
-      variant: "Sportz",
-      fuel: "Petrol",
-      year: "2012",
-    },
-    {
-      make: "Hyundai",
-      model: "Grand i10",
-      variant: "Asta",
-      fuel: "Diesel",
-      year: "2013",
-    },
-    {
-      make: "Hyundai",
-      model: "i20",
-      variant: "Magna",
-      fuel: "Petrol",
-      year: "2014",
-    },
-    {
-      make: "Hyundai",
-      model: "i20",
-      variant: "Sportz",
-      fuel: "Diesel",
-      year: "2015",
-    },
-    {
-      make: "Hyundai",
-      model: "Xcent",
-      variant: "SX",
-      fuel: "Petrol",
-      year: "2016",
-    },
-    {
-      make: "Hyundai",
-      model: "Xcent",
-      variant: "SX(O)",
-      fuel: "Diesel",
-      year: "2017",
-    },
-    {
-      make: "Hyundai",
-      model: "Aura",
-      variant: "S",
-      fuel: "Petrol",
-      year: "2020",
-    },
-    {
-      make: "Hyundai",
-      model: "Aura",
-      variant: "SX",
-      fuel: "CNG",
-      year: "2021",
-    },
-  ];
+const CompatibilityModal = ({ onClose, vehicles = [] }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter vehicles based on search term
+  const filteredVehicles = vehicles.filter((v) =>
+    Object.values(v)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="pn-modal-overlay">
       <div className="pn-modal">
         {/* Header */}
         <div className="pn-modal-header">
-          <input type="text" placeholder="Search" className="pn-modal-search" />
+          <input
+            type="text"
+            placeholder="Search"
+            className="pn-modal-search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <button className="pn-modal-close" onClick={onClose}>
             ✕
           </button>
@@ -235,15 +193,21 @@ const CompatibilityModal = ({ onClose }) => {
         <div>
           {" "}
           <div className="pn-modal-table-body">
-            {vehicles.map((v, i) => (
-              <div key={i} className="pn-modal-row">
-                <span>{v.make}</span>
-                <span>{v.model}</span>
-                <span>{v.variant}</span>
-                <span>{v.fuel}</span>
-                <span>{v.year}</span>
+            {filteredVehicles.length > 0 ? (
+              filteredVehicles.map((v, i) => (
+                <div key={i} className="pn-modal-row">
+                  <span>{v.make}</span>
+                  <span>{v.model}</span>
+                  <span>{v.variant}</span>
+                  <span>{v.fuelType}</span>
+                  <span>{v.year}</span>
+                </div>
+              ))
+            ) : (
+              <div className="pn-no-results" style={{ padding: "20px", textAlign: "center" }}>
+                No vehicles found
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -273,6 +237,8 @@ const PartNumber = () => {
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [otherBrandProducts, setOtherBrandProducts] = useState([]);
   const [vehicleList, setVehicleList] = useState([]);
+  const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
+  const [vehicleCount, setVehicleCount] = useState(0);
 
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
@@ -391,6 +357,69 @@ const PartNumber = () => {
     fetchPartsData();
   }, [searchKey]);
 
+  // Fetch vehicle compatibility data
+  useEffect(() => {
+    const fetchVehicleData = async () => {
+      if (!searchKey) {
+        setVehicleCompatibilityList([]);
+        setVehicleCount(0);
+        return;
+      }
+
+      try {
+        const response = await fetchVehicleListByPartNumber(searchKey);
+        const vehicles = response?.data || [];
+        setVehicleCompatibilityList(vehicles);
+        setVehicleCount(response?.count || vehicles.length);
+      } catch (err) {
+        console.error("Error fetching vehicle compatibility:", err);
+        setVehicleCompatibilityList([]);
+        setVehicleCount(0);
+      }
+    };
+
+    fetchVehicleData();
+  }, [searchKey]);
+
+  // Fetch all vehicles for filter dropdowns
+  useEffect(() => {
+    const fetchAllVehicles = async () => {
+      if (!searchKey) {
+        setVehicleList([]);
+        return;
+      }
+
+      try {
+        // Fetch all vehicles without filters to populate dropdowns
+        const requestBody = {
+          limit: 1000, // Get all vehicles
+          offset: 0,
+          sortOrder: "ASC",
+          customerCode: "0046",
+          brand: null,
+          partNumber: [searchKey],
+          aggregate: null,
+          subAggregate: null,
+          make: null,
+          model: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        };
+
+        const response = await apiService.post("/vehicle-list", requestBody);
+        const vehicles = response?.data || [];
+        setVehicleList(vehicles);
+      } catch (err) {
+        console.error("Error fetching vehicles for filters:", err);
+        setVehicleList([]);
+      }
+    };
+
+    fetchAllVehicles();
+  }, [searchKey]);
+
   return (
     <div className="pn-wrapper">
       <Search />
@@ -501,6 +530,7 @@ const PartNumber = () => {
                         <ProductCard
                           item={item}
                           onOpenCompatibility={() => setShowCompatibility(true)}
+                          vehicleCount={vehicleCount}
                         />
                       </div>
                     ))
@@ -520,6 +550,7 @@ const PartNumber = () => {
                         <ProductCard
                           item={item}
                           onOpenCompatibility={() => setShowCompatibility(true)}
+                          vehicleCount={vehicleCount}
                         />
                       </div>
                     ))
@@ -603,7 +634,10 @@ const PartNumber = () => {
 
       {/* ✅ MODAL MUST BE INSIDE RETURN */}
       {showCompatibility && (
-        <CompatibilityModal onClose={() => setShowCompatibility(false)} />
+        <CompatibilityModal
+          onClose={() => setShowCompatibility(false)}
+          vehicles={vehicleCompatibilityList}
+        />
       )}
     </div>
   );

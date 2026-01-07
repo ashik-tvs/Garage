@@ -6,19 +6,6 @@ import OciImage from "../../oci_image/ociImages";
 import noImage from "../../../assets/No Image.png";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 
-// Audi images
-import AudiA3 from "../../../assets/Model/Audi - A3.png";
-import AudiA4 from "../../../assets/Model/Audi - A4.png";
-import AudiA5 from "../../../assets/Model/Audi - A5.png";
-import AudiA6 from "../../../assets/Model/Audi - A6.png";
-import AudiA7 from "../../../assets/Model/Audi - A7.png";
-import AudiA8 from "../../../assets/Model/Audi - A8.png";
-import AudiQ3 from "../../../assets/Model/Audi - Q3.png";
-import AudiQ5 from "../../../assets/Model/Audi - Q5.png";
-import AudiQ7 from "../../../assets/Model/Audi - Q7.png";
-import AudiR8 from "../../../assets/Model/Audi - R8.png";
-import AudiTT from "../../../assets/Model/Audi - TT.png";
-
 const Model = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,29 +32,6 @@ const Model = () => {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Icon mapping for model images
-  const modelIconMap = {
-    "AUDI A3": AudiA3,
-    "AUDI A4": AudiA4,
-    "AUDI A5": AudiA5,
-    "AUDI A6": AudiA6,
-    "AUDI A7": AudiA7,
-    "AUDI A8": AudiA8,
-    "AUDI Q3": AudiQ3,
-    "AUDI Q5": AudiQ5,
-    "AUDI Q7": AudiQ7,
-    "AUDI R8": AudiR8,
-    "AUDI TT": AudiTT,
-  };
-
-  const getModelIcon = (modelName) => {
-    if (!modelName || typeof modelName !== "string") {
-      return noImage;
-    }
-    const upperName = modelName.toUpperCase();
-    return modelIconMap[upperName] || noImage;
-  };
 
   useEffect(() => {
     // For discontinued and electric variants, fetch without needing a make
@@ -151,7 +115,6 @@ const Model = () => {
             const formattedModels = modelNames.map((modelName, index) => ({
               id: index + 1,
               name: modelName,
-              image: getModelIcon(modelName),
             }));
 
             setModels(formattedModels);
@@ -311,11 +274,10 @@ const Model = () => {
         return;
       }
 
-      // Format models with icons
+      // Format models
       const formattedModels = uniqueModels.map((modelName, index) => ({
         id: index + 1,
         name: modelName,
-        image: getModelIcon(modelName),
       }));
 
       // Cache the results - only cache model names to save space
