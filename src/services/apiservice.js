@@ -134,4 +134,26 @@ export const fetchPartsListByItemName = async (itemName) => {
   return response;
 };
 
+// Fetch vehicle list by part number
+export const fetchVehicleListByPartNumber = async (partNumber) => {
+  const requestBody = {
+    limit: 10,
+    offset: 0,
+    sortOrder: "ASC",
+    customerCode: "0046",
+    brand: null,
+    partNumber: [partNumber],
+    aggregate: null,
+    subAggregate: null,
+    make: null,
+    model: null,
+    variant: null,
+    fuelType: null,
+    vehicle: null,
+    year: null,
+  };
+
+  return apiService.post("/vehicle-list", requestBody);
+};
+
 export default apiService;

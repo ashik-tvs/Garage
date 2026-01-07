@@ -9,7 +9,7 @@
   z-index: 1;
 }
 /* TOP AREA */
-.pn-top {
+.pn-top { 
   display: flex;
   justify-content: space-between;
   align-items: center;
