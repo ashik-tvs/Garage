@@ -378,12 +378,14 @@ const Model = () => {
               >
                 <div className="model-card-content">
                   <OciImage
-                    partNumber={model.name} // raw model name
-                    folder="model" // dynamic resolution
-                    fallbackImage={noImage} // optional
+                    partNumber={model.name}
+                    make={make} // ✅ PASS MAKE
+                    folder="model"
+                    fallbackImage={noImage}
                     className="model-image"
                     alt={model.name}
                   />
+
                   <p className="model-name" title={model.name}>
                     {model.name}
                   </p>

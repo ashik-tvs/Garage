@@ -6,18 +6,6 @@ import NoImage from "../../../assets/No Image.png";
 import OciImage from "../../oci_image/ociImages";
 import "../../../styles/home/SubCategory.css";
 
-// Sub Category Images (fallback)
-import BrakePad from "../../../assets/brakePad.png";
-import BrakeDisc from "../../../assets/Brake Disk.png";
-import Caliper from "../../../assets/caliperPins.png";
-import BrakeShoe from "../../../assets/brakeShoe.png";
-import BrakeLining from "../../../assets/BrakeLining.png";
-import MC from "../../../assets/McBooster.png";
-import Anti from "../../../assets/AntiLocking.png";
-import BrakeHose from "../../../assets/brakeHose.png";
-import BrakeDrum from "../../../assets/brakeDrum.png";
-import BrakeCable from "../../../assets/Sub Category/BRAKE CABLE.png";
-import Cylinder from "../../../assets/Cylinder.png";
 
 const Sub_Category = () => {
   const navigate = useNavigate();
@@ -29,28 +17,9 @@ const Sub_Category = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Icon mapping for fallback images
-  const iconMap = {
-    "BRAKE PAD": BrakePad,
-    "BRAKE DISC": BrakeDisc,
-    "BRAKE DISK": BrakeDisc,
-    "CALIPER PINS": Caliper,
-    CALIPER: Caliper,
-    "BRAKE SHOE": BrakeShoe,
-    "BRAKE LINING": BrakeLining,
-    "MC / BOOSTER": MC,
-    "MC BOOSTER": MC,
-    CYLINDER: Cylinder,
-    "ANTI LOCKING (ABS)": Anti,
-    ABS: Anti,
-    "BRAKE HOSE": BrakeHose,
-    "BRAKE DRUM": BrakeDrum,
-    "BRAKE CABLE": BrakeCable,
-  };
-
   const getIconForSubCategory = (subAggregateName) => {
     const upperName = subAggregateName.toUpperCase();
-    return iconMap[upperName] || NoImage;
+    return [upperName] || NoImage;
   };
 
   // Fetch UI assets
