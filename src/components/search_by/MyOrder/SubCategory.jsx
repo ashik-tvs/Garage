@@ -22,7 +22,10 @@ import Cylinder from "../../../assets/Cylinder.png";
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, category, aggregateName } = location.state || {};
+  const { make, model, brand, category, aggregateName, aggregate, featureLabel } = location.state || {};
+  
+  // Use aggregate from Category.jsx if available, fallback to aggregateName
+  const selectedAggregate = aggregate || aggregateName;
 
   const [uiAssets, setUiAssets] = useState({});
   const [subCategories, setSubCategories] = useState([]);
@@ -68,9 +71,9 @@ const Sub_Category = () => {
 
   // Fetch sub-categories from API
   useEffect(() => {
-    if (aggregateName) {
+    if (selectedAggregate) {
       // Check cache first
-      const cacheKey = `subCategory_${aggregateName}`;
+      const cacheKey = `subCategory_${selectedAggregate}`;
       const cachedData = localStorage.getItem(cacheKey);
       const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
       const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
@@ -81,7 +84,7 @@ const Sub_Category = () => {
 
         if (isCacheValid) {
           console.log(
-            `Loading sub-categories for ${aggregateName} from cache...`
+            `Loading sub-categories for ${selectedAggregate} from cache...`
           );
           setSubCategories(JSON.parse(cachedData));
           setLoading(false);
@@ -90,20 +93,23 @@ const Sub_Category = () => {
       }
 
       fetchSubCategories();
+    } else {
+      setLoading(false);
+      setError("No category selected");
     }
-  }, [aggregateName]);
+  }, [selectedAggregate]);
 
   const fetchSubCategories = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching sub-categories for:", aggregateName);
+      console.log("Fetching sub-categories for:", selectedAggregate);
 
       const response = await axios.post(
         "http://localhost:5000/api/parts-list",
         {
-          brandPriority: ["VALEO"],
+          brandPriority: null,
           limit: 5000,
           offset: 0,
           sortOrder: "ASC",
@@ -113,7 +119,7 @@ const Sub_Category = () => {
           model: null,
           brand: null,
           subAggregate: null,
-          aggregate: aggregateName, // Filter by selected category
+          aggregate: selectedAggregate, // Filter by selected category (e.g., "BATTERY", "STEERING")
           make: null,
           variant: null,
           fuelType: null,
@@ -171,10 +177,10 @@ const Sub_Category = () => {
       console.log("Formatted sub-categories:", formattedSubCategories);
 
       // Cache the sub-categories
-      const cacheKey = `subCategory_${aggregateName}`;
+      const cacheKey = `subCategory_${selectedAggregate}`;
       localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-      console.log(`Sub-categories for ${aggregateName} cached successfully`);
+      console.log(`Sub-categories for ${selectedAggregate} cached successfully`);
 
       setSubCategories(formattedSubCategories);
     } catch (err) {
@@ -227,9 +233,10 @@ const Sub_Category = () => {
         model,
         brand,
         category,
-        aggregateName, // Pass the aggregate name from Category
+        aggregateName: selectedAggregate, // Pass the selected aggregate name
         subCategory: subCategory.name,
         subAggregateName: subCategory.subAggregateName,
+        featureLabel,
       },
     });
   };
@@ -253,7 +260,11 @@ const Sub_Category = () => {
         <button className="back-button" onClick={handleBack}>
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
-        <h1 className="sub-category-title">Search by Sub Category</h1>
+        <h1 className="sub-category-title">
+          {featureLabel ? `${featureLabel} - ` : ""}
+          {selectedAggregate ? `${selectedAggregate} - ` : ""}
+          Search by Sub Category
+        </h1>
       </div>
 
       <div className="sub-category-main">
@@ -262,7 +273,7 @@ const Sub_Category = () => {
           {loading ? (
             <div className="sub-category-loading">
               <p style={{ textAlign: "center", padding: "20px" }}>
-                Loading subcategories...
+                Loading Subcategories...
               </p>
             </div>
           ) : error ? (
@@ -297,7 +308,7 @@ const Sub_Category = () => {
           ) : subCategories.length === 0 ? (
             <div className="sub-category-empty">
               <p style={{ textAlign: "center", padding: "20px" }}>
-                No subcategories found for {category}.
+                No subcategories found for {selectedAggregate || category}.
               </p>
             </div>
           ) : (
@@ -329,7 +340,7 @@ const Sub_Category = () => {
         {/* Service Type Sidebar */}
         <div className="service-type-sidebar">
           <div className="service-type-header">
-            <span>Service Type for {category || "Category"}</span>
+            <span>Service Type for {selectedAggregate || category || "Category"}</span>
             <div className="service-type-icon">
               <img
                 src={getAssetUrl(uiAssets["SERVICE TYPE"])}

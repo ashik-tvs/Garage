@@ -93,14 +93,14 @@
 
 /* Browse Link */
 .image-upload-browse {
-  color: #F36F21;
+  color: #3749A6;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.3s ease;
 }
 
 .image-upload-browse:hover {
-  color: #E05E10;
+  color: #3749A6;
 }
 
 /* Close Button Container */
