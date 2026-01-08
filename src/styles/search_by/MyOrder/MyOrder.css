@@ -211,7 +211,7 @@
 }
 
 .myorder-table thead {
-  background: #F4F4F4;
+  background: #575757;
 }
 
 .myorder-table thead tr {
@@ -225,7 +225,7 @@
   font-size: 14px;
   line-height: 20px;
   text-align: center;
-  color: #575757;
+  color: white;
   border: none;
 }
 

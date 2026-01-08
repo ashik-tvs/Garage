@@ -9,14 +9,7 @@ import {
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
-import Brake_1 from "../../../assets/brake1.png";
-import Brake_2 from "../../../assets/brake2.png";
-import Brake_3 from "../../../assets/brake3.png";
-
-/* ---------------- MOCK DATA ---------------- */
-const brakeImages = [Brake_1, Brake_2, Brake_3];
 
 const alignedProducts = [
   {
@@ -24,9 +17,9 @@ const alignedProducts = [
     partNo: "A6732S233132",
     brand: "Valeo",
     description: "Brake Disc Pad",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[2],
+    price: 4205,
+    mrp: 4080,
+    imageUrl: NoImage,
   },
   {
     id: 4,
@@ -34,9 +27,9 @@ const alignedProducts = [
 
     brand: "Mobil",
     description: "Brake Fluid",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[0],
+    price: 315,
+    mrp: 468,
+    imageUrl: NoImage,
   },
   {
     id: 5,
@@ -44,9 +37,9 @@ const alignedProducts = [
 
     brand: "Valeo",
     description: "Brake Fitting Kit",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[1],
+    price: 5650,
+    mrp: 6000,
+    imageUrl: NoImage,
   },
 ];
 
@@ -392,7 +385,7 @@ const PartNumber = () => {
       try {
         // Fetch all vehicles without filters to populate dropdowns
         const requestBody = {
-          limit: 1000, // Get all vehicles
+          limit: 100000, // Get all vehicles
           offset: 0,
           sortOrder: "ASC",
           customerCode: "0046",

@@ -316,7 +316,7 @@ const Model = () => {
     const isElectric = variant === "e" || featureLabel === "Electric";
     navigate("/Category", {
       state: {
-        make: isDiscontinued || isElectric ? null : make, // No make for discontinued or electric
+        make: isDiscontinued || isElectric ? null : make,
         model: model.name,
         variant,
         featureLabel,
@@ -330,15 +330,25 @@ const Model = () => {
         <button className="back-button" onClick={() => navigate(-1)}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="model-title">
-          {variant === "wide" || featureLabel === "Discontinued Model"
-            ? "Discontinued Models"
-            : variant === "e" || featureLabel === "Electric"
-            ? "Electric Models"
-            : `${featureLabel ? `${featureLabel} - ` : ""}${
-                make ? `${make} - ` : ""
-              }Model`}
-        </h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          <span className="breadcrumb-separator">&gt;</span>
+          {make && (
+            <>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/MakeNew', { 
+                  state: { variant, featureLabel } 
+                })}
+              >
+                {make}
+              </span>
+              <span className="breadcrumb-separator">&gt;</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="model-grid-wrapper">
@@ -378,12 +388,14 @@ const Model = () => {
               >
                 <div className="model-card-content">
                   <OciImage
-                    partNumber={model.name} // raw model name
-                    folder="model" // dynamic resolution
-                    fallbackImage={noImage} // optional
+                    partNumber={model.name}
+                    make={make} // ✅ PASS MAKE
+                    folder="model"
+                    fallbackImage={noImage}
                     className="model-image"
                     alt={model.name}
                   />
+
                   <p className="model-name" title={model.name}>
                     {model.name}
                   </p>

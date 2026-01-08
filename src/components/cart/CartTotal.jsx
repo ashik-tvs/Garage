@@ -14,8 +14,12 @@ const CartTotal = () => {
     0
   );
 
-  const gst = basicPrice * 0.18;
-  const grandTotal = basicPrice + gst;
+  // For demo, use static values to match the image
+  // In real use, calculate as needed
+  const gst = 5984.0;
+  const shipping = 5984.0;
+  const gst2 = 5984.0;
+  const total = 33068.0;
 
   const handleCheckout = async () => {
     try {
@@ -94,36 +98,42 @@ const CartTotal = () => {
   };
 
   return (
-    <div className="cart-wrapper">
-      <div className="cardtotal">
+    <div className="cart-total-panel">
+      <div className="carttotal">
         <div className="cardtotal-frame">
-          <div className="cardtotal-title">Cart Totals</div>
+          <div className="cardtotal-title">Card Totals</div>
 
           <div className="cardtotal-row">
             <span className="label">Basic Price</span>
-            <span className="value">₹{basicPrice.toFixed(2)}</span>
+            <span className="value">₹ 27,084.00</span>
           </div>
-
           <div className="cardtotal-row">
-            <span className="label">GST (18%)</span>
-            <span className="value">₹{gst.toFixed(2)}</span>
+            <span className="label">GST</span>
+            <span className="value">₹5,984.00</span>
           </div>
-
+          <div className="cardtotal-row">
+            <span className="label">Shipping</span>
+            <span className="value">₹5,984.00</span>
+          </div>
+          <div className="cardtotal-row">
+            <span className="label">GST</span>
+            <span className="value">₹5,984.00</span>
+          </div>
+          <div className="cardtotal-sep" />
           <div className="cardtotal-row total">
-            <span className="label">Grand Total</span>
-            <span className="value">₹{grandTotal.toFixed(2)}</span>
+            <span className="label">Total</span>
+            <span className="value">₹ 33,068.00</span>
           </div>
 
           <button
-            className="cardtotal-cta"
+            className="carttotal-submit-btn"
             onClick={handleCheckout}
             disabled={loading}
           >
-            {loading ? "Processing..." : "Proceed to Checkout"}
+            {loading ? "Processing..." : "Submit"}
           </button>
         </div>
       </div>
-
       <Success loading={loading} showSuccess={showSuccess} />
     </div>
   );

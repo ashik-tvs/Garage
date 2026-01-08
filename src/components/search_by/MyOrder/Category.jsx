@@ -8,7 +8,8 @@ import Image from "../../oci_image/ociImages";
 const Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { featureLabel } = location.state || {};
+  // Extract state variables including make, model, and variant
+  const { featureLabel, make, model, variant } = location.state || {};
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,9 @@ const Category = () => {
       state: {
         aggregate: category.name,
         featureLabel,
+        make,
+        model,
+        variant,
       },
     });
   };
@@ -67,10 +71,38 @@ const Category = () => {
         <button className="back-button" onClick={() => navigate(-1)}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="category-title">
-          {featureLabel ? `${featureLabel} - ` : ""}
-          Search by Category
-        </h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          {make && (
+            <>
+              <span className="breadcrumb-separator">&gt;</span>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/MakeNew', { 
+                  state: { variant, featureLabel } 
+                })}
+              >
+                {make}
+              </span>
+            </>
+          )}
+          {model && (
+            <>
+              <span className="breadcrumb-separator">&gt;</span>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/Model', { 
+                  state: { make, variant, featureLabel } 
+                })}
+              >
+                {model}
+              </span>
+              <span className="breadcrumb-separator">&gt;</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Content */}

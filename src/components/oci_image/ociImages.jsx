@@ -5,6 +5,7 @@ import { resolveOciModelName } from "../../utils/resolveOciModel";
 
 const Image = ({
   partNumber,
+  make,
   folder = "products",
   fallbackImage,
   className = "pr-image",
@@ -20,20 +21,16 @@ const Image = ({
       let ociName = partNumber;
 
       if (folder === "model") {
-        ociName = await resolveOciModelName(partNumber);
+        ociName = await resolveOciModelName(partNumber, make);
       }
 
       const url = await getOciImage(folder, ociName);
 
-      if (url === NoImage && fallbackImage) {
-        setImgUrl(fallbackImage);
-      } else {
-        setImgUrl(url);
-      }
+      setImgUrl(url || fallbackImage || NoImage);
     };
 
     loadImage();
-  }, [partNumber, folder, fallbackImage]);
+  }, [partNumber, folder, make, fallbackImage]);
 
   return (
     <img

@@ -148,16 +148,15 @@ const Category = () => {
     }
   };
   
-  const handleCategoryClick = (category) => {
-    console.log('Selected category:', category);
-    // Navigate to Sub Category page with category data
-    navigate('/sub_category', {
-      state: {
-        category: category.label,
-        aggregateName: category.aggregateName,
-      },
-    });
-  };
+const handleCategoryClick = (category) => {
+  navigate('/sub_category', {
+    state: {
+      category: category.label,        // ✅ FIX
+      aggregateName: category.aggregateName, // ✅ OK
+    },
+  });
+};
+
 
   const visibleCategories = expanded ? categories : categories.slice(0, 8);
 
