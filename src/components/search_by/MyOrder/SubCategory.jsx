@@ -36,130 +36,69 @@ const Sub_Category = () => {
   }, []);
 
   // Fetch sub-categories from API
-  useEffect(() => {
-    if (aggregateName) {
-      // Check cache first
-      const cacheKey = `subCategory_${aggregateName}`;
+useEffect(() => {
+  if (!aggregateName) {
+    console.error("aggregateName missing — API will not call");
+    return;
+  }
+
+  fetchSubCategories(true); // force fetch
+}, [aggregateName]);
+
+
+const fetchSubCategories = async (force = false) => {
+  try {
+    setLoading(true);
+    setError(null);
+
+    const cacheKey = `subCategory_${aggregateName}`;
+    const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+    const cacheExpiry = 24 * 60 * 60 * 1000;
+
+    if (!force) {
       const cachedData = localStorage.getItem(cacheKey);
-      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
-      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
 
-      if (cachedData && cacheTimestamp) {
-        const isCacheValid =
-          Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
-
-        if (isCacheValid) {
-          console.log(
-            `Loading sub-categories for ${aggregateName} from cache...`
-          );
-          setSubCategories(JSON.parse(cachedData));
-          setLoading(false);
-          return;
-        }
+      if (
+        cachedData &&
+        cacheTimestamp &&
+        Date.now() - parseInt(cacheTimestamp) < cacheExpiry
+      ) {
+        setSubCategories(JSON.parse(cachedData));
+        setLoading(false);
+        return; // ⛔ API skipped intentionally
       }
-
-      fetchSubCategories();
     }
-  }, [aggregateName]);
 
-  const fetchSubCategories = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    // ✅ API CALL WILL ALWAYS HAPPEN HERE
+    const response = await axios.post(
+      "http://localhost:5000/api/parts-list",
+      { aggregate: aggregateName },
+      { timeout: 90000 }
+    );
 
-      console.log("Fetching sub-categories for:", aggregateName);
+    const partsData = response.data?.data || [];
+    const uniqueSubAggregates = [
+      ...new Set(partsData.map(i => i.subAggregate).filter(Boolean))
+    ];
 
-      const response = await axios.post(
-        "http://localhost:5000/api/parts-list",
-        {
-          brandPriority: ["VALEO"],
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          fieldOrder: null,
-          customerCode: "0046",
-          partNumber: null,
-          model: null,
-          brand: null,
-          subAggregate: null,
-          aggregate: aggregateName, // Filter by selected category
-          make: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          timeout: 90000,
-        }
-      );
+    const formatted = uniqueSubAggregates.map((sub, i) => ({
+      id: i + 1,
+      name: sub,
+      subAggregateName: sub,
+      image: NoImage
+    }));
 
-      console.log("Sub-categories API Response:", response);
+    localStorage.setItem(cacheKey, JSON.stringify(formatted));
+    localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
 
-      // Handle different response structures
-      let partsData = [];
-      if (Array.isArray(response.data)) {
-        partsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        partsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.parts)) {
-        partsData = response.data.parts;
-      } else {
-        console.error("Unexpected response structure:", response.data);
-        throw new Error("Invalid response format");
-      }
+    setSubCategories(formatted);
+  } catch (err) {
+    setError("Failed to load sub-categories");
+  } finally {
+    setLoading(false);
+  }
+};
 
-      // Extract unique sub-aggregates (Sub-Categories)
-      const uniqueSubAggregates = [
-        ...new Set(
-          partsData
-            .map((item) => item.subAggregate)
-            .filter((subAggregate) => subAggregate)
-        ),
-      ];
-
-      console.log("Unique sub-aggregates:", uniqueSubAggregates);
-
-      // Format sub-categories
-      const formattedSubCategories = uniqueSubAggregates.map(
-        (subAggregate, index) => ({
-          id: index + 1,
-          name: subAggregate
-            .toLowerCase()
-            .split(" ")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" "),
-          subAggregateName: subAggregate,
-          image: getIconForSubCategory(subAggregate),
-        })
-      );
-
-      console.log("Formatted sub-categories:", formattedSubCategories);
-
-      // Cache the sub-categories
-      const cacheKey = `subCategory_${aggregateName}`;
-      localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
-      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-      console.log(`Sub-categories for ${aggregateName} cached successfully`);
-
-      setSubCategories(formattedSubCategories);
-    } catch (err) {
-      console.error("Error fetching sub-categories:", err);
-
-      if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
-        setError("Request timeout. Please try again later.");
-      } else {
-        setError(
-          `Failed to load sub-categories: ${err.message || "Please try again."}`
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Helper to build full asset URL
   const getAssetUrl = (filePath) => {
@@ -247,7 +186,7 @@ const Sub_Category = () => {
                 {error}
               </p>
               <button
-                onClick={fetchSubCategories}
+                onClick={fetchSubCategories(true)}
                 style={{
                   padding: "10px 20px",
                   backgroundColor: "#007bff",

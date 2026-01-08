@@ -9,7 +9,6 @@ import {
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
 import Brake_1 from "../../../assets/brake1.png";
 import Brake_2 from "../../../assets/brake2.png";
@@ -392,7 +391,7 @@ const PartNumber = () => {
       try {
         // Fetch all vehicles without filters to populate dropdowns
         const requestBody = {
-          limit: 1000, // Get all vehicles
+          limit: 100000, // Get all vehicles
           offset: 0,
           sortOrder: "ASC",
           customerCode: "0046",
