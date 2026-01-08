@@ -22,7 +22,7 @@ import Cylinder from "../../../assets/Cylinder.png";
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, category, aggregateName, aggregate, featureLabel } = location.state || {};
+  const { make, model, brand, category, aggregateName, aggregate, featureLabel, variant } = location.state || {};
   
   // Use aggregate from Category.jsx if available, fallback to aggregateName
   const selectedAggregate = aggregate || aggregateName;
@@ -237,6 +237,7 @@ const Sub_Category = () => {
         subCategory: subCategory.name,
         subAggregateName: subCategory.subAggregateName,
         featureLabel,
+        variant,
       },
     });
   };
@@ -260,11 +261,51 @@ const Sub_Category = () => {
         <button className="back-button" onClick={handleBack}>
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
-        <h1 className="sub-category-title">
-          {featureLabel ? `${featureLabel} - ` : ""}
-          {selectedAggregate ? `${selectedAggregate} - ` : ""}
-          Search by Sub Category
-        </h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          {make && (
+            <>
+              <span className="breadcrumb-separator">&gt;</span>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/MakeNew', { 
+                  state: { variant, featureLabel } 
+                })}
+              >
+                {make}
+              </span>
+            </>
+          )}
+          {model && (
+            <>
+              <span className="breadcrumb-separator">&gt;</span>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/Model', { 
+                  state: { make, variant, featureLabel } 
+                })}
+              >
+                {model}
+              </span>
+            </>
+          )}
+          {(selectedAggregate || category) && (
+            <>
+              <span className="breadcrumb-separator">&gt;</span>
+              <span 
+                className="breadcrumb-link" 
+                onClick={() => navigate('/Category', { 
+                  state: { make, model, variant, featureLabel } 
+                })}
+              >
+                {selectedAggregate || category}
+              </span>
+              <span className="breadcrumb-separator">&gt;</span>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="sub-category-main">

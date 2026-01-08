@@ -324,51 +324,105 @@ const Product = () => {
             onClick={() => navigate(-1)}
             className="vnp-breadcrumbs-icon"
           />
-          {brand && (
-            <>
-              <span>{brand}</span>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="15"
-                height="15"
-              />
-            </>
-          )}
+          <span 
+            onClick={() => navigate('/home')}
+            style={{ cursor: 'pointer' }}
+          >
+            Home
+          </span>
           {make && (
             <>
-              <span>{make}</span>
               <img
                 src={getAssetUrl("RIGHT ARROW")}
                 alt=""
                 width="15"
                 height="15"
               />
+              <span 
+                onClick={() => navigate('/MakeNew', { 
+                  state: { 
+                    variant: location.state?.variant,
+                    featureLabel: location.state?.featureLabel 
+                  } 
+                })}
+                style={{ cursor: 'pointer' }}
+              >
+                {make}
+              </span>
             </>
           )}
           {model && (
             <>
-              <span>{model}</span>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="10"
-                height="10"
-              />
-            </>
-          )}
-          {category && (
-            <>
-              <span>{category}</span>
               <img
                 src={getAssetUrl("RIGHT ARROW")}
                 alt=""
                 width="15"
                 height="15"
               />
+              <span 
+                onClick={() => navigate('/Model', { 
+                  state: { 
+                    make,
+                    variant: location.state?.variant,
+                    featureLabel: location.state?.featureLabel 
+                  } 
+                })}
+                style={{ cursor: 'pointer' }}
+              >
+                {model}
+              </span>
             </>
           )}
-          {subCategory && <span>{subCategory.name || subCategory}</span>}
+          {(aggregateName || category) && (
+            <>
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="15"
+                height="15"
+              />
+              <span 
+                onClick={() => navigate('/Category', { 
+                  state: { 
+                    make, 
+                    model,
+                    variant: location.state?.variant,
+                    featureLabel: location.state?.featureLabel 
+                  } 
+                })}
+                style={{ cursor: 'pointer' }}
+              >
+                {aggregateName || category}
+              </span>
+            </>
+          )}
+          {(subAggregateName || subCategory) && (
+            <>
+              <img
+                src={getAssetUrl("RIGHT ARROW")}
+                alt=""
+                width="15"
+                height="15"
+              />
+              <span
+                onClick={() => navigate('/sub_category', {
+                  state: {
+                    make,
+                    model,
+                    brand,
+                    category: aggregateName || category,
+                    aggregate: aggregateName || category,
+                    aggregateName: aggregateName || category,
+                    variant: location.state?.variant,
+                    featureLabel: location.state?.featureLabel
+                  }
+                })}
+                style={{ cursor: 'pointer' }}
+              >
+                {subAggregateName || subCategory?.name || subCategory}
+              </span>
+            </>
+          )}
         </div>
 
         <div className="vnp-top-right">

@@ -52,6 +52,37 @@
   margin: 0;
 }
 
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.breadcrumb-link {
+  color: #454545;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #FF6A00;
+}
+
+.breadcrumb-separator {
+  color: #454545;
+  font-weight: 400;
+}
+
+.breadcrumb-current {
+  color: #454545;
+  font-weight: 500;
+}
+
 /* Model Grid Wrapper */
 .model-grid-wrapper {
   display: flex;
@@ -85,7 +116,7 @@
   padding: 0px;
   isolation: isolate;
   width: 127px;
-  min-height: 119.05px;
+  min-height: 102.05px;
   background: #FFFFFF;
   border: 1px solid #dcdcdc;
   border-radius: 4px;
