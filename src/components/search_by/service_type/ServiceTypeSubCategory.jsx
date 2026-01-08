@@ -85,7 +85,21 @@ const handleServiceTypeClick = (serviceType) => {
         <button className="back-button" onClick={handleBack}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="sub-category-title">Search by Sub Category</h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          <span className="breadcrumb-separator">&gt;</span>
+          <span 
+            className="breadcrumb-link" 
+            onClick={() => navigate('/service-type-category', { 
+              state: { serviceType, make, model } 
+            })}
+          >
+            {category || 'Category'}
+          </span>
+          <span className="breadcrumb-separator">&gt;</span>
+        </div>
       </div>
 
       <div className="sub-category-main">

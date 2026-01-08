@@ -210,9 +210,12 @@ const MakeNew = () => {
         <button className="make-back-button" onClick={() => navigate(-1)}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="make-title">
-          {featureLabel ? `${featureLabel} - ` : ''}Make
-        </h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          <span className="breadcrumb-separator">&gt;</span>
+        </div>
       </div>
 
       <div className="make-grid-wrapper">

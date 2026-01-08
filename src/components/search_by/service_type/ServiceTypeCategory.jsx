@@ -67,7 +67,12 @@ const handleCategoryClick = (category) => {
         <button className="back-button" onClick={handleBack}>
           <img src={LeftArrow} alt="Back" />
         </button>
-        <h1 className="category-title">Search by Category</h1>
+        <div className="breadcrumb-nav">
+          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+            Home
+          </span>
+          <span className="breadcrumb-separator">&gt;</span>
+        </div>
       </div>
 
       <div className="category-content">
