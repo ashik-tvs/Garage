@@ -41,17 +41,17 @@
 }
 
 .sub-category-title {
-  position: absolute;
-  left: 14.9%;
-  transform: translateX(-50%);
-  font-family: "Poppins", sans-serif;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 48px;
-  letter-spacing: 0.04em;
-  color: #424242;
-  margin: 0;
+    position: absolute;
+    left: 20.9%;
+    transform: translateX(-50%);
+    font-family: "Poppins", sans-serif;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 48px;
+    letter-spacing: 0.04em;
+    color: #424242;
+    margin: 0;
 }
 
 /* Main Content Layout */

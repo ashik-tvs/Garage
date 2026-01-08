@@ -10,7 +10,10 @@ import "../../../styles/home/SubCategory.css";
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, category, aggregateName } = location.state || {};
+  const { make, model, brand, category, aggregateName, aggregate, featureLabel } = location.state || {};
+  
+  // Use aggregate from Category.jsx if available, fallback to aggregateName
+  const selectedAggregate = aggregate || aggregateName;
 
   const [uiAssets, setUiAssets] = useState({});
   const [subCategories, setSubCategories] = useState([]);
@@ -36,62 +39,119 @@ const Sub_Category = () => {
   }, []);
 
   // Fetch sub-categories from API
-useEffect(() => {
-  if (!aggregateName) {
-    console.error("aggregateName missing — API will not call");
-    return;
-  }
-
-  fetchSubCategories(true); // force fetch
-}, [aggregateName]);
-
-
-const fetchSubCategories = async (force = false) => {
-  try {
-    setLoading(true);
-    setError(null);
-
-    const cacheKey = `subCategory_${aggregateName}`;
-    const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
-    const cacheExpiry = 24 * 60 * 60 * 1000;
-
-    if (!force) {
+  useEffect(() => {
+    if (selectedAggregate) {
+      // Check cache first
+      const cacheKey = `subCategory_${selectedAggregate}`;
       const cachedData = localStorage.getItem(cacheKey);
+      const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+      const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
 
-      if (
-        cachedData &&
-        cacheTimestamp &&
-        Date.now() - parseInt(cacheTimestamp) < cacheExpiry
-      ) {
-        setSubCategories(JSON.parse(cachedData));
-        setLoading(false);
-        return; // ⛔ API skipped intentionally
+      if (cachedData && cacheTimestamp) {
+        const isCacheValid =
+          Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+
+        if (isCacheValid) {
+          console.log(
+            `Loading sub-categories for ${selectedAggregate} from cache...`
+          );
+          setSubCategories(JSON.parse(cachedData));
+          setLoading(false);
+          return;
+        }
       }
+
+      fetchSubCategories();
+    } else {
+      setLoading(false);
+      setError("No category selected");
     }
+  }, [selectedAggregate]);
 
-    // ✅ API CALL WILL ALWAYS HAPPEN HERE
-    const response = await axios.post(
-      "http://localhost:5000/api/parts-list",
-      { aggregate: aggregateName },
-      { timeout: 90000 }
-    );
+  const fetchSubCategories = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-    const partsData = response.data?.data || [];
-    const uniqueSubAggregates = [
-      ...new Set(partsData.map(i => i.subAggregate).filter(Boolean))
-    ];
+      console.log("Fetching sub-categories for:", selectedAggregate);
 
-    const formatted = uniqueSubAggregates.map((sub, i) => ({
-      id: i + 1,
-      name: sub,
-      subAggregateName: sub,
-      image: NoImage
-    }));
+      const response = await axios.post(
+        "http://localhost:5000/api/parts-list",
+        {
+          brandPriority: null,
+          limit: 5000,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: null,
+          customerCode: "0046",
+          partNumber: null,
+          model: null,
+          brand: null,
+          subAggregate: null,
+          aggregate: selectedAggregate, // Filter by selected category (e.g., "BATTERY", "STEERING")
+          make: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          timeout: 90000,
+        }
+      );
 
-    localStorage.setItem(cacheKey, JSON.stringify(formatted));
-    localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+      console.log("Sub-categories API Response:", response);
 
-    setSubCategories(formatted);
+      // Handle different response structures
+      let partsData = [];
+      if (Array.isArray(response.data)) {
+        partsData = response.data;
+      } else if (response.data && Array.isArray(response.data.data)) {
+        partsData = response.data.data;
+      } else if (response.data && Array.isArray(response.data.parts)) {
+        partsData = response.data.parts;
+      } else {
+        console.error("Unexpected response structure:", response.data);
+        throw new Error("Invalid response format");
+      }
+
+      // Extract unique sub-aggregates (Sub-Categories)
+      const uniqueSubAggregates = [
+        ...new Set(
+          partsData
+            .map((item) => item.subAggregate)
+            .filter((subAggregate) => subAggregate)
+        ),
+      ];
+
+      console.log("Unique sub-aggregates:", uniqueSubAggregates);
+
+      // Format sub-categories
+      const formattedSubCategories = uniqueSubAggregates.map(
+        (subAggregate, index) => ({
+          id: index + 1,
+          name: subAggregate
+            .toLowerCase()
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" "),
+          subAggregateName: subAggregate,
+          image: getIconForSubCategory(subAggregate),
+        })
+      );
+
+      console.log("Formatted sub-categories:", formattedSubCategories);
+
+      // Cache the sub-categories
+      const cacheKey = `subCategory_${selectedAggregate}`;
+      localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
+      localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+      console.log(`Sub-categories for ${selectedAggregate} cached successfully`);
+
+setSubCategories(formattedSubCategories);
   } catch (err) {
     setError("Failed to load sub-categories");
   } finally {
@@ -135,9 +195,10 @@ const fetchSubCategories = async (force = false) => {
         model,
         brand,
         category,
-        aggregateName, // Pass the aggregate name from Category
+        aggregateName: selectedAggregate, // Pass the selected aggregate name
         subCategory: subCategory.name,
         subAggregateName: subCategory.subAggregateName,
+        featureLabel,
       },
     });
   };
@@ -161,7 +222,11 @@ const fetchSubCategories = async (force = false) => {
         <button className="back-button" onClick={handleBack}>
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
-        <h1 className="sub-category-title">Search by Sub Category</h1>
+        <h1 className="sub-category-title">
+          {featureLabel ? `${featureLabel} - ` : ""}
+          {selectedAggregate ? `${selectedAggregate} - ` : ""}
+          Search by Sub Category
+        </h1>
       </div>
 
       <div className="sub-category-main">
@@ -170,7 +235,7 @@ const fetchSubCategories = async (force = false) => {
           {loading ? (
             <div className="sub-category-loading">
               <p style={{ textAlign: "center", padding: "20px" }}>
-                Loading subcategories...
+                Loading Subcategories...
               </p>
             </div>
           ) : error ? (
@@ -205,7 +270,7 @@ const fetchSubCategories = async (force = false) => {
           ) : subCategories.length === 0 ? (
             <div className="sub-category-empty">
               <p style={{ textAlign: "center", padding: "20px" }}>
-                No subcategories found for {category}.
+                No subcategories found for {selectedAggregate || category}.
               </p>
             </div>
           ) : (
@@ -237,7 +302,7 @@ const fetchSubCategories = async (force = false) => {
         {/* Service Type Sidebar */}
         <div className="service-type-sidebar">
           <div className="service-type-header">
-            <span>Service Type for {category || "Category"}</span>
+            <span>Service Type for {selectedAggregate || category || "Category"}</span>
             <div className="service-type-icon">
               <img
                 src={getAssetUrl(uiAssets["SERVICE TYPE"])}

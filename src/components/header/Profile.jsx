@@ -52,19 +52,20 @@ const Profile = () => {
   return (
     <div className="profile-container">
       <div className="profile-content">
-
         {/* =========================
            Header Section
         ========================= */}
         <div className="profile-header">
           <div className="profile-avatar">
-            <img src={ProfileIcon} alt="Profile" className="profile-avatar-img" />
+            <img
+              src={ProfileIcon}
+              alt="Profile"
+              className="profile-avatar-img"
+            />
           </div>
 
           <div className="profile-header-info">
-            <h2 className="profile-name">
-              {userProfile.full_name || "N/A"}
-            </h2>
+            <h2 className="profile-name">{userProfile.full_name || "N/A"}</h2>
 
             <p className="profile-email">{profile.email}</p>
 
@@ -79,31 +80,16 @@ const Profile = () => {
            Profile Details
         ========================= */}
         <div className="profile-details">
-
           <div className="profile-labels">
             <p className="profile-label">Mobile</p>
             <p className="profile-label">Employee Code</p>
-            <p className="profile-label">Reporting TO</p>
             <p className="profile-label">Designation</p>
-            <p className="profile-label">Sales Manager Name</p>
-            <p className="profile-label">Sales Manager Number</p>
           </div>
-
-          <div className="profile-separator">
-            {Array(6).fill(":").map((_, i) => (
-              <span key={i} className="separator-text">:</span>
-            ))}
-          </div>
-
           <div className="profile-values">
             <p className="profile-value">{userProfile.mobile || "-"}</p>
             <p className="profile-value">{userProfile.employee_code || "-"}</p>
-            <p className="profile-value">{userProfile.reporting_to || "-"}</p>
             <p className="profile-value">{userProfile.designation || "-"}</p>
-            <p className="profile-value">{userProfile.sales_manager_name || "-"}</p>
-            <p className="profile-value">{userProfile.sales_manager_number || "-"}</p>
           </div>
-
         </div>
       </div>
     </div>
