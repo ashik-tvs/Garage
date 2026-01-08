@@ -29,7 +29,8 @@ const Search = () => {
   // Vehicle number validation
   const isVehicleNumber = (value) =>
     /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i.test(value);
-  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+  // Part number: alphanumeric with optional hyphens, must contain at least one digit
+  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9\-]+$/i.test(value);
   const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
 
   // Fetch autocomplete suggestions
@@ -42,12 +43,20 @@ const Search = () => {
 
     try {
       setLoading(true);
+      
+      // Detect if searchKey is a part number (alphanumeric with optional hyphens, contains digit)
+      const normalizedKey = searchKey.trim().replace(/\s+/g, "");
+      const looksLikePartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(normalizedKey);
+      
+      // Send request with searchKey - API will handle both part number and item description
       const response = await apiService.post("/search", {
         customerCode: "0046",
-        searchKey: searchKey,
+        searchKey: searchKey.trim(),
+        partNumber: looksLikePartNumber ? searchKey.trim() : null,
       });
 
       console.log("Search API Response:", response);
+      console.log("Search type detected:", looksLikePartNumber ? "Part Number" : "Item Description");
 
       // Handle API response structure: { success, message, data: [...] }
       let data = [];
@@ -89,10 +98,12 @@ const Search = () => {
     console.log("=== SUGGESTION CLICKED ===");
     console.log("Full suggestion object:", suggestion);
 
-    // If user typed numbers and clicked a suggestion, use partNumber
-    // If user typed text/description, use itemName
-    const isNumberSearch = /\d/.test(searchValue);
-    const searchTerm = isNumberSearch
+    // Determine if the typed search value looks like a part number
+    const typedValue = searchValue.trim().replace(/\s+/g, "");
+    const isTypedPartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(typedValue);
+    
+    // Use partNumber if search looks like part number, otherwise use itemName
+    const searchTerm = isTypedPartNumber
       ? suggestion.partNumber || suggestion.searchValue || suggestion.itemName
       : suggestion.itemName || suggestion.partNumber || suggestion.searchValue;
 
@@ -131,7 +142,7 @@ const Search = () => {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    }, []);
 
   const handleSearch = (e) => {
     if (e.key !== "Enter") return;
@@ -142,13 +153,16 @@ const Search = () => {
 
     const rawValue = searchValue.trim();
     if (!rawValue) return;
-    const noSpaceValue = rawValue.replace(/\s+/g, "").toUpperCase();
+    
+    // For vehicle numbers, remove spaces. For part numbers, keep hyphens
+    const noSpaceValue = rawValue.replace(/\s+/g, "");
 
-    if (isVehicleNumber(noSpaceValue)) {
+    if (isVehicleNumber(noSpaceValue.toUpperCase())) {
       navigate("/search-by-vehicle-number", {
-        state: { vehicleNumber: noSpaceValue },
+        state: { vehicleNumber: noSpaceValue.toUpperCase() },
       });
     } else if (isPartNumber(noSpaceValue)) {
+      // Keep original case and hyphens for part numbers like 8502KPA1MFSU-TR0118
       navigate("/search-by-part-number", {
         state: { partNumber: noSpaceValue },
       });
@@ -195,7 +209,7 @@ const Search = () => {
     fetchBanner();
   }, []);
   // Detect if current search is a part number search
-  const isPartNumberSearch = /^(?=.*\d)[A-Z0-9]+$/i.test(
+  const isPartNumberSearch = /^(?=.*\d)[A-Z0-9\-]+$/i.test(
     searchValue.trim().replace(/\s+/g, "")
   );
 
