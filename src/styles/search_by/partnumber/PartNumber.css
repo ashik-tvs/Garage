@@ -126,7 +126,7 @@
   flex-direction: column;
   background: #fff;
   border-radius: 8px;
-  padding: 12px;
+  padding: 0px 12px;
   width: 370px;
 }
 .pn-card-row {

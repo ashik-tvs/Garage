@@ -35,7 +35,6 @@ const Product = () => {
   };
 
   const { cartItems, addToCart, removeFromCart } = useCart();
-  const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
   // Product states
@@ -64,17 +63,17 @@ const Product = () => {
   } = location.state || {};
 
   const [filters, setFilters] = useState({
-    brakeSystem: "",
-    price: "",
+    year: "",
+    fuelType: "",
     eta: "",
-    sortBy: "",
+    // sortBy: "",
   });
 
   const filterOptions = {
     brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
     price: ["Low to High", "High to Low"],
     eta: ["Same Day", "1-2 Days", "3-5 Days"],
-    sortBy: ["Relevance", "Price", "Brand"],
+    // sortBy: ["Relevance", "Price", "Brand"],
   };
 
   // Fetch products based on category and subcategory
@@ -425,108 +424,136 @@ const Product = () => {
           )}
         </div>
 
-        <div className="vnp-top-right">
-          <div className="vnp-vehicle-group">
-            <div className="vnp-filter-frame">
-              <div className="vnp-filter-rect" />
-              <div className="vnp-filter-number">
-                <div className="vnp-num-part">{vehicle?.make || "Hyundai"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.model || "Grand"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.variant || "i10"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.fuel || "Petrol"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.year || "2021"}</div>
-              </div>
-              <div className="vnp-indicator">
-                <div className="vnp-indicator-text">IND</div>
-                <div className="vnp-line-vertical" />
-              </div>
-            </div>
+        <div className="vnp-search-controls">
+          <select className="vnp-control-dropdown">
+            <option>Select Make</option>
+            <option>{vehicle?.make || "Hyundai"}</option>
+          </select>
+          
+          <select className="vnp-control-dropdown">
+            <option>Select Model</option>
+            <option>{vehicle?.model || "Grand i10"}</option>
+          </select>
+          
+          <select className="vnp-control-dropdown">
+            <option>Select Variant</option>
+            <option>{vehicle?.variant || "Sportz"}</option>
+          </select>
+          
+          <select className="vnp-control-dropdown">
+            <option>Select Fuel type</option>
+            <option>{vehicle?.fuel || "Petrol"}</option>
+          </select>
+          
+          <select className="vnp-control-dropdown">
+            <option>Select Year</option>
+            <option>{vehicle?.year || "2021"}</option>
+          </select>
+          
+          <button className="vnp-search-btn">
+            Search
+          </button>
 
-            <button
-              className="vnp-edit-btn"
-              onClick={() => setShowEditPopup(!showEditPopup)}
-              aria-label="Edit vehicle"
+          <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenFilter(openFilter === "year" ? null : "year");
+              }}
             >
-              <img
-                src={getAssetUrl("EDIT")}
-                alt="edit"
-                className="vnp-edit-icon-img"
-              />
-            </button>
+              <span>{filters.year || "Year"}</span>
+              <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+            </div>
+            {openFilter === "year" && (
+              <div
+                className="vnp-filter-dropdown"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {["2024", "2023", "2022", "2021", "2020"].map((option) => (
+                  <div
+                    key={option}
+                    className="vnp-filter-option"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilters((prev) => ({ ...prev, year: option }));
+                      setOpenFilter(null);
+                    }}
+                  >
+                    {option}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="vnp-filters-row">
-            {["brakeSystem", "price", "eta", "sortBy"].map((key) => (
-              <div className="vnp-filter-wrapper" key={key}>
-                <div
-                  className="vnp-filter-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenFilter(openFilter === key ? null : key);
-                  }}
-                >
-                  <span>{filters[key] || key}</span>
-                  <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
-                </div>
-                {openFilter === key && (
+          <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenFilter(openFilter === "fuelType" ? null : "fuelType");
+              }}
+            >
+              <span>{filters.fuelType || "Fuel type"}</span>
+              <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+            </div>
+            {openFilter === "fuelType" && (
+              <div
+                className="vnp-filter-dropdown"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {["Petrol", "Diesel", "CNG", "Electric"].map((option) => (
                   <div
-                    className="vnp-filter-dropdown"
-                    onClick={(e) => e.stopPropagation()}
+                    key={option}
+                    className="vnp-filter-option"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilters((prev) => ({ ...prev, fuelType: option }));
+                      setOpenFilter(null);
+                    }}
                   >
-                    {filterOptions[key].map((option) => (
-                      <div
-                        key={option}
-                        className="vnp-filter-option"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFilters((prev) => ({ ...prev, [key]: option }));
-                          setOpenFilter(null);
-                        }}
-                      >
-                        {option}
-                      </div>
-                    ))}
+                    {option}
                   </div>
-                )}
+                ))}
               </div>
-            ))}
+            )}
+          </div>
+
+          <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenFilter(openFilter === "eta" ? null : "eta");
+              }}
+            >
+              <span>{filters.eta || "ETA"}</span>
+              <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+            </div>
+            {openFilter === "eta" && (
+              <div
+                className="vnp-filter-dropdown"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {["Same Day", "1-2 Days", "3-5 Days"].map((option) => (
+                  <div
+                    key={option}
+                    className="vnp-filter-option"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilters((prev) => ({ ...prev, eta: option }));
+                      setOpenFilter(null);
+                    }}
+                  >
+                    {option}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* ---------- EDIT DROPDOWNS ---------- */}
-      {showEditPopup && (
-        <div className="vnp-edit-dropdowns">
-          <select className="vnp-dropdown">
-            <option>Select Make</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Model</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Variant</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Fuel type</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Year</option>
-          </select>
-          <button
-            className="vnp-find-btn"
-            onClick={() => {
-              setShowEditPopup(false);
-              navigate("/search-by-vehicle-number");
-            }}
-          >
-            Find Auto Parts
-          </button>
-        </div>
-      )}
 
       {/* ---------- CONTENT ---------- */}
       {loading ? (
