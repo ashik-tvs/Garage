@@ -213,7 +213,7 @@ const PartNumber = () => {
   const rawSearchKey = state?.partNumber || "";
 
   // Detection functions
-  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
   const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
 
   // Keep original case for item name, uppercase for part number
@@ -231,6 +231,9 @@ const PartNumber = () => {
   const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
   const [vehicleCount, setVehicleCount] = useState(0);
 
+  // State for "See More" functionality
+  const [showAllOtherProducts, setShowAllOtherProducts] = useState(false);
+
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedVariant, setSelectedVariant] = useState("");
@@ -238,32 +241,130 @@ const PartNumber = () => {
   const [selectedYear, setSelectedYear] = useState("");
   const [filteredCompatibility, setFilteredCompatibility] = useState([]);
 
-const applyCompatibilityFilter = () => {
-  let filtered = [...vehicleCompatibilityList];
+const applyCompatibilityFilter = async () => {
+  console.log("🔍 Applying compatibility filter...");
+  console.log("📋 Selected Filters:", {
+    make: selectedMake,
+    model: selectedModel,
+    variant: selectedVariant,
+    fuelType: selectedFuel,
+    year: selectedYear,
+  });
 
-  if (selectedMake) {
-    filtered = filtered.filter(v => v.make === selectedMake);
+  // Validate that at least one filter is selected
+  if (!selectedMake && !selectedModel && !selectedVariant && !selectedFuel && !selectedYear) {
+    console.log("❌ No filters selected");
+    return;
   }
 
-  if (selectedModel) {
-    filtered = filtered.filter(v => v.model === selectedModel);
-  }
+  setLoading(true);
+  setError(null);
 
-  if (selectedVariant) {
-    filtered = filtered.filter(v => v.variant === selectedVariant);
-  }
+  try {
+    // Fetch filtered products from parts-list API
+    console.log("➡️ Fetching filtered products...");
+    
+    const requestBody = {
+      brandPriority: null,
+      limit: 100,
+      offset: 0,
+      sortOrder: "ASC",
+      fieldOrder: null,
+      customerCode: "0046",
+      partNumber: null,
+      model: selectedModel || null,
+      brand: null,
+      subAggregate: null,
+      aggregate: null,
+      make: selectedMake || null,
+      variant: selectedVariant || null,
+      fuelType: selectedFuel || null,
+      vehicle: null,
+      year: selectedYear || null,
+    };
 
-  if (selectedFuel) {
-    filtered = filtered.filter(v => v.fuelType === selectedFuel);
-  }
+    console.log("📤 Request Body:", requestBody);
 
-  if (selectedYear) {
-    filtered = filtered.filter(v => String(v.year) === String(selectedYear));
-  }
+    const response = await apiService.post("/parts-list", requestBody);
+    
+    console.log("✅ Filtered Products Response:", response);
 
-  setFilteredCompatibility(filtered);
-  setVehicleCount(filtered.length);
-  setShowCompatibility(true);
+    const partsData = response?.data || [];
+    console.log("📦 Filtered Parts Count:", partsData.length);
+
+    // Transform API data to match component structure
+    const transformedParts = partsData.map((part, index) => ({
+      id: index + 1,
+      brand: part.brandName || "Unknown",
+      partNo: part.partNumber,
+      description: part.itemDescription,
+      price: parseFloat(part.listPrice) || 0,
+      mrp: parseFloat(part.mrp) || 0,
+      eta: "1-2 Days",
+      stock: "In stock",
+      vehicles: 12,
+      imageUrl: NoImage,
+      lineCode: part.lineCode,
+      hsnCode: part.hsnCode,
+      aggregate: part.aggregate,
+      subAggregate: part.subAggregate,
+      taxPercent: part.taxpercent,
+    }));
+
+    console.log("🔄 Transformed Filtered Parts:", transformedParts);
+
+    // Separate myTVS and other brands
+    const myTvsProducts = transformedParts.filter(
+      (item) => item.brand.toUpperCase() === "MYTVS",
+    );
+    const otherProducts = transformedParts.filter(
+      (item) => item.brand.toUpperCase() !== "MYTVS",
+    );
+
+    console.log("✅ Filtered myTVS Products:", myTvsProducts.length);
+    console.log("✅ Filtered Other Brand Products:", otherProducts.length);
+
+    // Update the products displayed on the page
+    setRecommendedProducts(myTvsProducts);
+    setOtherBrandProducts(otherProducts);
+    setShowAllOtherProducts(false); // Reset "See More" state when filtering
+
+    // Also filter the vehicle compatibility list for the modal
+    let filteredVehicles = [...vehicleCompatibilityList];
+
+    if (selectedMake) {
+      filteredVehicles = filteredVehicles.filter(v => v.make === selectedMake);
+    }
+
+    if (selectedModel) {
+      filteredVehicles = filteredVehicles.filter(v => v.model === selectedModel);
+    }
+
+    if (selectedVariant) {
+      filteredVehicles = filteredVehicles.filter(v => v.variant === selectedVariant);
+    }
+
+    if (selectedFuel) {
+      filteredVehicles = filteredVehicles.filter(v => v.fuelType === selectedFuel);
+    }
+
+    if (selectedYear) {
+      filteredVehicles = filteredVehicles.filter(v => String(v.year) === String(selectedYear));
+    }
+
+    setFilteredCompatibility(filteredVehicles);
+    setVehicleCount(response?.count || partsData.length);
+
+    console.log("🎉 Filter applied successfully!");
+
+  } catch (err) {
+    console.error("❌ Error fetching filtered products:", err);
+    setError("Failed to load filtered products. Please try again.");
+    setRecommendedProducts([]);
+    setOtherBrandProducts([]);
+  } finally {
+    setLoading(false);
+  }
 };
 
   const unique = (arr, key) => [
@@ -321,19 +422,26 @@ const applyCompatibilityFilter = () => {
 
       try {
         // Detect if searchKey is part number (alphanumeric with at least one digit) or item name (letters and spaces only)
-        const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9]+$/i.test(value);
+        const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
         const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ""));
+
+        console.log("🔍 Search Key:", searchKey);
+        console.log("🔍 Is Part Number Search:", isPartNumberSearch);
 
         let response;
         if (isPartNumberSearch) {
           // Search by part number
+          console.log("➡️ Calling fetchPartsListByPartNumber with:", searchKey);
           response = await fetchPartsListByPartNumber(searchKey);
         } else {
           // Search by item name/description
+          console.log("➡️ Calling fetchPartsListByItemName with:", searchKey);
           response = await fetchPartsListByItemName(searchKey);
         }
 
+        console.log("✅ API Response:", response);
         const partsData = response?.data || [];
+        console.log("📦 Parts Data Count:", partsData.length);
 
         // Transform API data to match component structure
         const transformedParts = partsData.map((part, index) => ({
@@ -354,6 +462,8 @@ const applyCompatibilityFilter = () => {
           taxPercent: part.taxpercent,
         }));
 
+        console.log("🔄 Transformed Parts:", transformedParts);
+
         // Separate myTVS and other brands
         const myTvsProducts = transformedParts.filter(
           (item) => item.brand.toUpperCase() === "MYTVS",
@@ -362,8 +472,13 @@ const applyCompatibilityFilter = () => {
           (item) => item.brand.toUpperCase() !== "MYTVS",
         );
 
+        console.log("✅ myTVS Products:", myTvsProducts.length);
+        console.log("✅ Other Brand Products:", otherProducts.length);
+        console.log("📋 Other Products Details:", otherProducts);
+
         setRecommendedProducts(myTvsProducts);
         setOtherBrandProducts(otherProducts);
+        setShowAllOtherProducts(false); // Reset "See More" state when new products load
       } catch (err) {
         console.error("Error fetching parts data:", err);
         setError("Failed to load parts. Please try again.");
@@ -520,7 +635,29 @@ const applyCompatibilityFilter = () => {
     !selectedYear
   }
 >
-  Search Compatibility
+  Search
+</button>
+
+<button
+  className="pn-clear-btn"
+  onClick={() => {
+    console.log("🧹 Clearing filters...");
+    setSelectedMake("");
+    setSelectedModel("");
+    setSelectedVariant("");
+    setSelectedFuel("");
+    setSelectedYear("");
+    setShowAllOtherProducts(false);
+  }}
+  disabled={
+    !selectedMake &&
+    !selectedModel &&
+    !selectedVariant &&
+    !selectedFuel &&
+    !selectedYear
+  }
+>
+  Clear
 </button>
           </div>
 
@@ -528,7 +665,6 @@ const applyCompatibilityFilter = () => {
             <Filter label="Year" options={years} />
             <Filter label="Fuel type" options={fuelTypes} />
             <Filter label="ETA" options={["1-2 Days", "3-5 Days", "5+ Days"]} />
-            <Filter label="Sort by" options={["Price", "ETA", "Popularity"]} />
           </div>
         </div>
 
@@ -627,11 +763,26 @@ const applyCompatibilityFilter = () => {
                   )}
                 </div>
 
-                <h4 className="pn-section-title">Other Products</h4>
+                <h4 className="pn-section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>Other Products</span>
+                  {otherBrandProducts.length > 4 && (
+                    <span
+                      onClick={() => setShowAllOtherProducts(!showAllOtherProducts)}
+                      style={{
+                        color: "#ff6b35",
+                        fontSize: "16px",
+                        cursor: "pointer",
+                        fontWeight: "normal",
+                      }}
+                    >
+                      {showAllOtherProducts ? "See Less" : "See More"}
+                    </span>
+                  )}
+                </h4>
 
                 <div className="pn-grid">
                   {otherBrandProducts.length > 0 ? (
-                    otherBrandProducts.map((item) => (
+                    (showAllOtherProducts ? otherBrandProducts : otherBrandProducts.slice(0, 4)).map((item) => (
                       <div className="pn-card" key={item.id}>
                         <ProductCard
                           item={item}

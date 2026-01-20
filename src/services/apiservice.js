@@ -156,4 +156,35 @@ export const fetchVehicleListByPartNumber = async (partNumber) => {
   return apiService.post("/vehicle-list", requestBody);
 };
 
+// Fetch master list (make, model, variant, fuelType, year) for cascading dropdowns
+export const fetchMasterList = async ({
+  masterType,
+  make = null,
+  model = null,
+  variant = null,
+  aggregate = null,
+  subAggregate = null,
+  limit = 0,
+}) => {
+  const requestBody = {
+    partNumber: null,
+    sortOrder: "ASC",
+    customerCode: "0046",
+    aggregate,
+    brand: null,
+    fuelType: null,
+    limit,
+    make,
+    masterType, // "make", "model", "variant", "fuelType", "year"
+    model,
+    offset: 0,
+    primary: false,
+    subAggregate,
+    variant,
+    year: null,
+  };
+
+  return apiService.post("/matertype", requestBody);
+};
+
 export default apiService;

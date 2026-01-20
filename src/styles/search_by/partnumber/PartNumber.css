@@ -85,6 +85,38 @@
   cursor: pointer;
   font-size: 12px;
 }
+
+.pn-compat-btn:hover:not(:disabled) {
+  background: #1e2470;
+}
+
+.pn-compat-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pn-clear-btn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.pn-clear-btn:hover {
+  background: #b91c1c;
+}
+
+.pn-clear-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .pn-main-content {
   display: flex;
   justify-content: center;
