@@ -1,31 +1,12 @@
-import { getOciModelIndex } from "./ociModelIndex";
+export const resolveOciModelName = (modelName, make) => {
+  if (!modelName || !make) return null;
 
-export const resolveOciModelName = async (make, model) => {
-  if (!make || !model) return null;
+  const formattedMake = make
+    .split(" ")
+    .map(
+      (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+    )
+    .join(" ");
 
-  const files = await getOciModelIndex();
-
-  const makeUpper = make.toUpperCase();
-  const modelUpper = model.toUpperCase();
-
-  // 1️⃣ Filter by make
-  const makeMatches = files.filter(f =>
-    f.toUpperCase().startsWith(makeUpper)
-  );
-
-  if (!makeMatches.length) return null;
-
-  // 2️⃣ Extract model tokens (numbers & letters only)
-  const tokens = modelUpper.match(/[A-Z0-9]+/g) || [];
-
-  // 3️⃣ Find best token match
-  for (const token of tokens) {
-    const hit = makeMatches.find(f =>
-      f.toUpperCase().includes(token)
-    );
-    if (hit) return hit;
-  }
-
-  // 4️⃣ Fallback → first model of make
-  return makeMatches[0];
+  return `${formattedMake} - ${modelName}`;
 };

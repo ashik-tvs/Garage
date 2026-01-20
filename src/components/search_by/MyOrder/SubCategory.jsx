@@ -6,24 +6,20 @@ import NoImage from "../../../assets/No Image.png";
 import OciImage from "../../oci_image/ociImages";
 import "../../../styles/home/SubCategory.css";
 
-// Sub Category Images (fallback)
-import BrakePad from "../../../assets/brakePad.png";
-import BrakeDisc from "../../../assets/Brake Disk.png";
-import Caliper from "../../../assets/caliperPins.png";
-import BrakeShoe from "../../../assets/brakeShoe.png";
-import BrakeLining from "../../../assets/BrakeLining.png";
-import MC from "../../../assets/McBooster.png";
-import Anti from "../../../assets/AntiLocking.png";
-import BrakeHose from "../../../assets/brakeHose.png";
-import BrakeDrum from "../../../assets/brakeDrum.png";
-import BrakeCable from "../../../assets/Sub Category/BRAKE CABLE.png";
-import Cylinder from "../../../assets/Cylinder.png";
-
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, category, aggregateName, aggregate, featureLabel, variant } = location.state || {};
-  
+  const {
+    make,
+    model,
+    brand,
+    category,
+    aggregateName,
+    aggregate,
+    featureLabel,
+    variant,
+  } = location.state || {};
+
   // Use aggregate from Category.jsx if available, fallback to aggregateName
   const selectedAggregate = aggregate || aggregateName;
 
@@ -32,28 +28,9 @@ const Sub_Category = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Icon mapping for fallback images
-  const iconMap = {
-    "BRAKE PAD": BrakePad,
-    "BRAKE DISC": BrakeDisc,
-    "BRAKE DISK": BrakeDisc,
-    "CALIPER PINS": Caliper,
-    CALIPER: Caliper,
-    "BRAKE SHOE": BrakeShoe,
-    "BRAKE LINING": BrakeLining,
-    "MC / BOOSTER": MC,
-    "MC BOOSTER": MC,
-    CYLINDER: Cylinder,
-    "ANTI LOCKING (ABS)": Anti,
-    ABS: Anti,
-    "BRAKE HOSE": BrakeHose,
-    "BRAKE DRUM": BrakeDrum,
-    "BRAKE CABLE": BrakeCable,
-  };
-
   const getIconForSubCategory = (subAggregateName) => {
     const upperName = subAggregateName.toUpperCase();
-    return iconMap[upperName] || NoImage;
+    return [upperName] || NoImage;
   };
 
   // Fetch UI assets
@@ -84,7 +61,7 @@ const Sub_Category = () => {
 
         if (isCacheValid) {
           console.log(
-            `Loading sub-categories for ${selectedAggregate} from cache...`
+            `Loading sub-categories for ${selectedAggregate} from cache...`,
           );
           setSubCategories(JSON.parse(cachedData));
           setLoading(false);
@@ -131,7 +108,7 @@ const Sub_Category = () => {
             "Content-Type": "application/json",
           },
           timeout: 90000,
-        }
+        },
       );
 
       console.log("Sub-categories API Response:", response);
@@ -154,7 +131,7 @@ const Sub_Category = () => {
         ...new Set(
           partsData
             .map((item) => item.subAggregate)
-            .filter((subAggregate) => subAggregate)
+            .filter((subAggregate) => subAggregate),
         ),
       ];
 
@@ -171,7 +148,7 @@ const Sub_Category = () => {
             .join(" "),
           subAggregateName: subAggregate,
           image: getIconForSubCategory(subAggregate),
-        })
+        }),
       );
 
       console.log("Formatted sub-categories:", formattedSubCategories);
@@ -180,19 +157,13 @@ const Sub_Category = () => {
       const cacheKey = `subCategory_${selectedAggregate}`;
       localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-      console.log(`Sub-categories for ${selectedAggregate} cached successfully`);
+      console.log(
+        `Sub-categories for ${selectedAggregate} cached successfully`,
+      );
 
       setSubCategories(formattedSubCategories);
     } catch (err) {
-      console.error("Error fetching sub-categories:", err);
-
-      if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
-        setError("Request timeout. Please try again later.");
-      } else {
-        setError(
-          `Failed to load sub-categories: ${err.message || "Please try again."}`
-        );
-      }
+      setError("Failed to load sub-categories");
     } finally {
       setLoading(false);
     }
@@ -262,17 +233,19 @@ const Sub_Category = () => {
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
         <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
+          <span className="breadcrumb-link" onClick={() => navigate("/home")}>
             Home
           </span>
           {make && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/MakeNew", {
+                    state: { variant, featureLabel },
+                  })
+                }
               >
                 {make}
               </span>
@@ -281,11 +254,13 @@ const Sub_Category = () => {
           {model && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/Model', { 
-                  state: { make, variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/Model", {
+                    state: { make, variant, featureLabel },
+                  })
+                }
               >
                 {model}
               </span>
@@ -294,11 +269,13 @@ const Sub_Category = () => {
           {(selectedAggregate || category) && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/Category', { 
-                  state: { make, model, variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/Category", {
+                    state: { make, model, variant, featureLabel },
+                  })
+                }
               >
                 {selectedAggregate || category}
               </span>
@@ -312,10 +289,20 @@ const Sub_Category = () => {
         {/* Sub Categories */}
         <div className="sub-category-content">
           {loading ? (
-            <div className="sub-category-loading">
-              <p style={{ textAlign: "center", padding: "20px" }}>
-                Loading Subcategories...
-              </p>
+            <div className="sub-category-grid">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="sub-category-item skeleton-sub-item"
+                >
+                  <div className="sub-category-image-wrapper">
+                    <div className="skeleton skeleton-sub-image"></div>
+                  </div>
+                  <div className="sub-category-label">
+                    <div className="skeleton skeleton-sub-text"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="sub-category-error">
@@ -330,7 +317,7 @@ const Sub_Category = () => {
                 {error}
               </p>
               <button
-                onClick={fetchSubCategories}
+                onClick={fetchSubCategories(true)}
                 style={{
                   padding: "10px 20px",
                   backgroundColor: "#007bff",
@@ -381,7 +368,9 @@ const Sub_Category = () => {
         {/* Service Type Sidebar */}
         <div className="service-type-sidebar">
           <div className="service-type-header">
-            <span>Service Type for {selectedAggregate || category || "Category"}</span>
+            <span>
+              Service Type for {selectedAggregate || category || "Category"}
+            </span>
             <div className="service-type-icon">
               <img
                 src={getAssetUrl(uiAssets["SERVICE TYPE"])}

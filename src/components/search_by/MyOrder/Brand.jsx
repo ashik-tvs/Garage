@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import LeftArrow from '../../../assets/Product/Left_Arrow.png';
-import NoImage from '../../../assets/No Image.png';
-import '../../../styles/search_by/MyOrder/Brand.css';
-import apiService from '../../../services/apiservice';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import LeftArrow from "../../../assets/Product/Left_Arrow.png";
+import NoImage from "../../../assets/No Image.png";
+import BrandSkeleton from "../../skeletonLoading/BrandSkeleton";
+import "../../../styles/search_by/MyOrder/Brand.css";
+import apiService from "../../../services/apiservice";
 
 // Brand Images
 import myTVS from "../../../assets/Brands/MYTVS.png";
@@ -14,16 +15,16 @@ const Brand = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { variant, featureLabel } = location.state || {};
-  
+
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Brand image mapping
   const brandImageMap = {
-    'FILTRON': Filtron,
-    'MFC': MFC,
-    'MYTVS': myTVS,
+    FILTRON: Filtron,
+    MFC: MFC,
+    MYTVS: myTVS,
   };
 
   useEffect(() => {
@@ -36,14 +37,15 @@ const Brand = () => {
       setError(null);
 
       // Check if coming from "Only with us" feature
-      const isOnlyWithUs = variant === 'logo' || featureLabel === 'Only with us';
+      const isOnlyWithUs =
+        variant === "logo" || featureLabel === "Only with us";
 
       if (isOnlyWithUs) {
         // Fetch brands from only-with-us API
-        console.log('Fetching brands from only-with-us API...');
-        const response = await apiService.get('/only-with-us');
-        
-        console.log('Only-with-us API Response:', response);
+        console.log("Fetching brands from only-with-us API...");
+        const response = await apiService.get("/only-with-us");
+
+        console.log("Only-with-us API Response:", response);
 
         // Handle response structure
         let onlyWithUsData = [];
@@ -57,13 +59,13 @@ const Brand = () => {
         }
 
         // Extract unique brands
-        const uniqueBrands = [...new Set(
-          onlyWithUsData
-            .map(item => item.brand)
-            .filter(brand => brand)
-        )];
+        const uniqueBrands = [
+          ...new Set(
+            onlyWithUsData.map((item) => item.brand).filter((brand) => brand),
+          ),
+        ];
 
-        console.log('Unique brands:', uniqueBrands);
+        console.log("Unique brands:", uniqueBrands);
 
         if (uniqueBrands.length === 0) {
           setError('No brands found for "Only with us".');
@@ -76,34 +78,34 @@ const Brand = () => {
         const formattedBrands = uniqueBrands.map((brandName, index) => ({
           id: index + 1,
           name: brandName,
-          image: brandImageMap[brandName.toUpperCase()] || NoImage
+          image: brandImageMap[brandName.toUpperCase()] || NoImage,
         }));
 
         setBrands(formattedBrands);
       } else {
         // Default brands for other flows
         setBrands([
-          { id: 1, name: 'FILTRON', image: Filtron },
-          { id: 2, name: 'MFC', image: MFC },
-          { id: 3, name: 'MYTVS', image: myTVS },
+          { id: 1, name: "FILTRON", image: Filtron },
+          { id: 2, name: "MFC", image: MFC },
+          { id: 3, name: "MYTVS", image: myTVS },
         ]);
       }
     } catch (err) {
-      console.error('Error fetching brands:', err);
-      setError('Failed to load brands. Please try again.');
+      console.error("Error fetching brands:", err);
+      setError("Failed to load brands. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleBrandClick = (brand) => {
-    navigate('/Category', { 
-      state: { 
+    navigate("/Category", {
+      state: {
         brand: brand.name,
         variant,
         featureLabel,
-        isOnlyWithUs: variant === 'logo' || featureLabel === 'Only with us'
-      } 
+        isOnlyWithUs: variant === "logo" || featureLabel === "Only with us",
+      },
     });
   };
 
@@ -118,11 +120,7 @@ const Brand = () => {
       </div>
 
       {/* Loading State */}
-      {loading && (
-        <div className="brands-loading">
-          <p>Loading brands...</p>
-        </div>
-      )}
+      {loading && <BrandSkeleton count={6} />}
 
       {/* Error State */}
       {error && (
@@ -135,14 +133,18 @@ const Brand = () => {
       {!loading && !error && (
         <div className="brands-grid">
           {brands.map((brand) => (
-            <div 
-              key={brand.id} 
+            <div
+              key={brand.id}
               className="brand-card"
               onClick={() => handleBrandClick(brand)}
-              style={{ cursor: 'pointer' }}
+              style={{ cursor: "pointer" }}
             >
               <div className="brand-image-wrapper">
-                <img src={brand.image} alt={brand.name} className="brand-image" />
+                <img
+                  src={brand.image}
+                  alt={brand.name}
+                  className="brand-image"
+                />
               </div>
             </div>
           ))}

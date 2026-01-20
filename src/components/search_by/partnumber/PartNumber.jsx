@@ -9,14 +9,7 @@ import {
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import DownArrow from "../../../assets/vehicle_search_entry/dropdown.png";
 import "../../../styles/search_by/partnumber/PartNumber.css";
-import Brake_1 from "../../../assets/brake1.png";
-import Brake_2 from "../../../assets/brake2.png";
-import Brake_3 from "../../../assets/brake3.png";
-
-/* ---------------- MOCK DATA ---------------- */
-const brakeImages = [Brake_1, Brake_2, Brake_3];
 
 const alignedProducts = [
   {
@@ -24,9 +17,9 @@ const alignedProducts = [
     partNo: "A6732S233132",
     brand: "Valeo",
     description: "Brake Disc Pad",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[2],
+    price: 4205,
+    mrp: 4080,
+    imageUrl: NoImage,
   },
   {
     id: 4,
@@ -34,9 +27,9 @@ const alignedProducts = [
 
     brand: "Mobil",
     description: "Brake Fluid",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[0],
+    price: 315,
+    mrp: 468,
+    imageUrl: NoImage,
   },
   {
     id: 5,
@@ -44,9 +37,9 @@ const alignedProducts = [
 
     brand: "Valeo",
     description: "Brake Fitting Kit",
-    price: 425,
-    mrp: 600,
-    imageUrl: brakeImages[1],
+    price: 5650,
+    mrp: 6000,
+    imageUrl: NoImage,
   },
 ];
 
@@ -87,7 +80,7 @@ const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
   const cartKey = `${item.partNo}_${item.brand}`;
 
   const isAdded = cartItems.some(
-    (cartItem) => cartItem.partNumber === localPartNumber
+    (cartItem) => cartItem.partNumber === localPartNumber,
   );
   const handleCart = () => {
     if (isAdded) {
@@ -140,10 +133,8 @@ const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
       <div className="pn-compatible-row" onClick={onOpenCompatibility}>
         <div>
           {" "}
-          Compatible with <b className="pn-count-vehicle">
-            {vehicleCount || 0}
-          </b>{" "}
-          vehicles
+          Compatible with{" "}
+          <b className="pn-count-vehicle">{vehicleCount || 0}</b> vehicles
         </div>
         <span className="pn-arrow">›</span>
       </div>
@@ -155,10 +146,7 @@ const CompatibilityModal = ({ onClose, vehicles = [] }) => {
 
   // Filter vehicles based on search term
   const filteredVehicles = vehicles.filter((v) =>
-    Object.values(v)
-      .join(" ")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+    Object.values(v).join(" ").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -204,7 +192,10 @@ const CompatibilityModal = ({ onClose, vehicles = [] }) => {
                 </div>
               ))
             ) : (
-              <div className="pn-no-results" style={{ padding: "20px", textAlign: "center" }}>
+              <div
+                className="pn-no-results"
+                style={{ padding: "20px", textAlign: "center" }}
+              >
                 No vehicles found
               </div>
             )}
@@ -245,6 +236,35 @@ const PartNumber = () => {
   const [selectedVariant, setSelectedVariant] = useState("");
   const [selectedFuel, setSelectedFuel] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [filteredCompatibility, setFilteredCompatibility] = useState([]);
+
+const applyCompatibilityFilter = () => {
+  let filtered = [...vehicleCompatibilityList];
+
+  if (selectedMake) {
+    filtered = filtered.filter(v => v.make === selectedMake);
+  }
+
+  if (selectedModel) {
+    filtered = filtered.filter(v => v.model === selectedModel);
+  }
+
+  if (selectedVariant) {
+    filtered = filtered.filter(v => v.variant === selectedVariant);
+  }
+
+  if (selectedFuel) {
+    filtered = filtered.filter(v => v.fuelType === selectedFuel);
+  }
+
+  if (selectedYear) {
+    filtered = filtered.filter(v => String(v.year) === String(selectedYear));
+  }
+
+  setFilteredCompatibility(filtered);
+  setVehicleCount(filtered.length);
+  setShowCompatibility(true);
+};
 
   const unique = (arr, key) => [
     ...new Set(arr.map((item) => item[key]).filter(Boolean)),
@@ -254,16 +274,16 @@ const PartNumber = () => {
 
   const models = unique(
     vehicleList.filter((v) => !selectedMake || v.make === selectedMake),
-    "model"
+    "model",
   );
 
   const variants = unique(
     vehicleList.filter(
       (v) =>
         (!selectedMake || v.make === selectedMake) &&
-        (!selectedModel || v.model === selectedModel)
+        (!selectedModel || v.model === selectedModel),
     ),
-    "variant"
+    "variant",
   );
 
   const fuelTypes = unique(
@@ -271,9 +291,9 @@ const PartNumber = () => {
       (v) =>
         (!selectedMake || v.make === selectedMake) &&
         (!selectedModel || v.model === selectedModel) &&
-        (!selectedVariant || v.variant === selectedVariant)
+        (!selectedVariant || v.variant === selectedVariant),
     ),
-    "fuelType"
+    "fuelType",
   );
 
   const years = unique(
@@ -282,9 +302,9 @@ const PartNumber = () => {
         (!selectedMake || v.make === selectedMake) &&
         (!selectedModel || v.model === selectedModel) &&
         (!selectedVariant || v.variant === selectedVariant) &&
-        (!selectedFuel || v.fuelType === selectedFuel)
+        (!selectedFuel || v.fuelType === selectedFuel),
     ),
-    "year"
+    "year",
   );
 
   // Fetch parts data from API
@@ -336,10 +356,10 @@ const PartNumber = () => {
 
         // Separate myTVS and other brands
         const myTvsProducts = transformedParts.filter(
-          (item) => item.brand.toUpperCase() === "MYTVS"
+          (item) => item.brand.toUpperCase() === "MYTVS",
         );
         const otherProducts = transformedParts.filter(
-          (item) => item.brand.toUpperCase() !== "MYTVS"
+          (item) => item.brand.toUpperCase() !== "MYTVS",
         );
 
         setRecommendedProducts(myTvsProducts);
@@ -392,7 +412,7 @@ const PartNumber = () => {
       try {
         // Fetch all vehicles without filters to populate dropdowns
         const requestBody = {
-          limit: 1000, // Get all vehicles
+          limit: 100000, // Get all vehicles
           offset: 0,
           sortOrder: "ASC",
           customerCode: "0046",
@@ -489,7 +509,19 @@ const PartNumber = () => {
               onChange={setSelectedYear}
             />
 
-            <button className="pn-compat-btn">Search Compatibility</button>
+<button
+  className="pn-compat-btn"
+  onClick={applyCompatibilityFilter}
+  disabled={
+    !selectedMake &&
+    !selectedModel &&
+    !selectedVariant &&
+    !selectedFuel &&
+    !selectedYear
+  }
+>
+  Search Compatibility
+</button>
           </div>
 
           <div className="pn-right-filters">
@@ -502,21 +534,75 @@ const PartNumber = () => {
 
         {/* CONTENT */}
         <div className="pn-content">
-          {/* Loading State */}
+          {/* ================= LOADING : SKELETON ================= */}
           {loading && (
-            <div className="pn-loading">
-              <p>Loading parts data...</p>
-            </div>
+            <>
+              {/* LEFT SKELETON */}
+              <div className="pn-left">
+                <h4 className="pn-section-title">myTVS Recommended Products</h4>
+
+                <div className="pn-grid">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="pn-card pn-skeleton-card">
+                      <div className="pn-skeleton pn-skeleton-line small"></div>
+                      <div className="pn-skeleton pn-skeleton-line medium"></div>
+                      <div className="pn-skeleton pn-skeleton-line large"></div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginTop: "12px",
+                        }}
+                      >
+                        <div>
+                          <div className="pn-skeleton pn-skeleton-line small"></div>
+                          <div className="pn-skeleton pn-skeleton-line small"></div>
+                        </div>
+                        <div className="pn-skeleton pn-skeleton-img"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <h4 className="pn-section-title">Other Products</h4>
+
+                <div className="pn-grid">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="pn-card pn-skeleton-card">
+                      <div className="pn-skeleton pn-skeleton-line small"></div>
+                      <div className="pn-skeleton pn-skeleton-line medium"></div>
+                      <div className="pn-skeleton pn-skeleton-line large"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* RIGHT SKELETON */}
+              <div className="pn-right">
+                <h4 className="pn-section-title">Aligned Products</h4>
+
+                <div className="pn-aligned">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="pn-aligned-card pn-skeleton-card">
+                      <div className="pn-skeleton pn-skeleton-line medium"></div>
+                      <div className="pn-skeleton pn-skeleton-line large"></div>
+                      <div className="pn-skeleton pn-skeleton-line small"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           )}
 
-          {/* Error State */}
-          {error && (
+          {/* ================= ERROR ================= */}
+          {!loading && error && (
             <div className="pn-error">
               <p>{error}</p>
             </div>
           )}
 
-          {/* Products Display */}
+          {/* ================= DATA ================= */}
           {!loading && !error && (
             <>
               {/* LEFT */}
@@ -536,7 +622,7 @@ const PartNumber = () => {
                     ))
                   ) : (
                     <div className="pn-no-results">
-                      No myTVS products found for {searchKey}
+                      No myTVS products found for <b>{searchKey}</b>
                     </div>
                   )}
                 </div>
@@ -570,7 +656,7 @@ const PartNumber = () => {
                   {alignedProducts.map((item) => {
                     const partNumber = `ALIGNED-${item.id}`;
                     const isAdded = cartItems.some(
-                      (cartItem) => cartItem.partNumber === partNumber
+                      (cartItem) => cartItem.partNumber === partNumber,
                     );
 
                     return (
@@ -582,7 +668,6 @@ const PartNumber = () => {
                             <span className="pn-tag-eta">1-2 Days</span>
                           </div>
 
-                          {/* Display Part Number */}
                           <p className="pn-align-part">{item.partNo}</p>
 
                           <p
@@ -597,30 +682,24 @@ const PartNumber = () => {
                             <span className="pn-mrp">₹ {item.mrp}</span>
                           </div>
                         </div>
+
                         <div className="pn-card-actions">
-                          <div>
-                            {" "}
-                            <img src={item.imageUrl} alt="" />
-                          </div>
-                          <div>
-                            <button
-                              className={`pn-add-btn ${
-                                isAdded ? "pn-added" : ""
-                              }`}
-                              onClick={() =>
-                                isAdded
-                                  ? removeFromCart(partNumber)
-                                  : addToCart({
-                                      ...item,
-                                      partNumber,
-                                      listPrice: item.price,
-                                      image: item.imageUrl, // ✅ ADD IMAGE
-                                    })
-                              }
-                            >
-                              {isAdded ? "Added" : "Add"}
-                            </button>
-                          </div>
+                          <img src={item.imageUrl} alt="" />
+                          <button
+                            className={`pn-add-btn ${isAdded ? "pn-added" : ""}`}
+                            onClick={() =>
+                              isAdded
+                                ? removeFromCart(partNumber)
+                                : addToCart({
+                                    ...item,
+                                    partNumber,
+                                    listPrice: item.price,
+                                    image: item.imageUrl,
+                                  })
+                            }
+                          >
+                            {isAdded ? "Added" : "Add"}
+                          </button>
                         </div>
                       </div>
                     );

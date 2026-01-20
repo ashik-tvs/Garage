@@ -4,9 +4,6 @@ import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
 import apiService from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import Brake_1 from "../../../assets/brake1.png";
-import Brake_2 from "../../../assets/brake2.png";
-import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- COMPONENT ---------------- */
 const Product = () => {
@@ -146,7 +143,7 @@ const Product = () => {
         setError("Session expired. Please login again.");
       } else {
         setError(
-          `Failed to load products: ${err.message || "Please try again."}`
+          `Failed to load products: ${err.message || "Please try again."}`,
         );
       }
     } finally {
@@ -174,7 +171,7 @@ const Product = () => {
         const stockItems = Array.isArray(response?.data) ? response.data : [];
         const totalQty = stockItems.reduce(
           (sum, item) => sum + (item.qty || 0),
-          0
+          0,
         );
 
         return {
@@ -207,7 +204,7 @@ const Product = () => {
 
   // Helper function to get random product image
   const getRandomImage = () => {
-    const images = [Brake_1, Brake_2, Brake_3];
+    const images = [NoImage];
     return images[Math.floor(Math.random() * images.length)];
   };
 
@@ -216,7 +213,7 @@ const Product = () => {
   const recommendedProducts = products.filter(
     (product) =>
       product.brand?.toUpperCase().includes("MYTVS") ||
-      product.brand?.toUpperCase().includes("MY TVS")
+      product.brand?.toUpperCase().includes("MY TVS"),
   );
 
   // Other Products: All brands except myTVS
@@ -225,7 +222,7 @@ const Product = () => {
       !(
         product.brand?.toUpperCase().includes("MYTVS") ||
         product.brand?.toUpperCase().includes("MY TVS")
-      )
+      ),
   );
 
   // Aligned Products: Can keep same logic or remove if not needed
@@ -250,6 +247,32 @@ const Product = () => {
       });
     }
   };
+  const SkeletonCard = () => (
+    <div className="vnp-card vnp-skeleton-card">
+      <div className="vnp-details">
+        <div className="vnp-skeleton-line small"></div>
+        <div className="vnp-skeleton-line medium"></div>
+        <div className="vnp-skeleton-line large"></div>
+        <div className="vnp-skeleton-line medium"></div>
+      </div>
+
+      <div className="vnp-image-placeholder">
+        <div className="vnp-skeleton-img"></div>
+        <div className="vnp-skeleton-btn"></div>
+      </div>
+    </div>
+  );
+
+  const SkeletonAlignedCard = () => (
+    <div className="vnp-aligned-card vnp-skeleton-card">
+      <div className="vnp-skeleton-img small"></div>
+      <div style={{ flex: 1 }}>
+        <div className="vnp-skeleton-line medium"></div>
+        <div className="vnp-skeleton-line large"></div>
+        <div className="vnp-skeleton-line small"></div>
+      </div>
+    </div>
+  );
 
   const renderProductCard = (product) => {
     const stockInfo = stockData[product.partNumber];
@@ -287,27 +310,25 @@ const Product = () => {
             <span className="vnp-price-original">₹ {product.mrp}.00</span>
           </div>
         </div>
-<div className="vnp-image-placeholder">
-  <div className="vnp-image-wrapper">
-    <img
-      src={product.image || NoImage}
-      alt={product.name}
-      className="vnp-product-image"
-    />
-  </div>
-  <div className="vnp-btn-wrapper">
-    <button
-      className={`vnp-btn-add ${
-        isInCart(product.partNumber) ? "added" : ""
-      }`}
-      onClick={() => handleToggleCart(product)}
-    >
-      {isInCart(product.partNumber) ? "Added" : "Add"}
-    </button>
-  </div>
-</div>
-
-
+        <div className="vnp-image-placeholder">
+          <div className="vnp-image-wrapper">
+            <img
+              src={product.image || NoImage}
+              alt={product.name}
+              className="vnp-product-image"
+            />
+          </div>
+          <div className="vnp-btn-wrapper">
+            <button
+              className={`vnp-btn-add ${
+                isInCart(product.partNumber) ? "added" : ""
+              }`}
+              onClick={() => handleToggleCart(product)}
+            >
+              {isInCart(product.partNumber) ? "Added" : "Add"}
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -323,9 +344,9 @@ const Product = () => {
             onClick={() => navigate(-1)}
             className="vnp-breadcrumbs-icon"
           />
-          <span 
-            onClick={() => navigate('/home')}
-            style={{ cursor: 'pointer' }}
+          <span
+            onClick={() => navigate("/home")}
+            style={{ cursor: "pointer" }}
             title="Home"
           >
             Home
@@ -338,14 +359,16 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { 
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/MakeNew", {
+                    state: {
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
                 title={make}
               >
                 {make}
@@ -360,15 +383,17 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/Model', { 
-                  state: { 
-                    make,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/Model", {
+                    state: {
+                      make,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
                 title={model}
               >
                 {model}
@@ -383,16 +408,18 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/Category', { 
-                  state: { 
-                    make, 
-                    model,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/Category", {
+                    state: {
+                      make,
+                      model,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
                 title={aggregateName || category}
               >
                 {aggregateName || category}
@@ -408,19 +435,21 @@ const Product = () => {
                 height="15"
               />
               <span
-                onClick={() => navigate('/sub_category', {
-                  state: {
-                    make,
-                    model,
-                    brand,
-                    category: aggregateName || category,
-                    aggregate: aggregateName || category,
-                    aggregateName: aggregateName || category,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel
-                  }
-                })}
-                style={{ cursor: 'pointer' }}
+                onClick={() =>
+                  navigate("/sub_category", {
+                    state: {
+                      make,
+                      model,
+                      brand,
+                      category: aggregateName || category,
+                      aggregate: aggregateName || category,
+                      aggregateName: aggregateName || category,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
                 title={subAggregateName || subCategory?.name || subCategory}
               >
                 {subAggregateName || subCategory?.name || subCategory}
@@ -435,34 +464,35 @@ const Product = () => {
               <option>Select Make</option>
               <option>{vehicle?.make || "Hyundai"}</option>
             </select>
-            
+
             <select className="vnp-control-dropdown">
               <option>Select Model</option>
               <option>{vehicle?.model || "Grand i10"}</option>
             </select>
-            
+
             <select className="vnp-control-dropdown">
               <option>Select Variant</option>
               <option>{vehicle?.variant || "Sportz"}</option>
             </select>
-            
+
             <select className="vnp-control-dropdown">
               <option>Select Fuel type</option>
               <option>{vehicle?.fuel || "Petrol"}</option>
             </select>
-            
+
             <select className="vnp-control-dropdown">
               <option>Select Year</option>
               <option>{vehicle?.year || "2021"}</option>
             </select>
-            
-            <button className="vnp-search-btn">
-              Search
-            </button>
+
+            <button className="vnp-search-btn">Search</button>
           </div>
-          
+
           <div className="vnp-search-filters">
-            <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div
                 className="vnp-filter-item"
                 onClick={(e) => {
@@ -495,7 +525,10 @@ const Product = () => {
               )}
             </div>
 
-            <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div
                 className="vnp-filter-item"
                 onClick={(e) => {
@@ -528,7 +561,10 @@ const Product = () => {
               )}
             </div>
 
-            <div className="vnp-filter-wrapper" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div
                 className="vnp-filter-item"
                 onClick={(e) => {
@@ -566,8 +602,40 @@ const Product = () => {
 
       {/* ---------- CONTENT ---------- */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "50px", fontSize: "18px" }}>
-          Loading products...
+        <div className="vnp-content-wrapper">
+          {/* LEFT SECTION SKELETON */}
+          <div className="vnp-left-section">
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+
+              <div className="vnp-cards-grid">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </div>
+
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">Other Products</h2>
+
+              <div className="vnp-cards-grid">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT SECTION SKELETON */}
+          <div className="vnp-right-section">
+            <div className="vnp-section-right">
+              <h2 className="vnp-section-title">Aligned Products</h2>
+
+              {Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonAlignedCard key={i} />
+              ))}
+            </div>
+          </div>
         </div>
       ) : error ? (
         <div style={{ textAlign: "center", padding: "50px" }}>

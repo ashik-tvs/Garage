@@ -214,7 +214,7 @@
 }
 .pn-add-btn {
   margin: auto;
-  background: #ff6a00;
+  background: #FF4D01;
   color: #fff;
   border: none;
   padding: 4px 12px;
@@ -434,4 +434,56 @@
   font-size: 14px;
   color: #666;
   text-align: center;
+}
+
+/* ===== Product Skeleton ===== */
+
+.pn-skeleton {
+  background: linear-gradient(
+    90deg,
+    #e6e6e6 25%,
+    #f2f2f2 37%,
+    #e6e6e6 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+.pn-skeleton-card {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.pn-skeleton-line {
+  height: 14px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.pn-skeleton-line.small {
+  width: 40%;
+}
+
+.pn-skeleton-line.medium {
+  width: 70%;
+}
+
+.pn-skeleton-line.large {
+  width: 90%;
+}
+
+.pn-skeleton-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
 }

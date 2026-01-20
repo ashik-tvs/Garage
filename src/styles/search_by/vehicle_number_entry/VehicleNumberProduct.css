@@ -804,7 +804,7 @@ padding: 6px 12px;
 .vnp-btn-add {
   width: 45%;
   padding: 6px 0;
-  background-color: #ff6b35;
+  background-color: #FF4D01;
   color: #fff;
   border: none;
   border-radius: 6px;
@@ -1038,3 +1038,66 @@ padding: 6px 12px;
   }
 }
 
+/* ===== Skeleton Base ===== */
+.vnp-skeleton-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.vnp-skeleton-line {
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e4e4e4 37%,
+    #f0f0f0 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.vnp-skeleton-line.small {
+  width: 40%;
+}
+
+.vnp-skeleton-line.medium {
+  width: 70%;
+}
+
+.vnp-skeleton-line.large {
+  width: 90%;
+}
+
+.vnp-skeleton-img {
+  width: 90px;
+  height: 90px;
+  background: #eaeaea;
+  border-radius: 8px;
+  animation: shimmer 1.4s infinite;
+}
+
+.vnp-skeleton-img.small {
+  width: 70px;
+  height: 70px;
+}
+
+.vnp-skeleton-btn {
+  width: 80px;
+  height: 32px;
+  background: #eaeaea;
+  border-radius: 6px;
+  margin-top: 10px;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
