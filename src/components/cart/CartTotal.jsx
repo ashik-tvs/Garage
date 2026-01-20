@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useCart } from "../../context/CartContext";
 import apiService from "../../services/apiservice";
 import "../../styles/cart/CartTotal.css";
@@ -9,26 +9,42 @@ const CartTotal = () => {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  /* ======================
+     DYNAMIC CALCULATIONS
+  ====================== */
   const basicPrice = cartItems.reduce(
-    (sum, item) => sum + item.quantity * item.listPrice,
-    0
+    (sum, item) => sum + item.quantity * Number(item.listPrice),
+    0,
   );
 
-  // For demo, use static values to match the image
-  // In real use, calculate as needed
-  const gst = 5984.0;
-  const shipping = 5984.0;
-  const gst2 = 5984.0;
-  const total = 33068.0;
+  const gst = 0; // explicitly zero
+  const shipping = 0; // explicitly zero
+  const gst2 = 0;
 
+  const total = basicPrice + gst + shipping + gst2;
+
+  /* ======================
+     AUTO CLOSE SUCCESS
+  ====================== */
+  useEffect(() => {
+    if (showSuccess) {
+      const timer = setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000); // closes after 3 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccess]);
+
+  /* ======================
+     CHECKOUT (UNCHANGED)
+  ====================== */
   const handleCheckout = async () => {
     try {
       setLoading(true);
 
-      // 1️⃣ Generate SOURCE ORDER ID
       const sourceOrderId = "MOF" + Date.now();
 
-      // 2️⃣ Create order payload
       const payload = [
         {
           BATCH: "20241022",
@@ -67,26 +83,7 @@ const CartTotal = () => {
         },
       ];
 
-      // 3️⃣ Create order in ERP
       await apiService.post("/create-sale-order", payload);
-
-      /* ============================
-   SAVE ORDER TO ORDER LIST
-============================ */
-      const existingOrders = JSON.parse(localStorage.getItem("orders")) || [];
-
-      const newOrder = {
-        orderNumber: sourceOrderId, // ERP will update later
-        sourceOrderId,
-        date: new Date().toISOString().split("T")[0],
-        quantity: cartItems.length,
-        status: "PENDING",
-        location: "Chennai",
-      };
-
-      existingOrders.unshift(newOrder); // latest order first
-
-      localStorage.setItem("orders", JSON.stringify(existingOrders));
 
       setShowSuccess(true);
     } catch (error) {
@@ -101,39 +98,40 @@ const CartTotal = () => {
     <div className="cart-total-panel">
       <div className="carttotal">
         <div className="cardtotal-frame">
-          <div className="cardtotal-title">Card Totals</div>
+          <div className="cardtotal-title">Cart Totals</div>
 
           <div className="cardtotal-row">
             <span className="label">Basic Price</span>
-            <span className="value">₹ 27,084.00</span>
+            <span className="value">₹ {basicPrice.toFixed(2)}</span>
           </div>
-          <div className="cardtotal-row">
-            <span className="label">GST</span>
-            <span className="value">₹5,984.00</span>
-          </div>
+
           <div className="cardtotal-row">
             <span className="label">Shipping</span>
-            <span className="value">₹5,984.00</span>
+            <span className="value">₹ {shipping.toFixed(2)}</span>
           </div>
+
           <div className="cardtotal-row">
             <span className="label">GST</span>
-            <span className="value">₹5,984.00</span>
+            <span className="value">₹ {gst2.toFixed(2)}</span>
           </div>
+
           <div className="cardtotal-sep" />
+
           <div className="cardtotal-row total">
             <span className="label">Total</span>
-            <span className="value">₹ 33,068.00</span>
+            <span className="value">₹ {total.toFixed(2)}</span>
           </div>
 
           <button
             className="carttotal-submit-btn"
             onClick={handleCheckout}
-            disabled={loading}
+            disabled={loading || cartItems.length === 0}
           >
             {loading ? "Processing..." : "Submit"}
           </button>
         </div>
       </div>
+
       <Success loading={loading} showSuccess={showSuccess} />
     </div>
   );

@@ -20,4 +20,5 @@ const Success = ({ loading, showSuccess }) => {
     </div>
   );
 };
+
 export default Success;
