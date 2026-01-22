@@ -15,6 +15,7 @@ import Brand from "./components/search_by/MyOrder/Brand.jsx";
 import MakeNew from "./components/search_by/MyOrder/MakeNew.jsx";
 import Model from "./components/search_by/MyOrder/Model.jsx";
 import Category from "./components/search_by/MyOrder/Category.jsx";
+import CategoryNew from "./components/search_by/MyOrder/CategoryNew.jsx";
 import Sub_Category from "./components/search_by/MyOrder/SubCategory.jsx";
 import SeviceTypeModel from "./components/search_by/service_type/ServiceTypeModel.jsx";
 import SeviceTypeCategory from "./components/search_by/service_type/ServiceTypeCategory.jsx";
@@ -75,6 +76,7 @@ function App() {
             <Route path="/MakeNew" element={<MakeNew />} />
             <Route path="/Model" element={<Model />} />
             <Route path="/Category" element={<Category />} />
+            <Route path="/CategoryNew" element={<CategoryNew />} />
             <Route path="/sub_category" element={<Sub_Category />} />
             {/* <Route path="/make1" element={<Make1 />} /> */}
             <Route path="/cart" element={<Cart />} />

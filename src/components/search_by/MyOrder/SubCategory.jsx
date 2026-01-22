@@ -4,6 +4,7 @@ import axios from "axios";
 import apiService from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import OciImage from "../../oci_image/ociImages";
+import Navigation from "../../Navigation/Navigation";
 import "../../../styles/home/SubCategory.css";
 
 const Sub_Category = () => {
@@ -225,69 +226,44 @@ const Sub_Category = () => {
     });
   };
 
+  // Build breadcrumbs array
+  const breadcrumbs = [];
+
+  if (make) {
+    breadcrumbs.push({
+      label: make,
+      onClick: () =>
+        navigate("/MakeNew", {
+          state: { variant, featureLabel },
+        }),
+    });
+  }
+
+  if (model) {
+    breadcrumbs.push({
+      label: model,
+      onClick: () =>
+        navigate("/Model", {
+          state: { make, variant, featureLabel },
+        }),
+    });
+  }
+
+  if (selectedAggregate || category) {
+    breadcrumbs.push({
+      label: selectedAggregate || category,
+      onClick: () =>
+        navigate("/CategoryNew", {
+          state: { make, model, variant, featureLabel },
+        }),
+    });
+  }
+
   return (
     <div className="sub-category-container">
       {/* Header */}
       <div className="sub-category-header">
-        <button className="back-button" onClick={handleBack}>
-          <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
-        </button>
-        <div className="breadcrumb-nav">
-          <img
-            src={getAssetUrl(uiAssets["HOME"])}
-            alt="Home"
-            className="breadcrumb-link"
-            style={{ cursor: "pointer", width: "20px", height: "20px" }}
-            onClick={() => navigate("/home")}
-            title="Home"
-          />
-          {make && (
-            <>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span
-                className="breadcrumb-link"
-                onClick={() =>
-                  navigate("/MakeNew", {
-                    state: { variant, featureLabel },
-                  })
-                }
-              >
-                {make}
-              </span>
-            </>
-          )}
-          {model && (
-            <>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span
-                className="breadcrumb-link"
-                onClick={() =>
-                  navigate("/Model", {
-                    state: { make, variant, featureLabel },
-                  })
-                }
-              >
-                {model}
-              </span>
-            </>
-          )}
-          {(selectedAggregate || category) && (
-            <>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span
-                className="breadcrumb-link"
-                onClick={() =>
-                  navigate("/Category", {
-                    state: { make, model, variant, featureLabel },
-                  })
-                }
-              >
-                {selectedAggregate || category}
-              </span>
-              <span className="breadcrumb-separator">&gt;</span>
-            </>
-          )}
-        </div>
+        <Navigation breadcrumbs={breadcrumbs} />
       </div>
 
       <div className="sub-category-main">

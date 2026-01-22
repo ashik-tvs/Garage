@@ -4,7 +4,7 @@ import "../../../styles/search_by/MyOrder/MakeNew.css";
 import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
 import noImage from "../../../assets/No Image.png";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
+import Navigation from "../../Navigation/Navigation";
 import Maruti from "../../../assets/Make/MARUTI SUZUKI.png";
 import Tata from "../../../assets/Make/TATA.png";
 import Hyundai from "../../../assets/Make/HYUNDAI.png";
@@ -228,20 +228,7 @@ const MakeNew = () => {
   return (
     <div className="make-container">
       <div className="make-header">
-        <button className="make-back-button" onClick={() => navigate(-1)}>
-          <img src={LeftArrow} alt="Back" />
-        </button>
-        <div className="breadcrumb-nav">
-          <img
-            src={getAssetUrl("HOME")}
-            alt="Home"
-            className="breadcrumb-link"
-            style={{ cursor: "pointer", width: "20px", height: "20px" }}
-            onClick={() => navigate("/home")}
-            title="Home"
-          />
-          <span className="breadcrumb-separator">&gt;</span>
-        </div>
+        <Navigation breadcrumbs={[]} />
       </div>
 
       <div className="make-grid-wrapper">

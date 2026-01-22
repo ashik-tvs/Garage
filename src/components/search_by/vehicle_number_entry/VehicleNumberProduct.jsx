@@ -4,6 +4,7 @@ import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
 import apiService, { fetchMasterList } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
+import Navigation from "../../Navigation/Navigation";
 
 /* ---------------- COMPONENT ---------------- */
 const Product = () => {
@@ -715,132 +716,75 @@ const Product = () => {
     );
   };
 
+  // Build breadcrumbs array for navigation
+  const breadcrumbs = [];
+
+  if (make) {
+    breadcrumbs.push({
+      label: make,
+      onClick: () =>
+        navigate("/MakeNew", {
+          state: {
+            variant: location.state?.variant,
+            featureLabel: location.state?.featureLabel,
+          },
+        }),
+    });
+  }
+
+  if (model) {
+    breadcrumbs.push({
+      label: model,
+      onClick: () =>
+        navigate("/Model", {
+          state: {
+            make,
+            variant: location.state?.variant,
+            featureLabel: location.state?.featureLabel,
+          },
+        }),
+    });
+  }
+
+  if (aggregateName || category) {
+    breadcrumbs.push({
+      label: aggregateName || category,
+      onClick: () =>
+        navigate("/Category", {
+          state: {
+            make,
+            model,
+            variant: location.state?.variant,
+            featureLabel: location.state?.featureLabel,
+          },
+        }),
+    });
+  }
+
+  if (subAggregateName || subCategory) {
+    breadcrumbs.push({
+      label: subAggregateName || subCategory?.name || subCategory,
+      onClick: () =>
+        navigate("/sub_category", {
+          state: {
+            make,
+            model,
+            brand,
+            category: aggregateName || category,
+            aggregate: aggregateName || category,
+            aggregateName: aggregateName || category,
+            variant: location.state?.variant,
+            featureLabel: location.state?.featureLabel,
+          },
+        }),
+    });
+  }
+
   return (
     <div className="vnp-container">
       {/* ---------- TOP SECTION ---------- */}
       <div className="vnp-top-row">
-        <div className="vnp-breadcrumbs">
-          <img
-            src={getAssetUrl("LEFT ARROW")}
-            alt="Back"
-            onClick={() => navigate(-1)}
-            className="vnp-breadcrumbs-icon"
-          />
-          <img
-            src={getAssetUrl("HOME")}
-            alt="Home"
-            className="breadcrumb-link"
-            style={{ cursor: "pointer", width: "20px", height: "20px" }}
-            onClick={() => navigate("/home")}
-            title="Home"
-          />
-     
-          {make && (
-            <>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="15"
-                height="15"
-              />
-              <span
-                onClick={() =>
-                  navigate("/MakeNew", {
-                    state: {
-                      variant: location.state?.variant,
-                      featureLabel: location.state?.featureLabel,
-                    },
-                  })
-                }
-                style={{ cursor: "pointer" }}
-                title={make}
-              >
-                {make}
-              </span>
-            </>
-          )}
-          {model && (
-            <>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="15"
-                height="15"
-              />
-              <span
-                onClick={() =>
-                  navigate("/Model", {
-                    state: {
-                      make,
-                      variant: location.state?.variant,
-                      featureLabel: location.state?.featureLabel,
-                    },
-                  })
-                }
-                style={{ cursor: "pointer" }}
-                title={model}
-              >
-                {model}
-              </span>
-            </>
-          )}
-          {(aggregateName || category) && (
-            <>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="15"
-                height="15"
-              />
-              <span
-                onClick={() =>
-                  navigate("/Category", {
-                    state: {
-                      make,
-                      model,
-                      variant: location.state?.variant,
-                      featureLabel: location.state?.featureLabel,
-                    },
-                  })
-                }
-                style={{ cursor: "pointer" }}
-                title={aggregateName || category}
-              >
-                {aggregateName || category}
-              </span>
-            </>
-          )}
-          {(subAggregateName || subCategory) && (
-            <>
-              <img
-                src={getAssetUrl("RIGHT ARROW")}
-                alt=""
-                width="15"
-                height="15"
-              />
-              <span
-                onClick={() =>
-                  navigate("/sub_category", {
-                    state: {
-                      make,
-                      model,
-                      brand,
-                      category: aggregateName || category,
-                      aggregate: aggregateName || category,
-                      aggregateName: aggregateName || category,
-                      variant: location.state?.variant,
-                      featureLabel: location.state?.featureLabel,
-                    },
-                  })
-                }
-                style={{ cursor: "pointer" }}
-                title={subAggregateName || subCategory?.name || subCategory}
-              >
-                {subAggregateName || subCategory?.name || subCategory}
-              </span>
-            </>
-          )}
-        </div>
+        <Navigation breadcrumbs={breadcrumbs} />
 
         <div className="vnp-search-controls">
           <div className="vnp-search-main">
