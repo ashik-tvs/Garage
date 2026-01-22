@@ -176,23 +176,23 @@ const Sub_Category = () => {
   };
 
   const serviceTypes = [
-    // "Complete Brake System Inspection",
-    // "Brake Noise / Vibration Diagnosis",
-    // "Brake Fluid Level Check",
-    // "ABS Warning Light Check",
-    // "Front Brake Pad Replacement",
-    // "Rear Brake Pad Replacement",
-    // "Brake Shoe Replacement (Drum Brakes)",
-    // "Brake Pad Cleaning & Adjustment",
-    // "Brake Rotor (Disc) Replacement",
-    // "Brake Rotor Resurfacing",
-    // "Brake Drum Replacement",
-    // "Brake Drum Turning / Resurfacing",
-    // "Brake Caliper Repair / Replacement",
-    // "Brake Line / Hose Replacement",
-    // "Brake Bleeding (Air Removal)",
-    // "Brake Oil Change (Brake Fluid Flush)",
-    // "Handbrake Cable Adjustment",
+    "Complete Brake System Inspection",
+    "Brake Noise / Vibration Diagnosis",
+    "Brake Fluid Level Check",
+    "ABS Warning Light Check",
+    "Front Brake Pad Replacement",
+    "Rear Brake Pad Replacement",
+    "Brake Shoe Replacement (Drum Brakes)",
+    "Brake Pad Cleaning & Adjustment",
+    "Brake Rotor (Disc) Replacement",
+    "Brake Rotor Resurfacing",
+    "Brake Drum Replacement",
+    "Brake Drum Turning / Resurfacing",
+    "Brake Caliper Repair / Replacement",
+    "Brake Line / Hose Replacement",
+    "Brake Bleeding (Air Removal)",
+    "Brake Oil Change (Brake Fluid Flush)",
+    "Handbrake Cable Adjustment",
   ];
 
   const handleBack = () => navigate(-1);
@@ -233,9 +233,14 @@ const Sub_Category = () => {
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
         <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate("/home")}>
-            Home
-          </span>
+          <img
+            src={getAssetUrl(uiAssets["HOME"])}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
+            onClick={() => navigate("/home")}
+            title="Home"
+          />
           {make && (
             <>
               <span className="breadcrumb-separator">&gt;</span>

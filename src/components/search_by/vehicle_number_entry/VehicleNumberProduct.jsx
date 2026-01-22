@@ -726,13 +726,15 @@ const Product = () => {
             onClick={() => navigate(-1)}
             className="vnp-breadcrumbs-icon"
           />
-          <span
+          <img
+            src={getAssetUrl("HOME")}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
             onClick={() => navigate("/home")}
-            style={{ cursor: "pointer" }}
             title="Home"
-          >
-            Home
-          </span>
+          />
+     
           {make && (
             <>
               <img
