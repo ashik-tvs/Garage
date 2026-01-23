@@ -49,8 +49,16 @@ function CartDetails() {
                     <img
                       src={item.imageUrl || NoImage}
                       alt={item.itemDescription}
+                      className="cartdetails-product-img"
                     />
-                    <span>{item.itemDescription}</span>
+                    <div className="cartdetails-product-info">
+                      <span className="cartdetails-product-name" title={item.itemDescription}>
+                        {item.itemDescription}
+                      </span>
+                      {item.brand && (
+                        <span className="cartdetails-product-brand">{item.brand}</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="cartdetails-price">₹{item.listPrice}</div>

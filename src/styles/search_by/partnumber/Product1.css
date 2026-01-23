@@ -45,7 +45,7 @@
 /* Container - Horizontal (3 per row) or Vertical (1 per row) */
 .product1-container {
   display: grid;
-  gap: 5px;
+  gap: 10px;
   width: 100%;
 }
 

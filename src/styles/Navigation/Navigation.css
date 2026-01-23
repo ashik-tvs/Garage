@@ -10,7 +10,7 @@
   flex-shrink: 1;
   white-space: nowrap;
   overflow-x: auto;
-  max-width: 100%;
+  max-width: 30%;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
   -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
   padding: 12px 0;
