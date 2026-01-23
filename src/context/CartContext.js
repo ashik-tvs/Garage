@@ -15,12 +15,15 @@ export const CartProvider = ({ children }) => {
 
   /* ➕ Add to cart */
   const addToCart = (product) => {
+    console.log("🛒 Adding to cart:", product.partNumber);
+    
     setCartItems((prev) => {
       const existing = prev.find(
         (item) => item.partNumber === product.partNumber
       );
 
       if (existing) {
+        console.log("⚠️ Product already in cart, incrementing quantity");
         return prev.map((item) =>
           item.partNumber === product.partNumber
             ? { ...item, quantity: item.quantity + 1 }
@@ -28,6 +31,7 @@ export const CartProvider = ({ children }) => {
         );
       }
 
+      console.log("✅ Adding new product to cart");
       return [...prev, { ...product, quantity: 1 }];
     });
   };

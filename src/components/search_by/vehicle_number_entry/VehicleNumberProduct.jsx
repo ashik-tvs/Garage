@@ -1,10 +1,163 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
-import apiService, { fetchMasterList } from "../../../services/apiservice";
+import apiService, { fetchMasterList, fetchVehicleListByPartNumber } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
+import Product1 from "../partnumber/Product1";
+
+/* ---------------- COMPATIBILITY MODAL ---------------- */
+const CompatibilityModal = ({ onClose, partNumber }) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const observerTarget = useRef(null);
+
+  // Fetch vehicles with pagination
+  const fetchVehicles = async (reset = false) => {
+    if (loading || (!hasMore && !reset)) return;
+
+    setLoading(true);
+    const currentOffset = reset ? 0 : offset;
+
+    try {
+      const response = await fetchVehicleListByPartNumber(partNumber, 50, currentOffset);
+      const newVehicles = response?.data || [];
+      const count = response?.count || 0;
+
+      setTotalCount(count);
+
+      if (reset) {
+        setVehicles(newVehicles);
+        setOffset(50);
+      } else {
+        setVehicles(prev => [...prev, ...newVehicles]);
+        setOffset(prev => prev + 50);
+      }
+
+      // Check if there are more vehicles to load
+      setHasMore(currentOffset + newVehicles.length < count);
+    } catch (err) {
+      console.error("❌ Error fetching vehicles:", err);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchVehicles(true);
+  }, [partNumber]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          fetchVehicles();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading, offset]);
+
+  // Filter vehicles based on search term
+  const filteredVehicles = vehicles.filter((v) =>
+    Object.values(v).join(" ").toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+  return (
+    <div className="vnp-modal-overlay">
+      <div className="vnp-modal">
+        {/* Header */}
+        <div className="vnp-modal-header">
+          <div className="vnp-modal-title">
+            Compatible Vehicles ({totalCount})
+          </div>
+          <input
+            type="text"
+            placeholder="Search"
+            className="vnp-modal-search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <button className="vnp-modal-close" onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        {/* Table Header */}
+        <div className="vnp-table-container">
+          <div className="vnp-modal-table-header">
+            <span>Make</span>
+            <span>Model</span>
+            <span>Variant</span>
+            <span>Fuel Type</span>
+            <span>Year</span>
+          </div>
+        </div>
+
+        {/* Table Body */}
+        <div>
+          <div className="vnp-modal-table-body">
+            {filteredVehicles.length > 0 ? (
+              <>
+                {filteredVehicles.map((v, i) => (
+                  <div key={i} className="vnp-modal-row">
+                    <span>{v.make}</span>
+                    <span>{v.model}</span>
+                    <span>{v.variant}</span>
+                    <span>{v.fuelType}</span>
+                    <span>{v.year}</span>
+                  </div>
+                ))}
+                {/* Infinite scroll trigger */}
+                {hasMore && !searchTerm && (
+                  <div 
+                    ref={observerTarget} 
+                    style={{ height: '20px', padding: '10px', textAlign: 'center' }}
+                  >
+                    {loading && <span>Loading more...</span>}
+                  </div>
+                )}
+              </>
+            ) : loading && vehicles.length === 0 ? (
+              <div
+                className="vnp-no-results"
+                style={{ padding: "20px", textAlign: "center" }}
+              >
+                Loading vehicles...
+              </div>
+            ) : (
+              <div
+                className="vnp-no-results"
+                style={{ padding: "20px", textAlign: "center" }}
+              >
+                No vehicles found
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 /* ---------------- COMPONENT ---------------- */
 const Product = () => {
@@ -34,16 +187,17 @@ const Product = () => {
 
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showPopup, setShowPopup] = useState(false);
+  const [showCompatibility, setShowCompatibility] = useState(false);
+  const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [vehicleCounts, setVehicleCounts] = useState({}); // Store count per partNumber
+  const [loadingCounts, setLoadingCounts] = useState(true); // Loading state for vehicle counts
 
   // Product states
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stockData, setStockData] = useState({}); // Store stock info by partNumber
-
-  // See More/Less states
-  const [showAllRecommended, setShowAllRecommended] = useState(false);
-  const [showAllOther, setShowAllOther] = useState(false);
 
   const isInCart = (partNumber) =>
     cartItems.some((item) => item.partNumber === partNumber);
@@ -60,15 +214,30 @@ const Product = () => {
     subAggregateName,
   } = location.state || {};
 
-  const [filters, setFilters] = useState({
+  // Generate cache key based on navigation context
+  const cacheKey = `vnp_cache_${aggregateName}_${subAggregateName}_${make}_${model}`;
+
+  // Initialize state from cache if available
+  const getCachedState = () => {
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      return cached ? JSON.parse(cached) : null;
+    } catch (err) {
+      console.error("❌ Error reading cache:", err);
+      return null;
+    }
+  };
+
+  const cachedState = getCachedState();
+
+  const [filters, setFilters] = useState(cachedState?.filters || {
     year: "",
     fuelType: "",
     eta: "",
-    // sortBy: "",
   });
 
   // Main search filter states (vnp-search-main)
-  const [searchFilters, setSearchFilters] = useState({
+  const [searchFilters, setSearchFilters] = useState(cachedState?.searchFilters || {
     make: "",
     model: "",
     variant: "",
@@ -104,14 +273,28 @@ const Product = () => {
   // Fetch products based on category and subcategory
   useEffect(() => {
     if (aggregateName && subAggregateName) {
-      fetchProducts();
+      // Check if we have valid cached data (less than 5 minutes old)
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      if (cachedState && cachedState.timestamp && (Date.now() - cachedState.timestamp < CACHE_DURATION)) {
+        console.log("✅ Using cached data");
+        setProducts(cachedState.products || []);
+        setStockData(cachedState.stockData || {});
+        setVehicleCounts(cachedState.vehicleCounts || {});
+        setLoadingCounts(false); // Counts already loaded from cache
+        setLoading(false);
+      } else {
+        console.log("🔄 Fetching fresh data");
+        fetchProducts();
+      }
     }
-  }, [aggregateName, subAggregateName, make, model]);
+  }, [aggregateName, subAggregateName]);
 
-  // Initialize main search filters based on breadcrumb flow
+  // Initialize main search filters based on breadcrumb flow (only once on mount)
   useEffect(() => {
-    initializeSearchFilters();
-  }, [make, model, aggregateName, subAggregateName]);
+    if (!cachedState) {
+      initializeSearchFilters();
+    }
+  }, []);
 
   // Initialize search filters based on breadcrumb navigation flow
   const initializeSearchFilters = async () => {
@@ -455,6 +638,7 @@ const Product = () => {
       setProducts(formattedProducts);
 
       fetchStockForProducts(formattedProducts);
+      fetchVehicleCountsForProducts(formattedProducts); // Non-blocking
     } catch (err) {
       console.error("❌ Error fetching filtered products:", err);
       setError(`Failed to load products: ${err.message || "Please try again."}`);
@@ -519,6 +703,9 @@ const Product = () => {
 
       // Fetch stock status for all products
       fetchStockForProducts(formattedProducts);
+      
+      // Fetch vehicle compatibility counts for all products (non-blocking)
+      fetchVehicleCountsForProducts(formattedProducts);
     } catch (err) {
       console.error("Error fetching products:", err);
 
@@ -532,6 +719,99 @@ const Product = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch vehicle compatibility count for each product (in batches)
+  const fetchVehicleCountsForProducts = async (productsList) => {
+    setLoadingCounts(true);
+    console.log("🔍 Fetching vehicle counts for", productsList.length, "products");
+    
+    const BATCH_SIZE = 5; // Fetch 5 at a time
+    const batches = [];
+    
+    // Split into batches
+    for (let i = 0; i < productsList.length; i += BATCH_SIZE) {
+      batches.push(productsList.slice(i, i + BATCH_SIZE));
+    }
+    
+    // Fetch batches progressively
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`🔄 Fetching batch ${i + 1}/${batches.length}`);
+      
+      const countPromises = batch.map(async (product) => {
+        try {
+          const response = await fetchVehicleListByPartNumber(product.partNumber, 1, 0);
+          return {
+            partNumber: product.partNumber,
+            count: response?.count || 0,
+          };
+        } catch (err) {
+          console.error(`❌ Error fetching vehicle count for ${product.partNumber}:`, err);
+          return {
+            partNumber: product.partNumber,
+            count: 0,
+          };
+        }
+      });
+      
+      try {
+        const countResults = await Promise.all(countPromises);
+        
+        // Update state incrementally after each batch
+        setVehicleCounts(prev => {
+          const updated = { ...prev };
+          countResults.forEach((result) => {
+            updated[result.partNumber] = result.count;
+          });
+          return updated;
+        });
+        
+        console.log(`✅ Batch ${i + 1} completed:`, countResults);
+      } catch (err) {
+        console.error("❌ Error fetching batch:", err);
+      }
+    }
+    
+    setLoadingCounts(false);
+    console.log("🎉 All vehicle counts fetched");
+  };
+
+  // Fetch vehicle compatibility for a specific part number
+  const fetchVehicleCompatibility = async (partNumber) => {
+    try {
+      console.log("🔍 Fetching vehicle compatibility for:", partNumber);
+      
+      const response = await apiService.post("/vehicle-list", {
+        partNumber: partNumber,
+        customerCode: "0046",
+      });
+
+      console.log("✅ Vehicle compatibility response:", response);
+
+      const vehicleData = Array.isArray(response?.data) ? response.data : [];
+      const formattedVehicles = vehicleData.map((v) => ({
+        make: v.makeName || "",
+        model: v.modelName || "",
+        variant: v.variantName || "",
+        fuelType: v.fuelType || "",
+        year: v.year || "",
+      }));
+
+      setVehicleCompatibilityList(formattedVehicles);
+      return formattedVehicles.length;
+    } catch (error) {
+      console.error("❌ Error fetching vehicle compatibility:", error);
+      setVehicleCompatibilityList([]);
+      return 0;
+    }
+  };
+
+  // Handle compatibility click
+  const handleCompatibilityClick = async (product) => {
+    setSelectedProduct(product);
+    await fetchVehicleCompatibility(product.partNumber);
+    setShowCompatibility(true);
   };
 
   // Fetch stock status for all products
@@ -608,14 +888,84 @@ const Product = () => {
       ),
   );
 
-  // Aligned Products: Can keep same logic or remove if not needed
-  const alignedProducts = [];
+  // Aligned Products: Static data similar to PartNumber.jsx
+  const alignedProducts = [
+    {
+      id: 3,
+      partNumber: "A6732S233132",
+      brand: "Valeo",
+      name: "Brake Disc Pad",
+      description: "Brake Disc Pad",
+      price: 4205,
+      mrp: 4080,
+      image: NoImage,
+      eta: "1-2 Days",
+    },
+    {
+      id: 4,
+      partNumber: "SA233663824",
+      brand: "Mobil",
+      name: "Brake Fluid",
+      description: "Brake Fluid",
+      price: 315,
+      mrp: 468,
+      image: NoImage,
+      eta: "1-2 Days",
+    },
+    {
+      id: 5,
+      partNumber: "YD323S5632",
+      brand: "Valeo",
+      name: "Brake Fitting Kit",
+      description: "Brake Fitting Kit",
+      price: 5650,
+      mrp: 6000,
+      image: NoImage,
+      eta: "1-2 Days",
+    },
+  ];
 
   useEffect(() => {
     const close = () => setOpenFilter(null);
     window.addEventListener("click", close);
     return () => window.removeEventListener("click", close);
   }, []);
+
+  // Cache state when products or filters change
+  useEffect(() => {
+    if (products.length > 0) {
+      const stateToCache = {
+        products,
+        filters,
+        searchFilters,
+        stockData,
+        vehicleCounts,
+        timestamp: Date.now(),
+      };
+      try {
+        sessionStorage.setItem(cacheKey, JSON.stringify(stateToCache));
+      } catch (err) {
+        console.error("❌ Error caching state:", err);
+      }
+    }
+  }, [products, filters, searchFilters, stockData, vehicleCounts, cacheKey]);
+
+  // Restore scroll position on mount if coming from cache
+  useEffect(() => {
+    if (cachedState) {
+      const scrollPos = sessionStorage.getItem(`${cacheKey}_scroll`);
+      if (scrollPos) {
+        setTimeout(() => window.scrollTo(0, parseInt(scrollPos)), 100);
+      }
+    }
+  }, []);
+
+  // Save scroll position before unmount
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem(`${cacheKey}_scroll`, window.scrollY.toString());
+    };
+  }, [cacheKey]);
 
   const handleToggleCart = (product) => {
     if (isInCart(product.partNumber)) {
@@ -871,7 +1221,6 @@ const Product = () => {
             <button 
               className="vnp-search-btn" 
               onClick={handleSearch}
-              disabled={!searchFilters.make}
             >
               Search
             </button>
@@ -991,213 +1340,121 @@ const Product = () => {
 
       {/* ---------- CONTENT ---------- */}
       {loading ? (
-        <div className="vnp-content-wrapper">
-          {/* LEFT SECTION SKELETON */}
-          <div className="vnp-left-section">
-            <div className="vnp-section">
-              <h2 className="vnp-section-title">myTVS Recommended Products</h2>
-
-              <div className="vnp-cards-grid">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </div>
-            </div>
-
-            <div className="vnp-section">
-              <h2 className="vnp-section-title">Other Products</h2>
-
-              <div className="vnp-cards-grid">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT SECTION SKELETON */}
-          <div className="vnp-right-section">
-            <div className="vnp-section-right">
-              <h2 className="vnp-section-title">Aligned Products</h2>
-
-              {Array.from({ length: 2 }).map((_, i) => (
-                <SkeletonAlignedCard key={i} />
-              ))}
-            </div>
-          </div>
-        </div>
+        <div className="vnp-loading">Loading products...</div>
       ) : error ? (
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <p style={{ color: "red", fontSize: "16px", marginBottom: "20px" }}>
-            {error}
-          </p>
-          <button
-            onClick={fetchProducts}
-            style={{
-              padding: "10px 20px",
-              fontSize: "16px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
+        <div className="vnp-error">
+          <p>{error}</p>
+          <button onClick={fetchProducts} className="vnp-retry-btn">
             Retry
           </button>
         </div>
       ) : (
         <div className="vnp-content-wrapper">
           <div className="vnp-left-section">
-            <div className="vnp-section">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <h2 className="vnp-section-title">
-                  myTVS Recommended Products
-                </h2>
-                {recommendedProducts.length > 2 && (
-                  <span
-                    className="see-more"
-                    onClick={() => setShowAllRecommended(!showAllRecommended)}
-                    style={{
-                      cursor: "pointer",
-                      color: "#e55a2b",
-                      fontSize: "14px",
-                      marginRight: "35px",
-                    }}
-                  >
-                    {showAllRecommended ? "See Less" : "See More"}
-                  </span>
-                )}
-              </div>
-              <div className="vnp-cards-grid">
-                {recommendedProducts.length > 0 ? (
-                  (showAllRecommended
-                    ? recommendedProducts
-                    : recommendedProducts.slice(0, 2)
-                  ).map(renderProductCard)
-                ) : (
-                  <p>No recommended products found.</p>
-                )}
-              </div>
-            </div>
+            {/* myTVS Recommended Products */}
+            <Product1
+              title="myTVS Recommended Products"
+              products={recommendedProducts.map((product, index) => ({
+                id: product.partNumber,
+                partNumber: product.partNumber,
+                cartId: `${product.partNumber}_${product.brand}_${index}`, // Unique cart identifier
+                name: product.name,
+                image: product.image || NoImage,
+                brand: product.brand,
+                price: product.price,
+                mrp: product.mrp,
+                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                deliveryTime: product.eta,
+                compatibleVehicles: vehicleCounts[product.partNumber] || 0,
+              }))}
+              layout="horizontal"
+              onAddToCart={(product) => {
+                addToCart({
+                  partNumber: product.cartId, // Use unique cartId
+                  itemDescription: product.name,
+                  listPrice: product.price,
+                  imageUrl: product.image,
+                  brand: product.brand,
+                  mrp: product.mrp,
+                  actualPartNumber: product.partNumber, // Keep original for reference
+                });
+              }}
+              onCompatibilityClick={handleCompatibilityClick}
+              isLoadingCounts={loadingCounts}
+            />
 
-            <div className="vnp-section">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <h2 className="vnp-section-title">Other Products</h2>
-                {otherProducts.length > 2 && (
-                  <span
-                    className="see-more"
-                    onClick={() => setShowAllOther(!showAllOther)}
-                    style={{
-                      cursor: "pointer",
-                      color: "#e55a2b",
-                      fontSize: "14px",
-                      marginRight: "35px",
-                    }}
-                  >
-                    {showAllOther ? "See Less" : "See More"}
-                  </span>
-                )}
-              </div>
-              <div className="vnp-cards-grid">
-                {otherProducts.length > 0 ? (
-                  (showAllOther
-                    ? otherProducts
-                    : otherProducts.slice(0, 2)
-                  ).map(renderProductCard)
-                ) : (
-                  <p>No other products found.</p>
-                )}
-              </div>
-            </div>
+            {/* Other Products */}
+            <Product1
+              title="Other Products"
+              products={otherProducts.map((product, index) => ({
+                id: product.partNumber,
+                partNumber: product.partNumber,
+                cartId: `${product.partNumber}_${product.brand}_${index}`, // Unique cart identifier
+                name: product.name,
+                image: product.image || NoImage,
+                brand: product.brand,
+                price: product.price,
+                mrp: product.mrp,
+                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                deliveryTime: product.eta,
+                compatibleVehicles: vehicleCounts[product.partNumber] || 0,
+              }))}
+              layout="horizontal"
+              onAddToCart={(product) => {
+                addToCart({
+                  partNumber: product.cartId, // Use unique cartId
+                  itemDescription: product.name,
+                  listPrice: product.price,
+                  imageUrl: product.image,
+                  brand: product.brand,
+                  mrp: product.mrp,
+                  actualPartNumber: product.partNumber, // Keep original for reference
+                });
+              }}
+              onCompatibilityClick={handleCompatibilityClick}
+              isLoadingCounts={loadingCounts}
+            />
           </div>
 
           <div className="vnp-right-section">
-            <div className="vnp-section-right">
-              <h2 className="vnp-section-title">Aligned Products</h2>
-
-              {alignedProducts.length > 0 ? (
-                alignedProducts.map((product) => {
-                  const stockInfo = stockData[product.partNumber];
-                  const isInStock = stockInfo?.inStock ?? true;
-                  return (
-                    <div className="vnp-aligned-card" key={product.partNumber}>
-                      <div className="vnp-image-placeholder-small">
-                        <img
-                          src={product.image || NoImage}
-                          alt={product.name}
-                          width="100"
-                        />
-                      </div>
-
-                      <div className="vnp-aligned-details">
-                        <div className="vnp-badges">
-                          <span
-                            className="vnp-badge vnp-badge-valeo"
-                            title={product.brand}
-                          >
-                            {product.brand}
-                          </span>
-                          <span
-                            className="vnp-badge vnp-badge-stock"
-                            style={{
-                              backgroundColor: isInStock
-                                ? "#e7f7ee"
-                                : "#f2d5d7",
-                              color: isInStock ? "#16a34a" : "#c3111e",
-                            }}
-                          >
-                            {isInStock ? "In Stock" : "Out of Stock"}
-                          </span>
-                          <span className="vnp-badge vnp-badge-eta">
-                            {product.eta}
-                          </span>
-                        </div>
-
-                        <p className="vnp-code">{product.partNumber}</p>
-                        <p className="vnp-name" title={product.name}>
-                          {product.name}
-                        </p>
-
-                        <div className="vnp-price-row">
-                          <span className="vnp-price-current">
-                            ₹ {product.price}.00
-                          </span>
-                          <span className="vnp-price-original">
-                            ₹ {product.mrp}.00
-                          </span>
-
-                          <button
-                            className={`vnp-btn-add ${
-                              isInCart(product.partNumber) ? "added" : ""
-                            }`}
-                            onClick={() => handleToggleCart(product)}
-                          >
-                            {isInCart(product.partNumber) ? "Added" : "Add"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              ) : (
-                <p>No aligned products found.</p>
-              )}
-            </div>
+            {/* Aligned Products */}
+            <Product1
+              title="Aligned Products"
+              products={alignedProducts.map((product, index) => ({
+                id: product.partNumber,
+                partNumber: product.partNumber,
+                cartId: `${product.partNumber}_${product.brand}_${index}`, // Unique cart identifier
+                name: product.name,
+                image: product.image || NoImage,
+                brand: product.brand,
+                price: product.price,
+                mrp: product.mrp,
+                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                deliveryTime: product.eta,
+              }))}
+              layout="vertical"
+              onAddToCart={(product) => {
+                addToCart({
+                  partNumber: product.cartId, // Use unique cartId
+                  itemDescription: product.name,
+                  listPrice: product.price,
+                  imageUrl: product.image,
+                  brand: product.brand,
+                  mrp: product.mrp,
+                  actualPartNumber: product.partNumber, // Keep original for reference
+                });
+              }}
+            />
           </div>
         </div>
+      )}
+
+      {/* Compatibility Modal */}
+      {showCompatibility && selectedProduct && (
+        <CompatibilityModal
+          onClose={() => setShowCompatibility(false)}
+          partNumber={selectedProduct.partNumber}
+        />
       )}
     </div>
   );

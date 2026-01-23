@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import apiService from "../../../services/apiservice";
 import Search from "../../home/Search";
@@ -142,8 +142,74 @@ const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
     </div>
   );
 };
-const CompatibilityModal = ({ onClose, vehicles = [] }) => {
+const CompatibilityModal = ({ onClose, partNumber }) => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const observerTarget = useRef(null);
+
+  // Fetch vehicles with pagination
+  const fetchVehicles = async (reset = false) => {
+    if (loading || (!hasMore && !reset)) return;
+
+    setLoading(true);
+    const currentOffset = reset ? 0 : offset;
+
+    try {
+      const response = await fetchVehicleListByPartNumber(partNumber, 50, currentOffset);
+      const newVehicles = response?.data || [];
+      const count = response?.count || 0;
+
+      setTotalCount(count);
+
+      if (reset) {
+        setVehicles(newVehicles);
+        setOffset(50);
+      } else {
+        setVehicles(prev => [...prev, ...newVehicles]);
+        setOffset(prev => prev + 50);
+      }
+
+      // Check if there are more vehicles to load
+      setHasMore(currentOffset + newVehicles.length < count);
+    } catch (err) {
+      console.error("❌ Error fetching vehicles:", err);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchVehicles(true);
+  }, [partNumber]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          fetchVehicles();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading, offset]);
 
   // Filter vehicles based on search term
   const filteredVehicles = vehicles.filter((v) =>
@@ -155,6 +221,9 @@ const CompatibilityModal = ({ onClose, vehicles = [] }) => {
       <div className="pn-modal">
         {/* Header */}
         <div className="pn-modal-header">
+          <div className="pn-modal-title">
+            Compatible Vehicles ({totalCount})
+          </div>
           <input
             type="text"
             placeholder="Search"
@@ -180,18 +249,35 @@ const CompatibilityModal = ({ onClose, vehicles = [] }) => {
 
         {/* Table Body */}
         <div>
-          {" "}
           <div className="pn-modal-table-body">
             {filteredVehicles.length > 0 ? (
-              filteredVehicles.map((v, i) => (
-                <div key={i} className="pn-modal-row">
-                  <span>{v.make}</span>
-                  <span>{v.model}</span>
-                  <span>{v.variant}</span>
-                  <span>{v.fuelType}</span>
-                  <span>{v.year}</span>
-                </div>
-              ))
+              <>
+                {filteredVehicles.map((v, i) => (
+                  <div key={i} className="pn-modal-row">
+                    <span>{v.make}</span>
+                    <span>{v.model}</span>
+                    <span>{v.variant}</span>
+                    <span>{v.fuelType}</span>
+                    <span>{v.year}</span>
+                  </div>
+                ))}
+                {/* Infinite scroll trigger */}
+                {hasMore && !searchTerm && (
+                  <div 
+                    ref={observerTarget} 
+                    style={{ height: '20px', padding: '10px', textAlign: 'center' }}
+                  >
+                    {loading && <span>Loading more...</span>}
+                  </div>
+                )}
+              </>
+            ) : loading && vehicles.length === 0 ? (
+              <div
+                className="pn-no-results"
+                style={{ padding: "20px", textAlign: "center" }}
+              >
+                Loading vehicles...
+              </div>
             ) : (
               <div
                 className="pn-no-results"
@@ -228,9 +314,35 @@ const PartNumber = () => {
   const [error, setError] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [otherBrandProducts, setOtherBrandProducts] = useState([]);
+  const [originalRecommendedProducts, setOriginalRecommendedProducts] = useState([]);
+  const [originalOtherBrandProducts, setOriginalOtherBrandProducts] = useState([]);
   const [vehicleList, setVehicleList] = useState([]);
   const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
   const [vehicleCount, setVehicleCount] = useState(0);
+  const [vehicleCounts, setVehicleCounts] = useState({}); // Store count per partNumber
+  const [loadingCounts, setLoadingCounts] = useState(true); // Loading state for vehicle counts
+  const [openFilter, setOpenFilter] = useState(null);
+  const [uiAssets, setUiAssets] = useState({});
+  const [stockData, setStockData] = useState({}); // Store stock info by partNumber
+
+  // Fetch UI assets
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets");
+        setUiAssets(assets.data);
+      } catch (err) {
+        console.error("❌ Failed to load UI assets", err);
+      }
+    };
+    fetchUiAssets();
+  }, []);
+
+  // Helper to get full URL
+  const getAssetUrl = (tagName) => {
+    if (!uiAssets[tagName]) return "";
+    return apiService.getAssetUrl(uiAssets[tagName]);
+  };
 
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
@@ -238,6 +350,129 @@ const PartNumber = () => {
   const [selectedFuel, setSelectedFuel] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [filteredCompatibility, setFilteredCompatibility] = useState([]);
+
+  // Right filters state
+  const [rightFilters, setRightFilters] = useState({
+    year: "",
+    fuelType: "",
+    eta: "",
+  });
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (openFilter) setOpenFilter(null);
+    };
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [openFilter]);
+
+  // Fetch vehicle compatibility count for each product (in batches)
+  const fetchVehicleCountsForProducts = async (productsList) => {
+    setLoadingCounts(true);
+    console.log("🔍 Fetching vehicle counts for", productsList.length, "products");
+    
+    const BATCH_SIZE = 5; // Fetch 5 at a time
+    const batches = [];
+    
+    // Split into batches
+    for (let i = 0; i < productsList.length; i += BATCH_SIZE) {
+      batches.push(productsList.slice(i, i + BATCH_SIZE));
+    }
+    
+    // Fetch batches progressively
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      console.log(`🔄 Fetching batch ${i + 1}/${batches.length}`);
+      
+      const countPromises = batch.map(async (product) => {
+        try {
+          const response = await fetchVehicleListByPartNumber(product.partNo, 1, 0);
+          return {
+            partNumber: product.partNo,
+            count: response?.count || 0,
+          };
+        } catch (err) {
+          console.error(`❌ Error fetching vehicle count for ${product.partNo}:`, err);
+          return {
+            partNumber: product.partNo,
+            count: 0,
+          };
+        }
+      });
+      
+      try {
+        const countResults = await Promise.all(countPromises);
+        
+        // Update state incrementally after each batch
+        setVehicleCounts(prev => {
+          const updated = { ...prev };
+          countResults.forEach((result) => {
+            updated[result.partNumber] = result.count;
+          });
+          return updated;
+        });
+        
+        console.log(`✅ Batch ${i + 1} completed:`, countResults);
+      } catch (err) {
+        console.error("❌ Error fetching batch:", err);
+      }
+    }
+    
+    setLoadingCounts(false);
+    console.log("🎉 All vehicle counts fetched");
+  };
+
+  // Fetch stock status for all products
+  const fetchStockForProducts = async (productsList) => {
+    const stockPromises = productsList.map(async (product) => {
+      try {
+        const response = await apiService.post("/stock-list", {
+          customerCode: "0046",
+          partNumber: product.partNo,
+          inventoryName: null,
+          entity: null,
+          software: null,
+          limit: 2,
+          offset: 0,
+          sortOrder: "ASC",
+          fieldOrder: "lotAgeDate",
+        });
+
+        // Check if stock data exists and has quantity
+        const stockItems = Array.isArray(response?.data) ? response.data : [];
+        const totalQty = stockItems.reduce(
+          (sum, item) => sum + (item.qty || 0),
+          0,
+        );
+
+        return {
+          partNumber: product.partNo,
+          inStock: totalQty > 0,
+          quantity: totalQty,
+        };
+      } catch (err) {
+        console.error(`Error fetching stock for ${product.partNo}:`, err);
+        return {
+          partNumber: product.partNo,
+          inStock: false,
+          quantity: 0,
+        };
+      }
+    });
+
+    try {
+      const stockResults = await Promise.all(stockPromises);
+      const stockMap = {};
+      stockResults.forEach((result) => {
+        stockMap[result.partNumber] = result;
+      });
+      setStockData(stockMap);
+      console.log("✅ Stock data fetched:", stockMap);
+    } catch (err) {
+      console.error("❌ Error fetching stock data:", err);
+    }
+  };
 
 const applyCompatibilityFilter = async () => {
   console.log("🔍 Applying compatibility filter...");
@@ -475,6 +710,15 @@ const applyCompatibilityFilter = async () => {
 
         setRecommendedProducts(myTvsProducts);
         setOtherBrandProducts(otherProducts);
+        // Store original products for reset functionality
+        setOriginalRecommendedProducts(myTvsProducts);
+        setOriginalOtherBrandProducts(otherProducts);
+
+        // Fetch stock data for all products
+        await fetchStockForProducts(transformedParts);
+        
+        // Fetch vehicle compatibility counts for all products
+        await fetchVehicleCountsForProducts(transformedParts);
 
       } catch (err) {
         console.error("Error fetching parts data:", err);
@@ -499,7 +743,7 @@ const applyCompatibilityFilter = async () => {
       }
 
       try {
-        const response = await fetchVehicleListByPartNumber(searchKey);
+        const response = await fetchVehicleListByPartNumber(searchKey, 100);
         const vehicles = response?.data || [];
         setVehicleCompatibilityList(vehicles);
         setVehicleCount(response?.count || vehicles.length);
@@ -564,103 +808,238 @@ const applyCompatibilityFilter = async () => {
         {/* FILTERS */}
         <div className="pn-top">
           <div className="pn-compatibility">
-            <Filter
-              label="Select Make"
-              options={makes}
+            <select 
+              className="pn-control-dropdown"
               value={selectedMake}
-              onChange={(val) => {
+              onChange={(e) => {
+                const val = e.target.value;
                 setSelectedMake(val);
                 setSelectedModel("");
                 setSelectedVariant("");
                 setSelectedFuel("");
                 setSelectedYear("");
               }}
-            />
+            >
+              <option value="">Select Make</option>
+              {makes.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
 
-            <Filter
-              label="Select Model"
-              options={models}
+            <select 
+              className="pn-control-dropdown"
               value={selectedModel}
-              disabled={!selectedMake}
-              onChange={(val) => {
+              onChange={(e) => {
+                const val = e.target.value;
                 setSelectedModel(val);
                 setSelectedVariant("");
                 setSelectedFuel("");
                 setSelectedYear("");
               }}
-            />
+              disabled={!selectedMake}
+            >
+              <option value="">Select Model</option>
+              {models.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
 
-            <Filter
-              label="Select Variant"
-              options={variants}
+            <select 
+              className="pn-control-dropdown"
               value={selectedVariant}
-              disabled={!selectedModel}
-              onChange={(val) => {
+              onChange={(e) => {
+                const val = e.target.value;
                 setSelectedVariant(val);
                 setSelectedFuel("");
                 setSelectedYear("");
               }}
-            />
+              disabled={!selectedModel}
+            >
+              <option value="">Select Variant</option>
+              {variants.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
 
-            <Filter
-              label="Select Fuel type"
-              options={fuelTypes}
+            <select 
+              className="pn-control-dropdown"
               value={selectedFuel}
-              disabled={!selectedVariant}
-              onChange={(val) => {
+              onChange={(e) => {
+                const val = e.target.value;
                 setSelectedFuel(val);
                 setSelectedYear("");
               }}
-            />
+              disabled={!selectedVariant}
+            >
+              <option value="">Select Fuel type</option>
+              {fuelTypes.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
 
-            <Filter
-              label="Select Year"
-              options={years}
+            <select 
+              className="pn-control-dropdown"
               value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
               disabled={!selectedFuel}
-              onChange={setSelectedYear}
-            />
+            >
+              <option value="">Select Year</option>
+              {years.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
 
-<button
-  className="pn-compat-btn"
-  onClick={applyCompatibilityFilter}
-  disabled={
-    !selectedMake &&
-    !selectedModel &&
-    !selectedVariant &&
-    !selectedFuel &&
-    !selectedYear
-  }
->
-  Search
-</button>
+            <button
+              className="pn-search-btn"
+              onClick={applyCompatibilityFilter}
+            >
+              Search
+            </button>
 
-<button
-  className="pn-clear-btn"
-  onClick={() => {
-    console.log("🧹 Clearing filters...");
-    setSelectedMake("");
-    setSelectedModel("");
-    setSelectedVariant("");
-    setSelectedFuel("");
-    setSelectedYear("");
-  }}
-  disabled={
-    !selectedMake &&
-    !selectedModel &&
-    !selectedVariant &&
-    !selectedFuel &&
-    !selectedYear
-  }
->
-  Clear
-</button>
+            <button
+              className="pn-clear-btn"
+              onClick={() => {
+                console.log("🧹 Clearing filters...");
+                // Clear left filter selections
+                setSelectedMake("");
+                setSelectedModel("");
+                setSelectedVariant("");
+                setSelectedFuel("");
+                setSelectedYear("");
+                // Clear right filter selections
+                setRightFilters({
+                  year: "",
+                  fuelType: "",
+                  eta: "",
+                });
+                // Restore original products
+                setRecommendedProducts(originalRecommendedProducts);
+                setOtherBrandProducts(originalOtherBrandProducts);
+                console.log("✅ Filters cleared and products restored to original state");
+              }}
+            >
+              Clear
+            </button>
           </div>
 
           <div className="pn-right-filters">
-            <Filter label="Year" options={years} />
-            <Filter label="Fuel type" options={fuelTypes} />
-            <Filter label="ETA" options={["1-2 Days", "3-5 Days", "5+ Days"]} />
+            <div
+              className="pn-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="pn-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "year" ? null : "year");
+                }}
+              >
+                <span>{rightFilters.year || "Year"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+              </div>
+              {openFilter === "year" && (
+                <div
+                  className="pn-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["2024", "2023", "2022", "2021", "2020"].map((option) => (
+                    <div
+                      key={option}
+                      className="pn-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRightFilters((prev) => ({ ...prev, year: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="pn-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="pn-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "fuelType" ? null : "fuelType");
+                }}
+              >
+                <span>{rightFilters.fuelType || "Fuel type"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+              </div>
+              {openFilter === "fuelType" && (
+                <div
+                  className="pn-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["Petrol", "Diesel", "CNG", "Electric"].map((option) => (
+                    <div
+                      key={option}
+                      className="pn-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRightFilters((prev) => ({ ...prev, fuelType: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="pn-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="pn-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "eta" ? null : "eta");
+                }}
+              >
+                <span>{rightFilters.eta || "ETA"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+              </div>
+              {openFilter === "eta" && (
+                <div
+                  className="pn-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["Same Day", "1-2 Days", "3-5 Days"].map((option) => (
+                    <div
+                      key={option}
+                      className="pn-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRightFilters((prev) => ({ ...prev, eta: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -686,63 +1065,65 @@ const applyCompatibilityFilter = async () => {
                 {/* myTVS Recommended Products */}
                 <Product1
                   title="myTVS Recommended Products"
-                  products={recommendedProducts.map(item => ({
+                  products={recommendedProducts.map((item, index) => ({
                     id: item.id,
                     partNumber: item.partNo,
+                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
                     name: item.description,
                     image: item.imageUrl,
                     brand: item.brand,
                     price: item.price,
                     mrp: item.mrp,
-                    stockStatus: item.stock,
+                    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
                     deliveryTime: item.eta,
-                    compatibleVehicles: vehicleCount,
+                    compatibleVehicles: vehicleCounts[item.partNo] || 0,
                   }))}
                   layout="horizontal"
                   onAddToCart={(product) => {
-                    const originalItem = recommendedProducts.find(
-                      item => item.partNo === product.partNumber
-                    );
-                    const localPartNumber = originalItem?.localPartNumber || 
-                      `${product.partNumber}_${product.brand}`;
                     addToCart({
-                      ...originalItem,
-                      partNumber: localPartNumber,
+                      partNumber: product.cartId, // Use unique cartId
+                      itemDescription: product.name,
                       listPrice: product.price,
-                      image: product.image,
+                      imageUrl: product.image,
+                      brand: product.brand,
+                      mrp: product.mrp,
+                      actualPartNumber: product.partNumber, // Keep original for reference
                     });
                   }}
+                  onCompatibilityClick={() => setShowCompatibility(true)}
+                  isLoadingCounts={loadingCounts}
                 />
 
                 {/* Other Products */}
                 <Product1
                   title="Other Products"
-                  products={otherBrandProducts.map(item => ({
+                  products={otherBrandProducts.map((item, index) => ({
                     id: item.id,
                     partNumber: item.partNo,
+                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
                     name: item.description,
                     image: item.imageUrl,
                     brand: item.brand,
                     price: item.price,
                     mrp: item.mrp,
-                    stockStatus: item.stock,
+                    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
                     deliveryTime: item.eta,
-                    compatibleVehicles: vehicleCount,
+                    compatibleVehicles: vehicleCounts[item.partNo] || 0,
                   }))}
                   layout="horizontal"
                   onAddToCart={(product) => {
-                    const originalItem = otherBrandProducts.find(
-                      item => item.partNo === product.partNumber
-                    );
-                    const localPartNumber = originalItem?.localPartNumber || 
-                      `${product.partNumber}_${product.brand}`;
                     addToCart({
-                      ...originalItem,
-                      partNumber: localPartNumber,
+                      partNumber: product.cartId, // Use unique cartId
+                      itemDescription: product.name,
                       listPrice: product.price,
-                      image: product.image,
+                      imageUrl: product.image,
+                      brand: product.brand,
+                      mrp: product.mrp,
+                      actualPartNumber: product.partNumber, // Keep original for reference
                     });
                   }}
+                  onCompatibilityClick={() => setShowCompatibility(true)}
+                  isLoadingCounts={loadingCounts}
                 />
               </div>
 
@@ -751,9 +1132,10 @@ const applyCompatibilityFilter = async () => {
                 {/* Aligned Products */}
                 <Product1
                   title="Aligned Products"
-                  products={alignedProducts.map(item => ({
+                  products={alignedProducts.map((item, index) => ({
                     id: item.id,
                     partNumber: item.partNo,
+                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
                     name: item.description,
                     image: item.imageUrl,
                     brand: item.brand,
@@ -764,15 +1146,14 @@ const applyCompatibilityFilter = async () => {
                   }))}
                   layout="vertical"
                   onAddToCart={(product) => {
-                    const partNumber = `ALIGNED-${product.id}`;
-                    const originalItem = alignedProducts.find(
-                      item => item.id === product.id
-                    );
                     addToCart({
-                      ...originalItem,
-                      partNumber,
+                      partNumber: product.cartId, // Use unique cartId
+                      itemDescription: product.name,
                       listPrice: product.price,
-                      image: product.image,
+                      imageUrl: product.image,
+                      brand: product.brand,
+                      mrp: product.mrp,
+                      actualPartNumber: product.partNumber, // Keep original for reference
                     });
                   }}
                 />
@@ -786,7 +1167,7 @@ const applyCompatibilityFilter = async () => {
       {showCompatibility && (
         <CompatibilityModal
           onClose={() => setShowCompatibility(false)}
-          vehicles={vehicleCompatibilityList}
+          partNumber={searchKey}
         />
       )}
     </div>

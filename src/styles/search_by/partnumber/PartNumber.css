@@ -17,6 +17,7 @@
   padding: 12px;
   border-radius: 8px;
   margin-top: 1%;
+  gap: 20px;
 }
 
 .pn-search-key {
@@ -36,6 +37,95 @@
   margin-bottom: 10px;
   align-items: center;
 }
+
+.pn-control-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 7px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  width: 100%;
+  min-width: 100px;
+  max-width: 130px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+}
+
+.pn-control-dropdown:focus {
+  outline: none;
+}
+
+.pn-control-dropdown:hover {
+  border-color: #98A2B3;
+}
+
+.pn-control-dropdown:disabled {
+  background: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pn-control-dropdown option {
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pn-search-btn {
+  background: #29318A;
+  color: #fff;
+  border: none;
+  padding: 7px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pn-search-btn:hover:not(:disabled) {
+  background: #1e2470;
+}
+
+.pn-search-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pn-clear-btn {
+  background: #dc2626;
+  color: #fff;
+  border: none;
+  padding: 7px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pn-clear-btn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.pn-clear-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .pn-c-i-c {
   color: #16a34a;
 }
@@ -43,6 +133,72 @@
 .pn-compatibility .pn-filter {
   min-width: 79px;
   max-width: 119px;
+}
+
+.pn-right-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.pn-filter-wrapper {
+  position: relative;
+  z-index: 200;
+}
+
+.pn-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  height: 25px;
+  background: #F9FAFB;
+  border: 2px solid #E5E7EB;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #374151;
+  user-select: none;
+  white-space: nowrap;
+  transition: all 0.2s;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+.pn-filter-item:hover {
+  background: #F3F4F6;
+  border-color: #D1D5DB;
+}
+
+.pn-filter-item img {
+  width: 12px;
+  height: 8px;
+}
+
+.pn-filter-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  min-width: 100%;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  z-index: 999999;
+}
+
+.pn-filter-option {
+  padding: 8px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.pn-filter-option:hover {
+  background: #f36f21;
+  color: #ffffff;
 }
 
 .pn-right-filters .pn-filter {
@@ -96,27 +252,6 @@
   opacity: 0.6;
 }
 
-.pn-clear-btn {
-  background: #dc2626;
-  color: #fff;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-left: 8px;
-}
-
-.pn-clear-btn:hover {
-  background: #b91c1c;
-}
-
-.pn-clear-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .pn-main-content {
   display: flex;
   justify-content: center;
@@ -130,15 +265,16 @@
 }
 
 .pn-left {
-  flex: 0 0 75%;
-  max-width: 75%;
+  flex: 0 0 74%;
+  max-width: 74%;
+  padding: 5px;
 }
 
 .pn-right {
-  flex: 0 0 25%;
-  max-width: 25%;
-  border-left: 1px solid #e0e0e0;
-  padding-left: 20px;
+  flex: 0 0 24%;
+  max-width: 24%;
+  /* border-left: 1px solid #e0e0e0; */
+  padding-left: 10px;
 }
 
 /* Loading and Error States */
@@ -352,7 +488,7 @@
 /* ---------- MODAL ---------- */
 /* ---------- MODAL ---------- */
 .pn-modal {
-  width: 1056px;
+  width: 953px;
   max-width: 90%;
   background: #fff;
   border-radius: 8px;
@@ -367,6 +503,15 @@
   padding: 16px 20px;
   justify-content: space-between;
   background: #fff;
+  gap: 12px;
+}
+
+.pn-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #29318A;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .pn-modal-search {
@@ -438,8 +583,8 @@
 .pn-modal-row {
   display: grid;
   grid-template-columns: 140px 120px 350px 120px 140px;
-  padding: 14px 30px;
-  font-size: 14px;
+  padding: 10px 30px;
+  font-size: 12px;
   border-bottom: 1px solid #e5e5e5;
   box-sizing: border-box;
   gap: 20px;

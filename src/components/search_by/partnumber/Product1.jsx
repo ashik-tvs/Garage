@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/partnumber/Product1.css";
 
 /**
@@ -9,11 +10,14 @@ import "../../../styles/search_by/partnumber/Product1.css";
  * @param {Array} products - Array of product objects
  * @param {string} layout - "horizontal" (3 per row) or "vertical" (1 per row)
  * @param {function} onAddToCart - Callback when Add button is clicked
+ * @param {function} onCompatibilityClick - Callback when compatibility section is clicked
+ * @param {boolean} isLoadingCounts - Whether vehicle counts are still loading
  * 
  * Product object structure:
  * {
  *   id: string,
- *   partNumber: string,
+ *   partNumber: string,  // Display part number (original)
+ *   cartId: string,      // Unique identifier for cart operations (partNumber_brand_index)
  *   name: string,
  *   image: string,
  *   brand: string,
@@ -24,12 +28,25 @@ import "../../../styles/search_by/partnumber/Product1.css";
  *   compatibleVehicles: number
  * }
  */
-const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) => {
+const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart, onCompatibilityClick, isLoadingCounts = false }) => {
   const [showAll, setShowAll] = useState(false);
+  const { cartItems, removeFromCart } = useCart();
+
+  const isInCart = (cartId) => {
+    return cartItems.some(item => item.partNumber === cartId);
+  };
 
   const handleAddClick = (product) => {
-    if (onAddToCart) {
-      onAddToCart(product);
+    // Use cartId (unique identifier) for cart operations
+    const identifier = product.cartId || product.partNumber;
+    
+    // Toggle: if already in cart, remove it; otherwise add it
+    if (isInCart(identifier)) {
+      removeFromCart(identifier);
+    } else {
+      if (onAddToCart) {
+        onAddToCart(product);
+      }
     }
   };
 
@@ -59,8 +76,9 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) 
 
       {/* Products Container */}
       <div className={`product1-container ${layout === "vertical" ? "vertical" : "horizontal"}`}>
-        {displayProducts.map((product) => (
-          <div key={product.id} className={`product1-card ${layout === "vertical" ? "aligned-card" : ""}`}>
+        {displayProducts.length > 0 ? (
+          displayProducts.map((product) => (
+            <div key={product.id} className={`product1-card ${layout === "vertical" ? "aligned-card" : ""}`}>
             
             {/* Aligned Product Layout - Image Left, Info Right, Button Bottom */}
             {layout === "vertical" ? (
@@ -83,11 +101,16 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) 
                   <div className="aligned-info">
                     {/* Tags */}
                     <div className="aligned-tags">
-                      <span className="aligned-tag brand-tag">{product.brand}</span>
-                      <span className="aligned-tag stock-tag">
+                      <span className="aligned-tag brand-tag" title={product.brand}>{product.brand}</span>
+                      <span 
+                        className={`aligned-tag stock-tag ${
+                          (product.stockStatus || "").toLowerCase().includes("out of stock") ? "out-of-stock" : ""
+                        }`} 
+                        title={product.stockStatus || "in stock"}
+                      >
                         {product.stockStatus || "in stock"}
                       </span>
-                      <span className="aligned-tag delivery-tag">
+                      <span className="aligned-tag delivery-tag" title={product.deliveryTime || "1-2 Days"}>
                         {product.deliveryTime || "1-2 Days"}
                       </span>
                     </div>
@@ -104,15 +127,13 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) 
                 <div className="aligned-bottom-section">
                   <div className="aligned-price-section">
                     <span className="aligned-price">₹ {product.price.toFixed(2)}</span>
-                    {product.mrp && product.mrp > product.price && (
-                      <span className="aligned-mrp">₹ {product.mrp.toFixed(2)}</span>
-                    )}
+                    <span className="aligned-mrp">₹ {(product.mrp || 0).toFixed(2)}</span>
                   </div>
                   <button
-                    className="aligned-add-btn"
+                    className={`aligned-add-btn ${isInCart(product.cartId || product.partNumber) ? 'added' : ''}`}
                     onClick={() => handleAddClick(product)}
                   >
-                    Add
+                    {isInCart(product.cartId || product.partNumber) ? 'Added' : 'Add'}
                   </button>
                 </div>
               </>
@@ -125,11 +146,16 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) 
                   <div className="product1-info">
                     {/* Top Tags */}
                     <div className="product1-tags">
-                      <span className="product1-tag brand-tag">{product.brand}</span>
-                      <span className="product1-tag stock-tag">
+                      <span className="product1-tag brand-tag" title={product.brand}>{product.brand}</span>
+                      <span 
+                        className={`product1-tag stock-tag ${
+                          (product.stockStatus || "").toLowerCase().includes("out of stock") ? "out-of-stock" : ""
+                        }`} 
+                        title={product.stockStatus || "in stock"}
+                      >
                         {product.stockStatus || "in stock"}
                       </span>
-                      <span className="product1-tag delivery-tag">
+                      <span className="product1-tag delivery-tag" title={product.deliveryTime || "1-2 Days"}>
                         {product.deliveryTime || "1-2 Days"}
                       </span>
                     </div>
@@ -157,28 +183,40 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart }) 
                 {/* Price Section */}
                 <div className="product1-price-section">
                   <span className="product1-price">₹ {product.price.toFixed(2)}</span>
-                  {product.mrp && product.mrp > product.price && (
-                    <span className="product1-mrp">₹ {product.mrp.toFixed(2)}</span>
-                  )}
+                  <span className="product1-mrp">₹ {(product.mrp || 0).toFixed(2)}</span>
                   <button
-                    className="product1-add-btn"
+                    className={`product1-add-btn ${isInCart(product.cartId || product.partNumber) ? 'added' : ''}`}
                     onClick={() => handleAddClick(product)}
                   >
-                    Add
+                    {isInCart(product.cartId || product.partNumber) ? 'Added' : 'Add'}
                   </button>
                 </div>
               </>
             )}
 
             {/* Compatible Vehicles */}
-            {product.compatibleVehicles && (
-              <div className="product1-compatible">
-                <span>Compatible with {product.compatibleVehicles} vehicles</span>
-                <span className="product1-arrow">›</span>
+            {onCompatibilityClick && (
+              <div 
+                className="product1-compatible"
+                onClick={() => !isLoadingCounts && onCompatibilityClick && onCompatibilityClick(product)}
+                style={{ cursor: isLoadingCounts ? 'default' : (onCompatibilityClick ? 'pointer' : 'default') }}
+              >
+                <span>
+                  {isLoadingCounts 
+                    ? "Loading compatibility..." 
+                    : `Compatible with ${product.compatibleVehicles || 0} vehicles`
+                  }
+                </span>
+                {!isLoadingCounts && <span className="product1-arrow">›</span>}
               </div>
             )}
           </div>
-        ))}
+        ))
+        ) : (
+          <div className="product1-no-results">
+            <p>No {title?.toLowerCase() || 'products'} found.</p>
+          </div>
+        )}
       </div>
     </div>
   );
