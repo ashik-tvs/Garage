@@ -168,7 +168,7 @@ const Category = () => {
     });
   };
 
-  const visibleCategories = expanded ? categories : categories.slice(0, 8);
+  const visibleCategories = expanded ? categories : categories.slice(0, 9);
 
   return (
     <section className="section-container">

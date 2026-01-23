@@ -176,7 +176,7 @@ const Make = () => {
     });
   };
 
-  const visibleMakes = expanded ? makes : makes.slice(0, 8);
+  const visibleMakes = expanded ? makes : makes.slice(0, 9);
 
   return (
     <section className="section-container">

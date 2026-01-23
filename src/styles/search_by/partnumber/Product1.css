@@ -1,0 +1,591 @@
+/* Product1 Component Styles */
+
+.product1-section {
+  margin-bottom: 10px;
+}
+
+.aligned-section {
+  margin-bottom: 40px;
+}
+
+/* Header with Title and See More */
+.product1-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+/* Section Title */
+.product1-section-title {
+  font-family: "Poppins", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+/* See More Link */
+.product1-see-more {
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ff6a00;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.product1-see-more:hover {
+  color: #e55d00;
+  text-decoration: underline;
+}
+
+/* Container - Horizontal (3 per row) or Vertical (1 per row) */
+.product1-container {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.product1-container.horizontal {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.product1-container.vertical {
+  grid-template-columns: 1fr;
+  width: 100%;
+}
+
+/* Product Card */
+.product1-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 10px 2px 10px;
+  display: flex;
+  flex-direction: column;
+  /* gap: 10px; */
+  transition: box-shadow 0.3s ease;
+  position: relative;
+}
+
+.product1-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Main Content - Side by Side */
+.product1-content {
+  display: flex;
+  gap: 15px;
+  justify-content: space-between;
+  align-items: flex-start;
+  /* margin-bottom: 10px; */
+}
+
+/* Vertical Layout - Content takes left side */
+.product1-container.vertical .product1-content {
+  flex: 1;
+  flex-direction: column;
+  margin-bottom: 0;
+  gap: 8px;
+}
+
+/* Left Column - Info */
+.product1-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Top Tags Row */
+.product1-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product1-tag {
+  font-family: "Poppins", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: lowercase;
+}
+
+.brand-tag {
+  background: #e8f1ff;
+  color:#2563eb;
+  border: 1px solid #e8f1ff;
+}
+
+.stock-tag {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.delivery-tag {
+  background: #fff9e6;
+  color: #f57c00;
+}
+
+/* Product Code */
+.product1-code {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+}
+
+/* Product Name */
+.product1-name {
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Tooltip styling for product1-name */
+.product1-name[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #333333;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: 6px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tooltip arrow for product1-name */
+.product1-name[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #333333;
+  z-index: 1000;
+  pointer-events: none;
+  animation: product1NameTooltipFadeIn 0.2s ease-in-out;
+}
+
+@keyframes product1NameTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Image Wrapper */
+.product1-image-wrapper {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 5px;
+  flex-shrink: 0;
+}
+
+/* Vertical Layout - Hide image in content area */
+.product1-container.vertical .product1-content .product1-image-wrapper {
+  display: none;
+}
+
+.product1-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Price Section */
+.product1-price-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.product1-price {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.product1-mrp {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #a90000;
+  text-decoration: line-through;
+}
+
+/* Add Button */
+.product1-add-btn {
+  width: 100%;
+  padding: 4px 12px;
+  background: #ff6a00;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  margin-top: 5px;
+}
+
+/* Add Button inside price section for horizontal layout */
+.product1-price-section .product1-add-btn {
+  width: auto;
+  min-width: 80px;
+  padding: 4px 12px;
+  margin-top: 0;
+  margin-left: auto;
+}
+
+/* Vertical Layout - Right column for image only */
+.product1-vertical-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.product1-vertical-right .product1-image-wrapper {
+  display: flex;
+}
+
+/* Vertical Layout - Price and Button Row */
+.product1-price-button-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 5px;
+}
+
+.product1-container.vertical .product1-price-section {
+  margin-top: 0;
+}
+
+.product1-container.vertical .product1-add-btn {
+  width: auto;
+  min-width: 80px;
+  padding: 8px 20px;
+  margin-top: 0;
+}
+
+.product1-add-btn:hover {
+  background: #e55e00;
+}
+
+.product1-add-btn:active {
+  transform: scale(0.98);
+}
+
+/* Compatible Vehicles */
+.product1-compatible {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "Poppins", sans-serif;
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 0;
+  border-top: 1px solid #f0f0f0;
+  /* margin-top: 5px; */
+  transition: color 0.3s ease;
+}
+
+.product1-compatible:hover {
+  color: #ff6a00;
+}
+
+.product1-arrow {
+  font-size: 18px;
+  font-weight: 600;
+  color: #999;
+}
+
+/* ========== ALIGNED PRODUCT STYLES (Vertical Layout) ========== */
+
+/* Aligned Product Card */
+.aligned-card {
+  display: flex;
+  flex-direction: column;
+  /* gap: 12px; */
+}
+
+/* Top Section - Image Left, Info Right */
+.aligned-top-section {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+/* Aligned Image Wrapper - Left Side */
+.aligned-image-wrapper {
+  width: 70px;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 10px;
+  flex-shrink: 0;
+}
+
+.aligned-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Aligned Info - Right Side */
+.aligned-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Aligned Tags */
+.aligned-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aligned-tag {
+  font-family: "Poppins", sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: lowercase;
+}
+
+/* Aligned Product Code */
+.aligned-code {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #666;
+}
+
+/* Aligned Product Name */
+.aligned-name {
+  font-family: "Poppins", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  cursor: pointer;
+  position: relative;
+}
+
+/* Tooltip styling for aligned-name */
+.aligned-name[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #333333;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: 6px;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tooltip arrow for aligned-name */
+.aligned-name[title]:hover::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 2px;
+  border: 6px solid transparent;
+  border-top-color: #333333;
+  z-index: 1000;
+  pointer-events: none;
+  animation: alignedNameTooltipFadeIn 0.2s ease-in-out;
+}
+
+@keyframes alignedNameTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Bottom Section - Price and Add Button */
+.aligned-bottom-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  /* border-top: 1px solid #f0f0f0; */
+}
+
+/* Aligned Price Section */
+.aligned-price-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aligned-price {
+  font-family: "Poppins", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.aligned-mrp {
+  font-family: "Poppins", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: #a90000;
+  text-decoration: line-through;
+}
+
+/* Aligned Add Button */
+.aligned-add-btn {
+  padding: 4px 12px;
+  background: #ff6a00;
+  border: none;
+  border-radius: 6px;
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  flex-shrink: 0;
+
+  transform: translateX(-10px); /* 👈 move left */
+}
+
+
+.aligned-add-btn:hover {
+  background: #e55e00;
+}
+
+.aligned-add-btn:active {
+  transform: scale(0.98);
+}
+
+/* ========== END ALIGNED PRODUCT STYLES ========== */
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .product1-container.horizontal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .product1-section,
+  .aligned-section {
+    margin-bottom: 30px;
+  }
+
+  .product1-section-title {
+    font-size: 16px;
+  }
+
+  .product1-container.horizontal {
+    grid-template-columns: 1fr;
+  }
+
+  .product1-container {
+    gap: 15px;
+  }
+
+  .product1-card {
+    padding: 12px;
+  }
+
+  .product1-image-wrapper {
+    height: 100px;
+  }
+}
+
+@media (max-width: 480px) {
+  .product1-section-title {
+    font-size: 14px;
+  }
+
+  .product1-tag {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .product1-name {
+    font-size: 12px;
+    min-height: 32px;
+  }
+
+  .product1-price {
+    font-size: 14px;
+  }
+
+  .product1-mrp {
+    font-size: 12px;
+  }
+
+  .product1-add-btn {
+    padding: 8px;
+    font-size: 13px;
+  }
+}

@@ -20,6 +20,7 @@ import Sub_Category from "./components/search_by/MyOrder/SubCategory.jsx";
 import SeviceTypeModel from "./components/search_by/service_type/ServiceTypeModel.jsx";
 import SeviceTypeCategory from "./components/search_by/service_type/ServiceTypeCategory.jsx";
 import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTypeSubCategory.jsx";
+import Product1Example from "./components/search_by/partnumber/Product1Example.jsx";
 
 import { CartProvider } from "./context/CartContext.js";
 import Login from "./components/Login/Login.jsx";
@@ -78,6 +79,7 @@ function App() {
             <Route path="/Category" element={<Category />} />
             <Route path="/CategoryNew" element={<CategoryNew />} />
             <Route path="/sub_category" element={<Sub_Category />} />
+            <Route path="/product1-example" element={<Product1Example />} />
             {/* <Route path="/make1" element={<Make1 />} /> */}
             <Route path="/cart" element={<Cart />} />
           </Route>
