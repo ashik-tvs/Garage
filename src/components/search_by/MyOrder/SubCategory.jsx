@@ -6,12 +6,20 @@ import NoImage from "../../../assets/No Image.png";
 import OciImage from "../../oci_image/ociImages";
 import "../../../styles/home/SubCategory.css";
 
-
 const Sub_Category = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, model, brand, category, aggregateName, aggregate, featureLabel, variant } = location.state || {};
-  
+  const {
+    make,
+    model,
+    brand,
+    category,
+    aggregateName,
+    aggregate,
+    featureLabel,
+    variant,
+  } = location.state || {};
+
   // Use aggregate from Category.jsx if available, fallback to aggregateName
   const selectedAggregate = aggregate || aggregateName;
 
@@ -53,7 +61,7 @@ const Sub_Category = () => {
 
         if (isCacheValid) {
           console.log(
-            `Loading sub-categories for ${selectedAggregate} from cache...`
+            `Loading sub-categories for ${selectedAggregate} from cache...`,
           );
           setSubCategories(JSON.parse(cachedData));
           setLoading(false);
@@ -100,7 +108,7 @@ const Sub_Category = () => {
             "Content-Type": "application/json",
           },
           timeout: 90000,
-        }
+        },
       );
 
       console.log("Sub-categories API Response:", response);
@@ -123,7 +131,7 @@ const Sub_Category = () => {
         ...new Set(
           partsData
             .map((item) => item.subAggregate)
-            .filter((subAggregate) => subAggregate)
+            .filter((subAggregate) => subAggregate),
         ),
       ];
 
@@ -140,7 +148,7 @@ const Sub_Category = () => {
             .join(" "),
           subAggregateName: subAggregate,
           image: getIconForSubCategory(subAggregate),
-        })
+        }),
       );
 
       console.log("Formatted sub-categories:", formattedSubCategories);
@@ -149,16 +157,17 @@ const Sub_Category = () => {
       const cacheKey = `subCategory_${selectedAggregate}`;
       localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-      console.log(`Sub-categories for ${selectedAggregate} cached successfully`);
+      console.log(
+        `Sub-categories for ${selectedAggregate} cached successfully`,
+      );
 
-setSubCategories(formattedSubCategories);
-  } catch (err) {
-    setError("Failed to load sub-categories");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setSubCategories(formattedSubCategories);
+    } catch (err) {
+      setError("Failed to load sub-categories");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Helper to build full asset URL
   const getAssetUrl = (filePath) => {
@@ -167,23 +176,23 @@ setSubCategories(formattedSubCategories);
   };
 
   const serviceTypes = [
-    // "Complete Brake System Inspection",
-    // "Brake Noise / Vibration Diagnosis",
-    // "Brake Fluid Level Check",
-    // "ABS Warning Light Check",
-    // "Front Brake Pad Replacement",
-    // "Rear Brake Pad Replacement",
-    // "Brake Shoe Replacement (Drum Brakes)",
-    // "Brake Pad Cleaning & Adjustment",
-    // "Brake Rotor (Disc) Replacement",
-    // "Brake Rotor Resurfacing",
-    // "Brake Drum Replacement",
-    // "Brake Drum Turning / Resurfacing",
-    // "Brake Caliper Repair / Replacement",
-    // "Brake Line / Hose Replacement",
-    // "Brake Bleeding (Air Removal)",
-    // "Brake Oil Change (Brake Fluid Flush)",
-    // "Handbrake Cable Adjustment",
+    "Complete Brake System Inspection",
+    "Brake Noise / Vibration Diagnosis",
+    "Brake Fluid Level Check",
+    "ABS Warning Light Check",
+    "Front Brake Pad Replacement",
+    "Rear Brake Pad Replacement",
+    "Brake Shoe Replacement (Drum Brakes)",
+    "Brake Pad Cleaning & Adjustment",
+    "Brake Rotor (Disc) Replacement",
+    "Brake Rotor Resurfacing",
+    "Brake Drum Replacement",
+    "Brake Drum Turning / Resurfacing",
+    "Brake Caliper Repair / Replacement",
+    "Brake Line / Hose Replacement",
+    "Brake Bleeding (Air Removal)",
+    "Brake Oil Change (Brake Fluid Flush)",
+    "Handbrake Cable Adjustment",
   ];
 
   const handleBack = () => navigate(-1);
@@ -224,17 +233,24 @@ setSubCategories(formattedSubCategories);
           <img src={getAssetUrl(uiAssets["LEFT ARROW"])} alt="Back" />
         </button>
         <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
-            Home
-          </span>
+          <img
+            src={getAssetUrl(uiAssets["HOME"])}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
+            onClick={() => navigate("/home")}
+            title="Home"
+          />
           {make && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/MakeNew", {
+                    state: { variant, featureLabel },
+                  })
+                }
               >
                 {make}
               </span>
@@ -243,11 +259,13 @@ setSubCategories(formattedSubCategories);
           {model && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/Model', { 
-                  state: { make, variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/Model", {
+                    state: { make, variant, featureLabel },
+                  })
+                }
               >
                 {model}
               </span>
@@ -256,11 +274,13 @@ setSubCategories(formattedSubCategories);
           {(selectedAggregate || category) && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/Category', { 
-                  state: { make, model, variant, featureLabel } 
-                })}
+              <span
+                className="breadcrumb-link"
+                onClick={() =>
+                  navigate("/Category", {
+                    state: { make, model, variant, featureLabel },
+                  })
+                }
               >
                 {selectedAggregate || category}
               </span>
@@ -274,10 +294,20 @@ setSubCategories(formattedSubCategories);
         {/* Sub Categories */}
         <div className="sub-category-content">
           {loading ? (
-            <div className="sub-category-loading">
-              <p style={{ textAlign: "center", padding: "20px" }}>
-                Loading Subcategories...
-              </p>
+            <div className="sub-category-grid">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="sub-category-item skeleton-sub-item"
+                >
+                  <div className="sub-category-image-wrapper">
+                    <div className="skeleton skeleton-sub-image"></div>
+                  </div>
+                  <div className="sub-category-label">
+                    <div className="skeleton skeleton-sub-text"></div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="sub-category-error">
@@ -343,7 +373,9 @@ setSubCategories(formattedSubCategories);
         {/* Service Type Sidebar */}
         <div className="service-type-sidebar">
           <div className="service-type-header">
-            <span>Service Type for {selectedAggregate || category || "Category"}</span>
+            <span>
+              Service Type for {selectedAggregate || category || "Category"}
+            </span>
             <div className="service-type-icon">
               <img
                 src={getAssetUrl(uiAssets["SERVICE TYPE"])}

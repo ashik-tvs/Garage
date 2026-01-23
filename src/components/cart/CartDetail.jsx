@@ -58,11 +58,16 @@ function CartDetails() {
                   <div className="cartdetails-quantity-box">
                     <button
                       className="cartdetails-qty-btn"
-                      onClick={() => updateQuantity(item.partNumber, -1)}
+                      onClick={() =>
+                        item.quantity > 1 && updateQuantity(item.partNumber, -1)
+                      }
                     >
                       −
                     </button>
-                    <span className="cartdetails-qty-value">{item.quantity}</span>
+
+                    <span className="cartdetails-qty-value">
+                      {item.quantity}
+                    </span>
                     <button
                       className="cartdetails-qty-btn"
                       onClick={() => updateQuantity(item.partNumber, 1)}

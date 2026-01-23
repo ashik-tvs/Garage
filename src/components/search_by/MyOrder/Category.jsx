@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Category.css";
 import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import apiService from "../../../services/apiservice";
+import CategorySkeleton from "../../skeletonLoading/CategorySkeleton";
 import Image from "../../oci_image/ociImages";
 
 const Category = () => {
@@ -14,6 +15,27 @@ const Category = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [uiAssets, setUiAssets] = useState({});
+
+  /* ===============================
+     FETCH UI ASSETS
+     =============================== */
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets");
+        setUiAssets(assets.data);
+      } catch (error) {
+        console.error("❌ Error fetching UI assets:", error);
+      }
+    };
+    fetchUiAssets();
+  }, []);
+
+  const getAssetUrl = (tagName) => {
+    if (!uiAssets[tagName]) return "";
+    return apiService.getAssetUrl(uiAssets[tagName]);
+  };
 
   /* ===============================
      FETCH FASTMOVER CATEGORIES
@@ -72,9 +94,14 @@ const Category = () => {
           <img src={LeftArrow} alt="Back" />
         </button>
         <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
-            Home
-          </span>
+          <img
+            src={getAssetUrl("HOME")}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
+            onClick={() => navigate("/home")}
+            title="Home"
+          />
           {make && (
             <>
               <span className="breadcrumb-separator">&gt;</span>
@@ -106,41 +133,53 @@ const Category = () => {
       </div>
 
       {/* Content */}
-      <div className="category-content">
-        {loading && <p>Loading categories...</p>}
-        {error && <p style={{ color: "red" }}>{error}</p>}
+<div className="category-content">
+  {/* Skeleton Loading */}
+  {loading && <CategorySkeleton count={8} />}
 
-        {!loading && !error && categories.length === 0 && (
-          <p>No categories available</p>
-        )}
+  {/* Error State */}
+  {!loading && error && (
+    <p style={{ color: "red", textAlign: "center" }}>
+      {error}
+    </p>
+  )}
 
-        {!loading &&
-          !error &&
-          categories.map((category) => (
-            <div
-              key={category.id}
-              className="category-item"
-              onClick={() => handleCategoryClick(category)}
-            >
-              <div className="category-card">
-                {/* Image Wrapper */}
-                <div className="category-image-wrapper">
-                  <Image
-                    partNumber={category.name}
-                    folder="categories"
-                    className="category-image"
-                    alt={category.name}
-                  />
-                </div>
+  {/* Empty State */}
+  {!loading && !error && categories.length === 0 && (
+    <p style={{ textAlign: "center" }}>
+      No categories available
+    </p>
+  )}
 
-                {/* Label */}
-                <div className="category-label">
-                  <span title={category.name}>{category.name}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+  {/* Category List */}
+  {!loading &&
+    !error &&
+    categories.map((category) => (
+      <div
+        key={category.id}
+        className="category-item"
+        onClick={() => handleCategoryClick(category)}
+      >
+        <div className="category-card">
+          {/* Image */}
+          <div className="category-image-wrapper">
+            <Image
+              partNumber={category.name}
+              folder="categories"
+              className="category-image"
+              alt={category.name}
+            />
+          </div>
+
+          {/* Label */}
+          <div className="category-label">
+            <span title={category.name}>{category.name}</span>
+          </div>
+        </div>
       </div>
+    ))}
+</div>
+
     </div>
   );
 };

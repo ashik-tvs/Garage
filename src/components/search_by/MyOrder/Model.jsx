@@ -32,6 +32,27 @@ const Model = () => {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [uiAssets, setUiAssets] = useState({});
+
+  /* ===============================
+     FETCH UI ASSETS
+     =============================== */
+  useEffect(() => {
+    const fetchUiAssets = async () => {
+      try {
+        const assets = await apiService.get("/ui-assets");
+        setUiAssets(assets.data);
+      } catch (error) {
+        console.error("❌ Error fetching UI assets:", error);
+      }
+    };
+    fetchUiAssets();
+  }, []);
+
+  const getAssetUrl = (tagName) => {
+    if (!uiAssets[tagName]) return "";
+    return apiService.getAssetUrl(uiAssets[tagName]);
+  };
 
   useEffect(() => {
     // For discontinued and electric variants, fetch without needing a make
@@ -331,9 +352,14 @@ const Model = () => {
           <img src={LeftArrow} alt="Back" />
         </button>
         <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
-            Home
-          </span>
+          <img
+            src={getAssetUrl("HOME")}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
+            onClick={() => navigate("/home")}
+            title="Home"
+          />
           <span className="breadcrumb-separator">&gt;</span>
           {make && (
             <>
@@ -352,11 +378,19 @@ const Model = () => {
       </div>
 
       <div className="model-grid-wrapper">
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <p>Loading models...</p>
-          </div>
-        ) : error ? (
+{loading ? (
+  <div className="model-row">
+    {Array.from({ length: 8 }).map((_, index) => (
+      <div key={index} className="model-card skeleton-card">
+        <div className="model-card-content">
+          <div className="skeleton skeleton-image"></div>
+          <div className="skeleton skeleton-text"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+)
+: error ? (
           <div style={{ textAlign: "center", padding: "40px", color: "red" }}>
             <p>{error}</p>
             <button

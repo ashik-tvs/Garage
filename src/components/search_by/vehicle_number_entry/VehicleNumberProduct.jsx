@@ -2,11 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
-import apiService from "../../../services/apiservice";
+import apiService, { fetchMasterList } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import Brake_1 from "../../../assets/brake1.png";
-import Brake_2 from "../../../assets/brake2.png";
-import Brake_3 from "../../../assets/brake3.png";
 
 /* ---------------- COMPONENT ---------------- */
 const Product = () => {
@@ -35,7 +32,6 @@ const Product = () => {
   };
 
   const { cartItems, addToCart, removeFromCart } = useCart();
-  const [showEditPopup, setShowEditPopup] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
 
   // Product states
@@ -64,17 +60,44 @@ const Product = () => {
   } = location.state || {};
 
   const [filters, setFilters] = useState({
-    brakeSystem: "",
-    price: "",
+    year: "",
+    fuelType: "",
     eta: "",
-    sortBy: "",
+    // sortBy: "",
+  });
+
+  // Main search filter states (vnp-search-main)
+  const [searchFilters, setSearchFilters] = useState({
+    make: "",
+    model: "",
+    variant: "",
+    fuelType: "",
+    year: "",
+  });
+
+  // Dropdown options for main search filters
+  const [dropdownOptions, setDropdownOptions] = useState({
+    makes: [],
+    models: [],
+    variants: [],
+    fuelTypes: [],
+    years: [],
+  });
+
+  // Loading states for dropdowns
+  const [loadingDropdowns, setLoadingDropdowns] = useState({
+    makes: false,
+    models: false,
+    variants: false,
+    fuelTypes: false,
+    years: false,
   });
 
   const filterOptions = {
     brakeSystem: ["Disc Brake", "Drum Brake", "ABS", "Non-ABS"],
     price: ["Low to High", "High to Low"],
     eta: ["Same Day", "1-2 Days", "3-5 Days"],
-    sortBy: ["Relevance", "Price", "Brand"],
+    // sortBy: ["Relevance", "Price", "Brand"],
   };
 
   // Fetch products based on category and subcategory
@@ -83,6 +106,361 @@ const Product = () => {
       fetchProducts();
     }
   }, [aggregateName, subAggregateName, make, model]);
+
+  // Initialize main search filters based on breadcrumb flow
+  useEffect(() => {
+    initializeSearchFilters();
+  }, [make, model, aggregateName, subAggregateName]);
+
+  // Initialize search filters based on breadcrumb navigation flow
+  const initializeSearchFilters = async () => {
+    console.log("🔄 Initializing search filters...");
+    console.log("📍 Breadcrumb context:", { make, model, aggregateName, subAggregateName });
+
+    // Flow 1: Make -> Model -> Category -> SubCategory (Vehicle-based navigation)
+    if (make && model) {
+      console.log("✅ Flow 1: Vehicle-based navigation (Make + Model)");
+      
+      // Set make and model from breadcrumbs
+      setSearchFilters(prev => ({
+        ...prev,
+        make: make,
+        model: model,
+      }));
+
+      // Fetch variants for the selected make and model
+      await fetchVariants(make, model);
+    }
+    // Flow 2: Category -> SubCategory (Category-based navigation)
+    else if (aggregateName && subAggregateName) {
+      console.log("✅ Flow 2: Category-based navigation (Aggregate + SubAggregate)");
+      
+      // Reset all search filters
+      setSearchFilters({
+        make: "",
+        model: "",
+        variant: "",
+        fuelType: "",
+        year: "",
+      });
+
+      // Fetch makes for the selected category and subcategory
+      await fetchMakes(aggregateName, subAggregateName);
+    }
+  };
+
+  // Fetch Makes (for Flow 2: Category -> SubCategory)
+  const fetchMakes = async (aggregate, subAggregate) => {
+    try {
+      setLoadingDropdowns(prev => ({ ...prev, makes: true }));
+      console.log("🔍 Fetching makes for:", { aggregate, subAggregate });
+
+      const response = await fetchMasterList({
+        masterType: "make",
+        aggregate,
+        subAggregate,
+        limit: 0,
+      });
+
+      console.log("✅ Makes response:", response);
+
+      const makes = response?.data?.map(item => item.masterName) || [];
+      setDropdownOptions(prev => ({ ...prev, makes }));
+      console.log("📋 Makes loaded:", makes.length);
+
+    } catch (error) {
+      console.error("❌ Error fetching makes:", error);
+      setDropdownOptions(prev => ({ ...prev, makes: [] }));
+    } finally {
+      setLoadingDropdowns(prev => ({ ...prev, makes: false }));
+    }
+  };
+
+  // Fetch Models (for selected Make)
+  const fetchModels = async (selectedMake) => {
+    try {
+      setLoadingDropdowns(prev => ({ ...prev, models: true }));
+      console.log("🔍 Fetching models for make:", selectedMake);
+
+      const response = await fetchMasterList({
+        masterType: "model",
+        make: selectedMake,
+        aggregate: aggregateName,
+        subAggregate: subAggregateName,
+        limit: 0,
+      });
+
+      console.log("✅ Models response:", response);
+
+      const models = response?.data?.map(item => item.masterName) || [];
+      setDropdownOptions(prev => ({ ...prev, models }));
+      console.log("📋 Models loaded:", models.length);
+
+    } catch (error) {
+      console.error("❌ Error fetching models:", error);
+      setDropdownOptions(prev => ({ ...prev, models: [] }));
+    } finally {
+      setLoadingDropdowns(prev => ({ ...prev, models: false }));
+    }
+  };
+
+  // Fetch Variants (for selected Make and Model)
+  const fetchVariants = async (selectedMake, selectedModel) => {
+    try {
+      setLoadingDropdowns(prev => ({ ...prev, variants: true }));
+      console.log("🔍 Fetching variants for:", { selectedMake, selectedModel });
+
+      const response = await fetchMasterList({
+        masterType: "variant",
+        make: selectedMake,
+        model: selectedModel,
+        aggregate: aggregateName || null,
+        subAggregate: subAggregateName || null,
+        limit: 0,
+      });
+
+      console.log("✅ Variants response:", response);
+
+      const variants = response?.data?.map(item => item.masterName) || [];
+      setDropdownOptions(prev => ({ ...prev, variants }));
+      console.log("📋 Variants loaded:", variants.length);
+
+    } catch (error) {
+      console.error("❌ Error fetching variants:", error);
+      setDropdownOptions(prev => ({ ...prev, variants: [] }));
+    } finally {
+      setLoadingDropdowns(prev => ({ ...prev, variants: false }));
+    }
+  };
+
+  // Fetch Fuel Types (for selected Variant)
+  const fetchFuelTypes = async (selectedMake, selectedModel, selectedVariant) => {
+    try {
+      setLoadingDropdowns(prev => ({ ...prev, fuelTypes: true }));
+      console.log("🔍 Fetching fuel types for:", { selectedMake, selectedModel, selectedVariant });
+
+      const response = await fetchMasterList({
+        masterType: "fuelType",
+        make: selectedMake,
+        model: selectedModel,
+        variant: selectedVariant,
+        aggregate: aggregateName || null,
+        subAggregate: subAggregateName || null,
+        limit: 0,
+      });
+
+      console.log("✅ Fuel Types response:", response);
+
+      const fuelTypes = response?.data?.map(item => item.masterName) || [];
+      setDropdownOptions(prev => ({ ...prev, fuelTypes }));
+      console.log("📋 Fuel Types loaded:", fuelTypes.length);
+
+    } catch (error) {
+      console.error("❌ Error fetching fuel types:", error);
+      setDropdownOptions(prev => ({ ...prev, fuelTypes: [] }));
+    } finally {
+      setLoadingDropdowns(prev => ({ ...prev, fuelTypes: false }));
+    }
+  };
+
+  // Fetch Years (for selected Fuel Type)
+  const fetchYears = async (selectedMake, selectedModel, selectedVariant, selectedFuelType) => {
+    try {
+      setLoadingDropdowns(prev => ({ ...prev, years: true }));
+      console.log("🔍 Fetching years for:", { selectedMake, selectedModel, selectedVariant, selectedFuelType });
+
+      const response = await fetchMasterList({
+        masterType: "year",
+        make: selectedMake,
+        model: selectedModel,
+        variant: selectedVariant,
+        aggregate: aggregateName || null,
+        subAggregate: subAggregateName || null,
+        limit: 0,
+      });
+
+      console.log("✅ Years response:", response);
+
+      const years = response?.data?.map(item => item.masterName) || [];
+      setDropdownOptions(prev => ({ ...prev, years }));
+      console.log("📋 Years loaded:", years.length);
+
+    } catch (error) {
+      console.error("❌ Error fetching years:", error);
+      setDropdownOptions(prev => ({ ...prev, years: [] }));
+    } finally {
+      setLoadingDropdowns(prev => ({ ...prev, years: false }));
+    }
+  };
+
+  // Handle Make selection (cascading)
+  const handleMakeChange = async (selectedMake) => {
+    console.log("🔄 Make changed:", selectedMake);
+    setSearchFilters({
+      make: selectedMake,
+      model: "",
+      variant: "",
+      fuelType: "",
+      year: "",
+    });
+
+    // Reset dependent dropdowns
+    setDropdownOptions(prev => ({
+      ...prev,
+      models: [],
+      variants: [],
+      fuelTypes: [],
+      years: [],
+    }));
+
+    if (selectedMake) {
+      await fetchModels(selectedMake);
+    }
+  };
+
+  // Handle Model selection (cascading)
+  const handleModelChange = async (selectedModel) => {
+    console.log("🔄 Model changed:", selectedModel);
+    setSearchFilters(prev => ({
+      ...prev,
+      model: selectedModel,
+      variant: "",
+      fuelType: "",
+      year: "",
+    }));
+
+    // Reset dependent dropdowns
+    setDropdownOptions(prev => ({
+      ...prev,
+      variants: [],
+      fuelTypes: [],
+      years: [],
+    }));
+
+    if (selectedModel && searchFilters.make) {
+      await fetchVariants(searchFilters.make, selectedModel);
+    }
+  };
+
+  // Handle Variant selection (cascading)
+  const handleVariantChange = async (selectedVariant) => {
+    console.log("🔄 Variant changed:", selectedVariant);
+    setSearchFilters(prev => ({
+      ...prev,
+      variant: selectedVariant,
+      fuelType: "",
+      year: "",
+    }));
+
+    // Reset dependent dropdowns
+    setDropdownOptions(prev => ({
+      ...prev,
+      fuelTypes: [],
+      years: [],
+    }));
+
+    if (selectedVariant && searchFilters.make && searchFilters.model) {
+      await fetchFuelTypes(searchFilters.make, searchFilters.model, selectedVariant);
+    }
+  };
+
+  // Handle Fuel Type selection (cascading)
+  const handleFuelTypeChange = async (selectedFuelType) => {
+    console.log("🔄 Fuel Type changed:", selectedFuelType);
+    setSearchFilters(prev => ({
+      ...prev,
+      fuelType: selectedFuelType,
+      year: "",
+    }));
+
+    // Reset dependent dropdowns
+    setDropdownOptions(prev => ({
+      ...prev,
+      years: [],
+    }));
+
+    if (selectedFuelType && searchFilters.make && searchFilters.model && searchFilters.variant) {
+      await fetchYears(searchFilters.make, searchFilters.model, searchFilters.variant, selectedFuelType);
+    }
+  };
+
+  // Handle Year selection
+  const handleYearChange = (selectedYear) => {
+    console.log("🔄 Year changed:", selectedYear);
+    setSearchFilters(prev => ({
+      ...prev,
+      year: selectedYear,
+    }));
+  };
+
+  // Handle Search button click
+  const handleSearch = () => {
+    console.log("🔍 Search initiated with filters:", searchFilters);
+    
+    // Refetch products with the new search filters
+    if (aggregateName && subAggregateName) {
+      fetchProductsWithFilters();
+    }
+  };
+
+  // Fetch products with search filters applied
+  const fetchProductsWithFilters = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      console.log("🔍 Fetching products with filters:", {
+        aggregateName,
+        subAggregateName,
+        ...searchFilters,
+      });
+
+      const response = await apiService.post("/parts-list", {
+        brandPriority: ["VALEO"],
+        limit: 100,
+        offset: 0,
+        sortOrder: "ASC",
+        fieldOrder: null,
+        customerCode: "0046",
+        partNumber: null,
+        model: searchFilters.model || null,
+        brand: null,
+        subAggregate: subAggregateName,
+        aggregate: aggregateName,
+        make: searchFilters.make || null,
+        variant: searchFilters.variant || null,
+        fuelType: searchFilters.fuelType || null,
+        vehicle: null,
+        year: searchFilters.year || null,
+      });
+
+      console.log("✅ Filtered Products API Response:", response);
+
+      const partsData = Array.isArray(response?.data) ? response.data : [];
+
+      const formattedProducts = partsData.map((item, index) => ({
+        partNumber: item.partNumber || `PART-${index}`,
+        name: item.itemDescription || "Product Name",
+        brand: item.brandName || "Brand",
+        price: parseFloat(item.listPrice) || 0,
+        mrp: parseFloat(item.mrp) || 0,
+        stockQty: 10,
+        eta: "1-2 Days",
+        image: getRandomImage(),
+        originalData: item,
+      }));
+
+      console.log("📦 Filtered products:", formattedProducts);
+      setProducts(formattedProducts);
+
+      fetchStockForProducts(formattedProducts);
+    } catch (err) {
+      console.error("❌ Error fetching filtered products:", err);
+      setError(`Failed to load products: ${err.message || "Please try again."}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -147,7 +525,7 @@ const Product = () => {
         setError("Session expired. Please login again.");
       } else {
         setError(
-          `Failed to load products: ${err.message || "Please try again."}`
+          `Failed to load products: ${err.message || "Please try again."}`,
         );
       }
     } finally {
@@ -175,7 +553,7 @@ const Product = () => {
         const stockItems = Array.isArray(response?.data) ? response.data : [];
         const totalQty = stockItems.reduce(
           (sum, item) => sum + (item.qty || 0),
-          0
+          0,
         );
 
         return {
@@ -208,7 +586,7 @@ const Product = () => {
 
   // Helper function to get random product image
   const getRandomImage = () => {
-    const images = [Brake_1, Brake_2, Brake_3];
+    const images = [NoImage];
     return images[Math.floor(Math.random() * images.length)];
   };
 
@@ -217,7 +595,7 @@ const Product = () => {
   const recommendedProducts = products.filter(
     (product) =>
       product.brand?.toUpperCase().includes("MYTVS") ||
-      product.brand?.toUpperCase().includes("MY TVS")
+      product.brand?.toUpperCase().includes("MY TVS"),
   );
 
   // Other Products: All brands except myTVS
@@ -226,7 +604,7 @@ const Product = () => {
       !(
         product.brand?.toUpperCase().includes("MYTVS") ||
         product.brand?.toUpperCase().includes("MY TVS")
-      )
+      ),
   );
 
   // Aligned Products: Can keep same logic or remove if not needed
@@ -251,6 +629,32 @@ const Product = () => {
       });
     }
   };
+  const SkeletonCard = () => (
+    <div className="vnp-card vnp-skeleton-card">
+      <div className="vnp-details">
+        <div className="vnp-skeleton-line small"></div>
+        <div className="vnp-skeleton-line medium"></div>
+        <div className="vnp-skeleton-line large"></div>
+        <div className="vnp-skeleton-line medium"></div>
+      </div>
+
+      <div className="vnp-image-placeholder">
+        <div className="vnp-skeleton-img"></div>
+        <div className="vnp-skeleton-btn"></div>
+      </div>
+    </div>
+  );
+
+  const SkeletonAlignedCard = () => (
+    <div className="vnp-aligned-card vnp-skeleton-card">
+      <div className="vnp-skeleton-img small"></div>
+      <div style={{ flex: 1 }}>
+        <div className="vnp-skeleton-line medium"></div>
+        <div className="vnp-skeleton-line large"></div>
+        <div className="vnp-skeleton-line small"></div>
+      </div>
+    </div>
+  );
 
   const renderProductCard = (product) => {
     const stockInfo = stockData[product.partNumber];
@@ -288,27 +692,25 @@ const Product = () => {
             <span className="vnp-price-original">₹ {product.mrp}.00</span>
           </div>
         </div>
-<div className="vnp-image-placeholder">
-  <div className="vnp-image-wrapper">
-    <img
-      src={product.image || NoImage}
-      alt={product.name}
-      className="vnp-product-image"
-    />
-  </div>
-  <div className="vnp-btn-wrapper">
-    <button
-      className={`vnp-btn-add ${
-        isInCart(product.partNumber) ? "added" : ""
-      }`}
-      onClick={() => handleToggleCart(product)}
-    >
-      {isInCart(product.partNumber) ? "Added" : "Add"}
-    </button>
-  </div>
-</div>
-
-
+        <div className="vnp-image-placeholder">
+          <div className="vnp-image-wrapper">
+            <img
+              src={product.image || NoImage}
+              alt={product.name}
+              className="vnp-product-image"
+            />
+          </div>
+          <div className="vnp-btn-wrapper">
+            <button
+              className={`vnp-btn-add ${
+                isInCart(product.partNumber) ? "added" : ""
+              }`}
+              onClick={() => handleToggleCart(product)}
+            >
+              {isInCart(product.partNumber) ? "Added" : "Add"}
+            </button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -324,12 +726,15 @@ const Product = () => {
             onClick={() => navigate(-1)}
             className="vnp-breadcrumbs-icon"
           />
-          <span 
-            onClick={() => navigate('/home')}
-            style={{ cursor: 'pointer' }}
-          >
-            Home
-          </span>
+          <img
+            src={getAssetUrl("HOME")}
+            alt="Home"
+            className="breadcrumb-link"
+            style={{ cursor: "pointer", width: "20px", height: "20px" }}
+            onClick={() => navigate("/home")}
+            title="Home"
+          />
+     
           {make && (
             <>
               <img
@@ -338,14 +743,17 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { 
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/MakeNew", {
+                    state: {
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
+                title={make}
               >
                 {make}
               </span>
@@ -359,15 +767,18 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/Model', { 
-                  state: { 
-                    make,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/Model", {
+                    state: {
+                      make,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
+                title={model}
               >
                 {model}
               </span>
@@ -381,16 +792,19 @@ const Product = () => {
                 width="15"
                 height="15"
               />
-              <span 
-                onClick={() => navigate('/Category', { 
-                  state: { 
-                    make, 
-                    model,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel 
-                  } 
-                })}
-                style={{ cursor: 'pointer' }}
+              <span
+                onClick={() =>
+                  navigate("/Category", {
+                    state: {
+                      make,
+                      model,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
+                title={aggregateName || category}
               >
                 {aggregateName || category}
               </span>
@@ -405,19 +819,22 @@ const Product = () => {
                 height="15"
               />
               <span
-                onClick={() => navigate('/sub_category', {
-                  state: {
-                    make,
-                    model,
-                    brand,
-                    category: aggregateName || category,
-                    aggregate: aggregateName || category,
-                    aggregateName: aggregateName || category,
-                    variant: location.state?.variant,
-                    featureLabel: location.state?.featureLabel
-                  }
-                })}
-                style={{ cursor: 'pointer' }}
+                onClick={() =>
+                  navigate("/sub_category", {
+                    state: {
+                      make,
+                      model,
+                      brand,
+                      category: aggregateName || category,
+                      aggregate: aggregateName || category,
+                      aggregateName: aggregateName || category,
+                      variant: location.state?.variant,
+                      featureLabel: location.state?.featureLabel,
+                    },
+                  })
+                }
+                style={{ cursor: "pointer" }}
+                title={subAggregateName || subCategory?.name || subCategory}
               >
                 {subAggregateName || subCategory?.name || subCategory}
               </span>
@@ -425,113 +842,245 @@ const Product = () => {
           )}
         </div>
 
-        <div className="vnp-top-right">
-          <div className="vnp-vehicle-group">
-            <div className="vnp-filter-frame">
-              <div className="vnp-filter-rect" />
-              <div className="vnp-filter-number">
-                <div className="vnp-num-part">{vehicle?.make || "Hyundai"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.model || "Grand"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.variant || "i10"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.fuel || "Petrol"}</div>
-                <div className="vnp-sep">-</div>
-                <div className="vnp-num-part">{vehicle?.year || "2021"}</div>
-              </div>
-              <div className="vnp-indicator">
-                <div className="vnp-indicator-text">IND</div>
-                <div className="vnp-line-vertical" />
-              </div>
-            </div>
-
-            <button
-              className="vnp-edit-btn"
-              onClick={() => setShowEditPopup(!showEditPopup)}
-              aria-label="Edit vehicle"
+        <div className="vnp-search-controls">
+          <div className="vnp-search-main">
+            <select 
+              className="vnp-control-dropdown"
+              value={searchFilters.make}
+              onChange={(e) => handleMakeChange(e.target.value)}
+              disabled={loadingDropdowns.makes}
             >
-              <img
-                src={getAssetUrl("EDIT")}
-                alt="edit"
-                className="vnp-edit-icon-img"
-              />
+              <option value="">
+                {loadingDropdowns.makes ? "Loading Makes..." : "Select Make"}
+              </option>
+              {dropdownOptions.makes.map((makeOption, index) => (
+                <option key={index} value={makeOption}>
+                  {makeOption}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              className="vnp-control-dropdown"
+              value={searchFilters.model}
+              onChange={(e) => handleModelChange(e.target.value)}
+              disabled={!searchFilters.make || loadingDropdowns.models}
+            >
+              <option value="">
+                {loadingDropdowns.models ? "Loading Models..." : "Select Model"}
+              </option>
+              {dropdownOptions.models.map((modelOption, index) => (
+                <option key={index} value={modelOption}>
+                  {modelOption}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              className="vnp-control-dropdown"
+              value={searchFilters.variant}
+              onChange={(e) => handleVariantChange(e.target.value)}
+              disabled={!searchFilters.model || loadingDropdowns.variants}
+            >
+              <option value="">
+                {loadingDropdowns.variants ? "Loading Variants..." : "Select Variant"}
+              </option>
+              {dropdownOptions.variants.map((variantOption, index) => (
+                <option key={index} value={variantOption}>
+                  {variantOption}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              className="vnp-control-dropdown"
+              value={searchFilters.fuelType}
+              onChange={(e) => handleFuelTypeChange(e.target.value)}
+              disabled={!searchFilters.variant || loadingDropdowns.fuelTypes}
+            >
+              <option value="">
+                {loadingDropdowns.fuelTypes ? "Loading Fuel Types..." : "Select Fuel type"}
+              </option>
+              {dropdownOptions.fuelTypes.map((fuelOption, index) => (
+                <option key={index} value={fuelOption}>
+                  {fuelOption}
+                </option>
+              ))}
+            </select>
+
+            <select 
+              className="vnp-control-dropdown"
+              value={searchFilters.year}
+              onChange={(e) => handleYearChange(e.target.value)}
+              disabled={!searchFilters.fuelType || loadingDropdowns.years}
+            >
+              <option value="">
+                {loadingDropdowns.years ? "Loading Years..." : "Select Year"}
+              </option>
+              {dropdownOptions.years.map((yearOption, index) => (
+                <option key={index} value={yearOption}>
+                  {yearOption}
+                </option>
+              ))}
+            </select>
+
+            <button 
+              className="vnp-search-btn" 
+              onClick={handleSearch}
+              disabled={!searchFilters.make}
+            >
+              Search
             </button>
           </div>
 
-          <div className="vnp-filters-row">
-            {["brakeSystem", "price", "eta", "sortBy"].map((key) => (
-              <div className="vnp-filter-wrapper" key={key}>
-                <div
-                  className="vnp-filter-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenFilter(openFilter === key ? null : key);
-                  }}
-                >
-                  <span>{filters[key] || key}</span>
-                  <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
-                </div>
-                {openFilter === key && (
-                  <div
-                    className="vnp-filter-dropdown"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {filterOptions[key].map((option) => (
-                      <div
-                        key={option}
-                        className="vnp-filter-option"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFilters((prev) => ({ ...prev, [key]: option }));
-                          setOpenFilter(null);
-                        }}
-                      >
-                        {option}
-                      </div>
-                    ))}
-                  </div>
-                )}
+          <div className="vnp-search-filters">
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="vnp-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "year" ? null : "year");
+                }}
+              >
+                <span>{filters.year || "Year"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
               </div>
-            ))}
+              {openFilter === "year" && (
+                <div
+                  className="vnp-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["2024", "2023", "2022", "2021", "2020"].map((option) => (
+                    <div
+                      key={option}
+                      className="vnp-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilters((prev) => ({ ...prev, year: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="vnp-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "fuelType" ? null : "fuelType");
+                }}
+              >
+                <span>{filters.fuelType || "Fuel type"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+              </div>
+              {openFilter === "fuelType" && (
+                <div
+                  className="vnp-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["Petrol", "Diesel", "CNG", "Electric"].map((option) => (
+                    <div
+                      key={option}
+                      className="vnp-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilters((prev) => ({ ...prev, fuelType: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div
+              className="vnp-filter-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div
+                className="vnp-filter-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenFilter(openFilter === "eta" ? null : "eta");
+                }}
+              >
+                <span>{filters.eta || "ETA"}</span>
+                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+              </div>
+              {openFilter === "eta" && (
+                <div
+                  className="vnp-filter-dropdown"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {["Same Day", "1-2 Days", "3-5 Days"].map((option) => (
+                    <div
+                      key={option}
+                      className="vnp-filter-option"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFilters((prev) => ({ ...prev, eta: option }));
+                        setOpenFilter(null);
+                      }}
+                    >
+                      {option}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ---------- EDIT DROPDOWNS ---------- */}
-      {showEditPopup && (
-        <div className="vnp-edit-dropdowns">
-          <select className="vnp-dropdown">
-            <option>Select Make</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Model</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Variant</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Fuel type</option>
-          </select>
-          <select className="vnp-dropdown">
-            <option>Select Year</option>
-          </select>
-          <button
-            className="vnp-find-btn"
-            onClick={() => {
-              setShowEditPopup(false);
-              navigate("/search-by-vehicle-number");
-            }}
-          >
-            Find Auto Parts
-          </button>
-        </div>
-      )}
-
       {/* ---------- CONTENT ---------- */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "50px", fontSize: "18px" }}>
-          Loading products...
+        <div className="vnp-content-wrapper">
+          {/* LEFT SECTION SKELETON */}
+          <div className="vnp-left-section">
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">myTVS Recommended Products</h2>
+
+              <div className="vnp-cards-grid">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </div>
+
+            <div className="vnp-section">
+              <h2 className="vnp-section-title">Other Products</h2>
+
+              <div className="vnp-cards-grid">
+                {Array.from({ length: 2 }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT SECTION SKELETON */}
+          <div className="vnp-right-section">
+            <div className="vnp-section-right">
+              <h2 className="vnp-section-title">Aligned Products</h2>
+
+              {Array.from({ length: 2 }).map((_, i) => (
+                <SkeletonAlignedCard key={i} />
+              ))}
+            </div>
+          </div>
         </div>
       ) : error ? (
         <div style={{ textAlign: "center", padding: "50px" }}>

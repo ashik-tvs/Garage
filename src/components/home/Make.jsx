@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import apiService from "../../services/apiservice";
 import OciImage from "../oci_image/ociImages.jsx";
 import NoImage from "../../assets/No Image.png";
+import MakeSkeleton from "../skeletonLoading/MakeSkeleton";
 import "../../styles/home/Make.css";
 
 const Make = () => {
@@ -20,15 +21,15 @@ const Make = () => {
 
   useEffect(() => {
     // Check if makes are already cached in localStorage
-    const cachedMakes = localStorage.getItem('makeCache');
-    const cacheTimestamp = localStorage.getItem('makeCacheTimestamp');
+    const cachedMakes = localStorage.getItem("makeCache");
+    const cacheTimestamp = localStorage.getItem("makeCacheTimestamp");
     const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
 
     if (cachedMakes && cacheTimestamp) {
       const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
-      
+
       if (isCacheValid) {
-        console.log('💾 Loading makes from cache...');
+        console.log("💾 Loading makes from cache...");
         setMakes(JSON.parse(cachedMakes));
         setLoading(false);
         return;
@@ -80,11 +81,13 @@ const Make = () => {
       }
 
       // Extract unique makes
-      const uniqueMakes = [...new Set(
-        vehicleData
-          .map(item => item.make)
-          .filter(make => make && make.trim() !== '') // Remove null/undefined/empty
-      )].sort(); // Sort alphabetically
+      const uniqueMakes = [
+        ...new Set(
+          vehicleData
+            .map((item) => item.make)
+            .filter((make) => make && make.trim() !== ""), // Remove null/undefined/empty
+        ),
+      ].sort(); // Sort alphabetically
 
       console.log("Unique makes found:", uniqueMakes.length, uniqueMakes);
 
@@ -100,18 +103,18 @@ const Make = () => {
         id: index + 1,
         name: make
           .toLowerCase()
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' '),
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
         makeName: make,
       }));
 
       console.log("Formatted makes:", formattedMakes);
 
       // Cache the makes
-      localStorage.setItem('makeCache', JSON.stringify(formattedMakes));
-      localStorage.setItem('makeCacheTimestamp', Date.now().toString());
-      console.log('💾 Makes cached successfully');
+      localStorage.setItem("makeCache", JSON.stringify(formattedMakes));
+      localStorage.setItem("makeCacheTimestamp", Date.now().toString());
+      console.log("💾 Makes cached successfully");
 
       setMakes(formattedMakes);
     } catch (err) {
@@ -120,37 +123,43 @@ const Make = () => {
         message: err.message,
         response: err.response?.data,
         status: err.response?.status,
-        code: err.code
+        code: err.code,
       });
 
       // Handle specific error types
       let errorMessage = "Failed to load makes. ";
-      
-      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
-        errorMessage = "⏱️ Request timeout. The API is taking too long to respond. Please try again later.";
+
+      if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
+        errorMessage =
+          "⏱️ Request timeout. The API is taking too long to respond. Please try again later.";
       } else if (err.response) {
         const status = err.response.status;
         const errorType = err.response.data?.error;
-        
+
         if (status === 502) {
-          errorMessage = "🔌 Bad Gateway (502). The external parts API is currently unavailable. Please try again in a few moments.";
+          errorMessage =
+            "🔌 Bad Gateway (502). The external parts API is currently unavailable. Please try again in a few moments.";
         } else if (status === 503) {
-          errorMessage = "⚠️ Service Unavailable (503). The parts API is temporarily down. Please try again later.";
+          errorMessage =
+            "⚠️ Service Unavailable (503). The parts API is temporarily down. Please try again later.";
         } else if (status === 504) {
-          errorMessage = "⏱️ Gateway Timeout (504). The API request timed out. Please try again.";
-        } else if (errorType === 'timeout') {
-          errorMessage = "⏱️ API timeout. The external service is slow. Please try again in a moment.";
+          errorMessage =
+            "⏱️ Gateway Timeout (504). The API request timed out. Please try again.";
+        } else if (errorType === "timeout") {
+          errorMessage =
+            "⏱️ API timeout. The external service is slow. Please try again in a moment.";
         } else if (status === 401) {
           errorMessage = "🔒 Authentication failed. Please contact support.";
         } else {
           errorMessage = `❌ Error ${status}: ${err.response.data?.message || err.message || "Unknown error"}`;
         }
-      } else if (err.message.includes('Network Error')) {
-        errorMessage = "🌐 Network error. Please check your internet connection or ensure the backend server is running.";
+      } else if (err.message.includes("Network Error")) {
+        errorMessage =
+          "🌐 Network error. Please check your internet connection or ensure the backend server is running.";
       } else {
         errorMessage = `❌ ${err.message || "An unexpected error occurred. Please try again."}`;
       }
-      
+
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -158,7 +167,7 @@ const Make = () => {
   };
 
   const handleMakeClick = (make) => {
-    console.log('Selected make:', make);
+    console.log("Selected make:", make);
     navigate("/Model", {
       state: {
         make: make.name,
@@ -167,7 +176,7 @@ const Make = () => {
     });
   };
 
-  const visibleMakes = expanded ? makes : makes.slice(0, 8);
+  const visibleMakes = expanded ? makes : makes.slice(0, 9);
 
   return (
     <section className="section-container">
@@ -179,16 +188,13 @@ const Make = () => {
       </div>
 
       {loading ? (
-        <div className="grid-container">
-          <p style={{ textAlign: "center", padding: "20px", gridColumn: "1 / -1" }}>
-            Loading makes...
-          </p>
-        </div>
+        <MakeSkeleton count={8} />
       ) : error ? (
-        <div className="grid-container" style={{ gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}>
-          <p style={{ color: "red", marginBottom: "10px" }}>
-            {error}
-          </p>
+        <div
+          className="grid-container"
+          style={{ gridColumn: "1 / -1", textAlign: "center", padding: "20px" }}
+        >
+          <p style={{ color: "red", marginBottom: "10px" }}>{error}</p>
           <button
             onClick={fetchMakes}
             style={{
@@ -198,7 +204,7 @@ const Make = () => {
               border: "none",
               borderRadius: "5px",
               cursor: "pointer",
-              fontSize: "14px"
+              fontSize: "14px",
             }}
           >
             Retry

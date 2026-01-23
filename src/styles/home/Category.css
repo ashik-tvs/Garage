@@ -68,17 +68,24 @@
 /* Text */
 .cat-label {
   width: 100%;
-  padding: 6px 6px;
+  padding: 6px 8px; /* Increased horizontal padding from 6px to 8px */
   margin: 0;
   flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block; /* Changed from flex to block for text truncation */
   text-align: center;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
-  margin: 0;
   background: #f3f3f3;
+  position: relative;
+  cursor: pointer;
+  line-height: 1.2;
+  
+  /* Text truncation - shows start of text */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: ltr; /* Left to right - shows beginning of text */
+  box-sizing: border-box; /* Include padding in width calculation */
 }
 
 /* Tooltip styling */

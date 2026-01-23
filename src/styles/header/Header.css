@@ -128,7 +128,7 @@
 /* Medium laptops (max-width: 1280px) */
 @media (max-width: 1280px) {
   .header-right {
-    gap: 50px;
+    gap: 20px;
   }
 
   .header-logo {
