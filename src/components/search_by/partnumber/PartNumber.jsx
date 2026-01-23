@@ -9,6 +9,7 @@ import {
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
+import Product1 from "./Product1";
 import "../../../styles/search_by/partnumber/PartNumber.css";
 
 const alignedProducts = [
@@ -231,9 +232,6 @@ const PartNumber = () => {
   const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
   const [vehicleCount, setVehicleCount] = useState(0);
 
-  // State for "See More" functionality
-  const [showAllOtherProducts, setShowAllOtherProducts] = useState(false);
-
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedVariant, setSelectedVariant] = useState("");
@@ -327,7 +325,6 @@ const applyCompatibilityFilter = async () => {
     // Update the products displayed on the page
     setRecommendedProducts(myTvsProducts);
     setOtherBrandProducts(otherProducts);
-    setShowAllOtherProducts(false); // Reset "See More" state when filtering
 
     // Also filter the vehicle compatibility list for the modal
     let filteredVehicles = [...vehicleCompatibilityList];
@@ -478,7 +475,7 @@ const applyCompatibilityFilter = async () => {
 
         setRecommendedProducts(myTvsProducts);
         setOtherBrandProducts(otherProducts);
-        setShowAllOtherProducts(false); // Reset "See More" state when new products load
+
       } catch (err) {
         console.error("Error fetching parts data:", err);
         setError("Failed to load parts. Please try again.");
@@ -647,7 +644,6 @@ const applyCompatibilityFilter = async () => {
     setSelectedVariant("");
     setSelectedFuel("");
     setSelectedYear("");
-    setShowAllOtherProducts(false);
   }}
   disabled={
     !selectedMake &&
@@ -670,65 +666,9 @@ const applyCompatibilityFilter = async () => {
 
         {/* CONTENT */}
         <div className="pn-content">
-          {/* ================= LOADING : SKELETON ================= */}
+          {/* ================= LOADING ================= */}
           {loading && (
-            <>
-              {/* LEFT SKELETON */}
-              <div className="pn-left">
-                <h4 className="pn-section-title">myTVS Recommended Products</h4>
-
-                <div className="pn-grid">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="pn-card pn-skeleton-card">
-                      <div className="pn-skeleton pn-skeleton-line small"></div>
-                      <div className="pn-skeleton pn-skeleton-line medium"></div>
-                      <div className="pn-skeleton pn-skeleton-line large"></div>
-
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          marginTop: "12px",
-                        }}
-                      >
-                        <div>
-                          <div className="pn-skeleton pn-skeleton-line small"></div>
-                          <div className="pn-skeleton pn-skeleton-line small"></div>
-                        </div>
-                        <div className="pn-skeleton pn-skeleton-img"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <h4 className="pn-section-title">Other Products</h4>
-
-                <div className="pn-grid">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="pn-card pn-skeleton-card">
-                      <div className="pn-skeleton pn-skeleton-line small"></div>
-                      <div className="pn-skeleton pn-skeleton-line medium"></div>
-                      <div className="pn-skeleton pn-skeleton-line large"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* RIGHT SKELETON */}
-              <div className="pn-right">
-                <h4 className="pn-section-title">Aligned Products</h4>
-
-                <div className="pn-aligned">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="pn-aligned-card pn-skeleton-card">
-                      <div className="pn-skeleton pn-skeleton-line medium"></div>
-                      <div className="pn-skeleton pn-skeleton-line large"></div>
-                      <div className="pn-skeleton pn-skeleton-line small"></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </>
+            <div className="pn-loading">Loading products...</div>
           )}
 
           {/* ================= ERROR ================= */}
@@ -741,121 +681,101 @@ const applyCompatibilityFilter = async () => {
           {/* ================= DATA ================= */}
           {!loading && !error && (
             <>
-              {/* LEFT */}
+              {/* LEFT SECTION - 75% */}
               <div className="pn-left">
-                <h4 className="pn-section-title">myTVS Recommended Products</h4>
+                {/* myTVS Recommended Products */}
+                <Product1
+                  title="myTVS Recommended Products"
+                  products={recommendedProducts.map(item => ({
+                    id: item.id,
+                    partNumber: item.partNo,
+                    name: item.description,
+                    image: item.imageUrl,
+                    brand: item.brand,
+                    price: item.price,
+                    mrp: item.mrp,
+                    stockStatus: item.stock,
+                    deliveryTime: item.eta,
+                    compatibleVehicles: vehicleCount,
+                  }))}
+                  layout="horizontal"
+                  onAddToCart={(product) => {
+                    const originalItem = recommendedProducts.find(
+                      item => item.partNo === product.partNumber
+                    );
+                    const localPartNumber = originalItem?.localPartNumber || 
+                      `${product.partNumber}_${product.brand}`;
+                    addToCart({
+                      ...originalItem,
+                      partNumber: localPartNumber,
+                      listPrice: product.price,
+                      image: product.image,
+                    });
+                  }}
+                />
 
-                <div className="pn-grid">
-                  {recommendedProducts.length > 0 ? (
-                    recommendedProducts.map((item) => (
-                      <div className="pn-card" key={item.id}>
-                        <ProductCard
-                          item={item}
-                          onOpenCompatibility={() => setShowCompatibility(true)}
-                          vehicleCount={vehicleCount}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="pn-no-results">
-                      No myTVS products found for <b>{searchKey}</b>
-                    </div>
-                  )}
-                </div>
-
-                <h4 className="pn-section-title" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span>Other Products</span>
-                  {otherBrandProducts.length > 4 && (
-                    <span
-                      onClick={() => setShowAllOtherProducts(!showAllOtherProducts)}
-                      style={{
-                        color: "#ff6b35",
-                        fontSize: "16px",
-                        cursor: "pointer",
-                        fontWeight: "normal",
-                      }}
-                    >
-                      {showAllOtherProducts ? "See Less" : "See More"}
-                    </span>
-                  )}
-                </h4>
-
-                <div className="pn-grid">
-                  {otherBrandProducts.length > 0 ? (
-                    (showAllOtherProducts ? otherBrandProducts : otherBrandProducts.slice(0, 4)).map((item) => (
-                      <div className="pn-card" key={item.id}>
-                        <ProductCard
-                          item={item}
-                          onOpenCompatibility={() => setShowCompatibility(true)}
-                          vehicleCount={vehicleCount}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <div className="pn-no-results">
-                      No other brand products found for <b>{searchKey}</b>
-                    </div>
-                  )}
-                </div>
+                {/* Other Products */}
+                <Product1
+                  title="Other Products"
+                  products={otherBrandProducts.map(item => ({
+                    id: item.id,
+                    partNumber: item.partNo,
+                    name: item.description,
+                    image: item.imageUrl,
+                    brand: item.brand,
+                    price: item.price,
+                    mrp: item.mrp,
+                    stockStatus: item.stock,
+                    deliveryTime: item.eta,
+                    compatibleVehicles: vehicleCount,
+                  }))}
+                  layout="horizontal"
+                  onAddToCart={(product) => {
+                    const originalItem = otherBrandProducts.find(
+                      item => item.partNo === product.partNumber
+                    );
+                    const localPartNumber = originalItem?.localPartNumber || 
+                      `${product.partNumber}_${product.brand}`;
+                    addToCart({
+                      ...originalItem,
+                      partNumber: localPartNumber,
+                      listPrice: product.price,
+                      image: product.image,
+                    });
+                  }}
+                />
               </div>
 
-              {/* RIGHT */}
+              {/* RIGHT SECTION - 25% */}
               <div className="pn-right">
-                <h4 className="pn-section-title">Aligned Products</h4>
-
-                <div className="pn-aligned">
-                  {alignedProducts.map((item) => {
-                    const partNumber = `ALIGNED-${item.id}`;
-                    const isAdded = cartItems.some(
-                      (cartItem) => cartItem.partNumber === partNumber,
+                {/* Aligned Products */}
+                <Product1
+                  title="Aligned Products"
+                  products={alignedProducts.map(item => ({
+                    id: item.id,
+                    partNumber: item.partNo,
+                    name: item.description,
+                    image: item.imageUrl,
+                    brand: item.brand,
+                    price: item.price,
+                    mrp: item.mrp,
+                    stockStatus: "in stock",
+                    deliveryTime: "1-2 Days",
+                  }))}
+                  layout="vertical"
+                  onAddToCart={(product) => {
+                    const partNumber = `ALIGNED-${product.id}`;
+                    const originalItem = alignedProducts.find(
+                      item => item.id === product.id
                     );
-
-                    return (
-                      <div key={item.id} className="pn-aligned-card">
-                        <div className="pn-aligned-card-content">
-                          <div className="pn-b-s-e">
-                            <span className="pn-tag-brand">{item.brand}</span>
-                            <span className="pn-tag-stock">In stock</span>
-                            <span className="pn-tag-eta">1-2 Days</span>
-                          </div>
-
-                          <p className="pn-align-part">{item.partNo}</p>
-
-                          <p
-                            className="pn-name-align pn-truncate"
-                            title={item.description}
-                          >
-                            {item.description}
-                          </p>
-
-                          <div className="pn-price-row">
-                            <span className="pn-price">₹ {item.price}</span>
-                            <span className="pn-mrp">₹ {item.mrp}</span>
-                          </div>
-                        </div>
-
-                        <div className="pn-card-actions">
-                          <img src={item.imageUrl} alt="" />
-                          <button
-                            className={`pn-add-btn ${isAdded ? "pn-added" : ""}`}
-                            onClick={() =>
-                              isAdded
-                                ? removeFromCart(partNumber)
-                                : addToCart({
-                                    ...item,
-                                    partNumber,
-                                    listPrice: item.price,
-                                    image: item.imageUrl,
-                                  })
-                            }
-                          >
-                            {isAdded ? "Added" : "Add"}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    addToCart({
+                      ...originalItem,
+                      partNumber,
+                      listPrice: product.price,
+                      image: product.image,
+                    });
+                  }}
+                />
               </div>
             </>
           )}
