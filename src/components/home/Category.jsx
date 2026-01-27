@@ -147,7 +147,11 @@ const Category = () => {
         setError(
           "Request timeout. The external API is slow or unreachable. Please try again later.",
         );
-      } else if (err.response?.data?.error?.includes("timeout")) {
+      } else if (
+        err.response?.data?.error && 
+        typeof err.response.data.error === 'string' && 
+        err.response.data.error.includes("timeout")
+      ) {
         setError("External API timeout. Please try again in a moment.");
       } else {
         setError(
