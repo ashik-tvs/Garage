@@ -135,10 +135,10 @@ export const fetchPartsListByItemName = async (itemName) => {
 };
 
 // Fetch vehicle list by part number
-export const fetchVehicleListByPartNumber = async (partNumber) => {
+export const fetchVehicleListByPartNumber = async (partNumber, limit = 10, offset = 0) => {
   const requestBody = {
-    limit: 10,
-    offset: 0,
+    limit: limit,
+    offset: offset,
     sortOrder: "ASC",
     customerCode: "0046",
     brand: null,

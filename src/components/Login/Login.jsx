@@ -64,17 +64,37 @@ const Login = () => {
         return;
       }
 
-      const response = await apiService.post("/auth/login", { email, password });
-      const { token, user } = response;
+      const response = await apiService.post("/auth/login", {
+        email,
+        password,
+      });
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(user));
-      localStorage.setItem("isAuthenticated", "true");
+      // store JWT token
+      localStorage.setItem("token", response.token);
 
-      if (rememberMe) {
-        localStorage.setItem("rememberedEmail", email);
-      } else {
-        localStorage.removeItem("rememberedEmail");
+      // store user data
+      localStorage.setItem("loggedInUser", JSON.stringify(response.user));
+
+      // store customer data
+      localStorage.setItem(
+        "loggedInCustomer",
+        JSON.stringify(response.customer),
+      );
+
+      const userLocation = JSON.parse(
+        localStorage.getItem("userLocation") || "{}",
+      );
+      if (!userLocation.lat || !userLocation.lng) {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+        localStorage.setItem(
+          "userLocation",
+          JSON.stringify({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          }),
+        );
       }
 
       navigate("/home");

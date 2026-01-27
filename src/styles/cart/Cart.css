@@ -5,11 +5,14 @@
   /* justify-content: space-between; */
   align-items: flex-start;
   max-width: 93%;
-  margin: 30px auto;
+  margin: 20px auto;
   padding: 0 20px;
   gap: 3%;
 }
 
+.cart-header{
+  padding: 15px 40px;
+}
 /* Left Section */
 .cart-left {
   flex: 1;

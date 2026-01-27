@@ -4,7 +4,7 @@ import "../../../styles/search_by/MyOrder/Model.css";
 import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
 import noImage from "../../../assets/No Image.png";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
+import Navigation from "../../Navigation/Navigation";
 
 const Model = () => {
   const navigate = useNavigate();
@@ -335,7 +335,7 @@ const Model = () => {
     const isDiscontinued =
       variant === "wide" || featureLabel === "Discontinued Model";
     const isElectric = variant === "e" || featureLabel === "Electric";
-    navigate("/Category", {
+    navigate("/CategoryNew", {
       state: {
         make: isDiscontinued || isElectric ? null : make,
         model: model.name,
@@ -345,36 +345,22 @@ const Model = () => {
     });
   };
 
+  // Build breadcrumbs array
+  const breadcrumbs = [];
+
+  if (make) {
+    breadcrumbs.push({
+      label: make,
+      onClick: () => navigate('/MakeNew', { 
+        state: { variant, featureLabel } 
+      })
+    });
+  }
+
   return (
     <div className="model-container">
       <div className="model-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <img src={LeftArrow} alt="Back" />
-        </button>
-        <div className="breadcrumb-nav">
-          <img
-            src={getAssetUrl("HOME")}
-            alt="Home"
-            className="breadcrumb-link"
-            style={{ cursor: "pointer", width: "20px", height: "20px" }}
-            onClick={() => navigate("/home")}
-            title="Home"
-          />
-          <span className="breadcrumb-separator">&gt;</span>
-          {make && (
-            <>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { variant, featureLabel } 
-                })}
-              >
-                {make}
-              </span>
-              <span className="breadcrumb-separator">&gt;</span>
-            </>
-          )}
-        </div>
+        <Navigation breadcrumbs={breadcrumbs} />
       </div>
 
       <div className="model-grid-wrapper">

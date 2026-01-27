@@ -1,8 +1,23 @@
 import React, { useState, useEffect } from "react";
 import { useCart } from "../../context/CartContext";
-import apiService from "../../services/apiservice";
+import apiService from "../../services/apiservice.js";
 import "../../styles/cart/CartTotal.css";
 import Success from "./Success";
+
+/* ======================
+   HELPERS
+====================== */
+const safeString = (val, fallback = "NA") => {
+  if (val === undefined || val === null) return fallback;
+  if (String(val).trim() === "") return fallback;
+  return String(val);
+};
+
+const safeNumberString = (val, fallback = "0") => {
+  if (val === undefined || val === null) return fallback;
+  if (isNaN(val)) return fallback;
+  return String(val);
+};
 
 const CartTotal = () => {
   const { cartItems = [] } = useCart();
@@ -10,17 +25,28 @@ const CartTotal = () => {
   const [showSuccess, setShowSuccess] = useState(false);
 
   /* ======================
-     DYNAMIC CALCULATIONS
+     LOGGED IN CUSTOMER
+  ====================== */
+  const loggedInCustomer = JSON.parse(
+    localStorage.getItem("loggedInCustomer") || "{}",
+  );
+
+  const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser") || "{}");
+
+  const userLocation = JSON.parse(localStorage.getItem("userLocation") || "{}");
+
+  /* ======================
+     PRICE
   ====================== */
   const basicPrice = cartItems.reduce(
-    (sum, item) => sum + item.quantity * Number(item.listPrice),
+    (sum, item) =>
+      sum + Number(item.quantity || 0) * Number(item.listPrice || 0),
     0,
   );
 
-  const gst = 0; // explicitly zero
-  const shipping = 0; // explicitly zero
+  const gst = 0;
+  const shipping = 0;
   const gst2 = 0;
-
   const total = basicPrice + gst + shipping + gst2;
 
   /* ======================
@@ -30,70 +56,113 @@ const CartTotal = () => {
     if (showSuccess) {
       const timer = setTimeout(() => {
         setShowSuccess(false);
-      }, 3000); // closes after 3 seconds
-
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [showSuccess]);
 
   /* ======================
-     CHECKOUT (UNCHANGED)
+     TXN ID
+  ====================== */
+  const generateTxnId = () => {
+    return (
+      new Date().toISOString().replace(/[-:.TZ]/g, "") +
+      Math.floor(Math.random() * 100000)
+    );
+  };
+
+  /* ======================
+     CHECKOUT
   ====================== */
   const handleCheckout = async () => {
     try {
       setLoading(true);
 
-      const sourceOrderId = "MOF" + Date.now();
+      /* ======================
+         ERP PAYLOAD
+      ====================== */
+      const payload = {
+        validity_date: new Date().toISOString().split("T")[0],
 
-      const payload = [
-        {
-          BATCH: "20241022",
-          Order_preference: "Y",
-          Legal_Entity: "TVS Automobile Solutions Private Limited",
-          Unique_Identifier: Date.now().toString(),
-          Warehouse: "TASL_COI",
-          SalesOrder_number: sourceOrderId,
-          Order_Type: "Credit",
-          ordered_creation_date: new Date().toISOString(),
-          Customer_number: "50004683",
-          Customer_site: "81735524",
-          Customer_name: "SRI MEENAKSHI AUTO SPARES",
-          Business_Unit: "TVS ASL Parts",
-          order_entry_source: "A",
-          Source_reference: "OPS",
-          Credit_Cash: "Credit",
-          Payment_term: "IMMEDIATE",
-          expiry_date: new Date(Date.now() + 5 * 86400000).toISOString(),
-          noOfLines: cartItems.length,
-          Operation: "Create",
-          CurrencyCode: "INR",
-          source_order_id: sourceOrderId,
-          cross_billing: "Y",
-          Lines: cartItems.map((item, index) => ({
-            source_line_ref: index + 1,
-            UOM: "Nos",
-            Item_code: item.partNumber,
-            Qty: item.quantity.toString(),
-            Item_id: item.itemId,
-            lot: [],
-            Line_value: (item.quantity * item.listPrice).toFixed(2),
-            Line_tax_value: (item.quantity * item.listPrice * 0.18).toFixed(2),
-            Line_Unique_Id: `${Date.now()}${index}`,
-          })),
-        },
-      ];
+        customer_code: safeString(loggedInCustomer.party_number),
+        customer_name: safeString(loggedInCustomer.party_name),
+        mobile_number: safeString(loggedInCustomer.phone_number),
+        employee_id: safeString(loggedInUser.user_id),
 
-      await apiService.post("/create-sale-order", payload);
+        latitude: safeString(userLocation.lat),
+        longitude: safeString(userLocation.lng),
 
-      setShowSuccess(true);
-    } catch (error) {
-      console.error("Checkout failed:", error);
-      alert("Order failed. Please try again.");
+        transaction_track_id: generateTxnId(),
+
+        total_price: safeNumberString(
+          cartItems.reduce(
+            (sum, item) =>
+              sum + Number(item.listPrice || 0) * Number(item.quantity || 1),
+            0,
+          ),
+        ),
+
+        total_quantity: safeNumberString(
+          cartItems.reduce((sum, item) => sum + Number(item.quantity || 1), 0),
+        ),
+
+        part_details: cartItems.map((item, index) => {
+          const qty = Number(item.quantity || 1);
+          const price = Number(item.listPrice || 0);
+          const subtotal = price * qty;
+
+          return {
+            parts_no: safeString(item.partNo, `PART_${index + 1}`),
+            parts_name: safeString(item.description, "UNKNOWN_PART"),
+            brand_name: safeString(item.brand, "GENERIC"),
+
+            quantity: qty,
+            warehouse: safeString(
+              loggedInCustomer.primary_warehouse_code,
+              "KMS_WHG",
+            ),
+            item_price: safeNumberString(price),
+            sub_total: subtotal,
+            tax_price: "0.00",
+            total_price: safeNumberString(subtotal),
+            cgst: "0.00",
+            sgst: "0.00",
+            igst: "0.00",
+            mrp: price,
+          };
+        }),
+      };
+
+      console.log("FULL ERP PAYLOAD:", payload);
+
+      /* ======================
+         API CALL
+      ====================== */
+      const res = await apiService.post("/create-order", payload);
+      console.log("ORDER RESPONSE:", res); // <- res already has data
+
+      if (res?.success === true) {
+        setShowSuccess(true);
+        return;
+      }
+
+      if (res?.message?.toLowerCase().includes("success")) {
+        setShowSuccess(true);
+        return;
+      }
+
+      alert(res?.data?.message || "Order failed");
+    } catch (err) {
+      console.error("ORDER ERROR:", err?.response?.data || err.message);
+      alert(err?.response?.data?.message || "Order failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ======================
+     UI
+  ====================== */
   return (
     <div className="cart-total-panel">
       <div className="carttotal">

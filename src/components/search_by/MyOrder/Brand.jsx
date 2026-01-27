@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import NoImage from "../../../assets/No Image.png";
 import BrandSkeleton from "../../skeletonLoading/BrandSkeleton";
 import "../../../styles/search_by/MyOrder/Brand.css";
 import apiService from "../../../services/apiservice";
+import Navigation from "../../Navigation/Navigation";
 
 // Brand Images
 import myTVS from "../../../assets/Brands/MYTVS.png";
@@ -111,12 +111,9 @@ const Brand = () => {
 
   return (
     <div className="brand-container">
-      {/* Top Section with Back Button and Title */}
+      {/* Top Section with Navigation */}
       <div className="brand-top-section">
-        <button className="brand-back-button" onClick={() => navigate(-1)}>
-          <img src={LeftArrow} alt="Back" />
-        </button>
-        <h1 className="brand-title">Brand</h1>
+        <Navigation breadcrumbs={[{ label: "Brand" }]} />
       </div>
 
       {/* Loading State */}

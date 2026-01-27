@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Category.css";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import apiService from "../../../services/apiservice";
 import CategorySkeleton from "../../skeletonLoading/CategorySkeleton";
 import Image from "../../oci_image/ociImages";
+import Navigation from "../../Navigation/Navigation";
 
 const Category = () => {
   const navigate = useNavigate();
@@ -86,50 +86,32 @@ const Category = () => {
     });
   };
 
+  // Build breadcrumbs array
+  const breadcrumbs = [];
+
+  if (make) {
+    breadcrumbs.push({
+      label: make,
+      onClick: () => navigate('/MakeNew', { 
+        state: { variant, featureLabel } 
+      })
+    });
+  }
+
+  if (model) {
+    breadcrumbs.push({
+      label: model,
+      onClick: () => navigate('/Model', { 
+        state: { make, variant, featureLabel } 
+      })
+    });
+  }
+
   return (
     <div className="category-container">
       {/* Header */}
       <div className="category-header">
-        <button className="back-button" onClick={() => navigate(-1)}>
-          <img src={LeftArrow} alt="Back" />
-        </button>
-        <div className="breadcrumb-nav">
-          <img
-            src={getAssetUrl("HOME")}
-            alt="Home"
-            className="breadcrumb-link"
-            style={{ cursor: "pointer", width: "20px", height: "20px" }}
-            onClick={() => navigate("/home")}
-            title="Home"
-          />
-          {make && (
-            <>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/MakeNew', { 
-                  state: { variant, featureLabel } 
-                })}
-              >
-                {make}
-              </span>
-            </>
-          )}
-          {model && (
-            <>
-              <span className="breadcrumb-separator">&gt;</span>
-              <span 
-                className="breadcrumb-link" 
-                onClick={() => navigate('/Model', { 
-                  state: { make, variant, featureLabel } 
-                })}
-              >
-                {model}
-              </span>
-              <span className="breadcrumb-separator">&gt;</span>
-            </>
-          )}
-        </div>
+        <Navigation breadcrumbs={breadcrumbs} />
       </div>
 
       {/* Content */}

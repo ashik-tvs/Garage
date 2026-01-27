@@ -188,7 +188,7 @@ const Make = () => {
       </div>
 
       {loading ? (
-        <MakeSkeleton count={8} />
+        <MakeSkeleton count={9} />
       ) : error ? (
         <div
           className="grid-container"

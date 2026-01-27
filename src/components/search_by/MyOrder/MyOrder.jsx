@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import apiService from "../../../services/apiservice";
-import PageNavigation from "../../page_navigation/PageNavigation.jsx";
+import Navigation from "../../Navigation/Navigation";
 import SearchIcon from "../../../assets/search/search.png";
-import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 import "../../../styles/search_by/MyOrder/MyOrder.css";
 
 const ITEMS_PER_PAGE = 6;
@@ -128,12 +127,7 @@ const MyOrder = () => {
     <div className="myorder-container">
       {/* Top Bar */}
       <div className="myorder-top-bar">
-        <div className="myorder-left-section">
-          <button className="back-button" onClick={() => navigate(-1)}>
-            <img src={LeftArrow} alt="Back" />
-          </button>
-          <PageNavigation />
-        </div>
+        <Navigation breadcrumbs={[{ label: "My Orders" }]} />
 
         <div className="myorder-right-section">
           <input

@@ -1,14 +1,16 @@
 import React from "react";
 import CartDetails from "./CartDetail";
 import CardTotal from "./CartTotal";
-import PageNavigate from "../page_navigation/PageNavigation";
+import Navigation from "../Navigation/Navigation";
 import "../../styles/cart/Cart.css";
 
 const Cart = () => {
   return (
     <>
-      {/* Breadcrumb */}
-      <PageNavigate />
+      {/* Header with Navigation */}
+      <div className="cart-header">
+        <Navigation breadcrumbs={[{ label: "Cart" }]} />
+      </div>
 
       <div className="cart-page">
         <div className="cart-left">

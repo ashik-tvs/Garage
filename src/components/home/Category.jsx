@@ -180,7 +180,7 @@ const Category = () => {
       </div>
 
       {loading ? (
-        <CategorySkeleton count={8} />
+        <CategorySkeleton count={9} />
       ) : error ? (
         <div
           className="grid-container"
