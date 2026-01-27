@@ -310,6 +310,7 @@ const PartNumber = () => {
 
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showCompatibility, setShowCompatibility] = useState(false);
+  const [selectedPartNumber, setSelectedPartNumber] = useState(""); // Track selected product for modal
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
@@ -324,6 +325,12 @@ const PartNumber = () => {
   const [openFilter, setOpenFilter] = useState(null);
   const [uiAssets, setUiAssets] = useState({});
   const [stockData, setStockData] = useState({}); // Store stock info by partNumber
+
+  // Handler for opening compatibility modal
+  const handleCompatibilityClick = (product) => {
+    setSelectedPartNumber(product.partNumber);
+    setShowCompatibility(true);
+  };
 
   // Fetch UI assets
   useEffect(() => {
@@ -560,6 +567,13 @@ const applyCompatibilityFilter = async () => {
     // Update the products displayed on the page
     setRecommendedProducts(myTvsProducts);
     setOtherBrandProducts(otherProducts);
+    
+    // Hide loading immediately after products are set
+    setLoading(false);
+
+    // Fetch stock data and vehicle counts in background (non-blocking)
+    fetchStockForProducts(transformedParts);
+    fetchVehicleCountsForProducts(transformedParts);
 
     // Also filter the vehicle compatibility list for the modal
     let filteredVehicles = [...vehicleCompatibilityList];
@@ -594,7 +608,6 @@ const applyCompatibilityFilter = async () => {
     setError("Failed to load filtered products. Please try again.");
     setRecommendedProducts([]);
     setOtherBrandProducts([]);
-  } finally {
     setLoading(false);
   }
 };
@@ -713,19 +726,19 @@ const applyCompatibilityFilter = async () => {
         // Store original products for reset functionality
         setOriginalRecommendedProducts(myTvsProducts);
         setOriginalOtherBrandProducts(otherProducts);
-
-        // Fetch stock data for all products
-        await fetchStockForProducts(transformedParts);
         
-        // Fetch vehicle compatibility counts for all products
-        await fetchVehicleCountsForProducts(transformedParts);
+        // Hide loading immediately after products are set
+        setLoading(false);
+
+        // Fetch stock data and vehicle counts in background (non-blocking)
+        fetchStockForProducts(transformedParts);
+        fetchVehicleCountsForProducts(transformedParts);
 
       } catch (err) {
         console.error("Error fetching parts data:", err);
         setError("Failed to load parts. Please try again.");
         setRecommendedProducts([]);
         setOtherBrandProducts([]);
-      } finally {
         setLoading(false);
       }
     };
@@ -1090,7 +1103,7 @@ const applyCompatibilityFilter = async () => {
                       actualPartNumber: product.partNumber, // Keep original for reference
                     });
                   }}
-                  onCompatibilityClick={() => setShowCompatibility(true)}
+                  onCompatibilityClick={handleCompatibilityClick}
                   isLoadingCounts={loadingCounts}
                 />
 
@@ -1122,7 +1135,7 @@ const applyCompatibilityFilter = async () => {
                       actualPartNumber: product.partNumber, // Keep original for reference
                     });
                   }}
-                  onCompatibilityClick={() => setShowCompatibility(true)}
+                  onCompatibilityClick={handleCompatibilityClick}
                   isLoadingCounts={loadingCounts}
                 />
               </div>
@@ -1164,10 +1177,13 @@ const applyCompatibilityFilter = async () => {
       </div>
 
       {/* ✅ MODAL MUST BE INSIDE RETURN */}
-      {showCompatibility && (
+      {showCompatibility && selectedPartNumber && (
         <CompatibilityModal
-          onClose={() => setShowCompatibility(false)}
-          partNumber={searchKey}
+          onClose={() => {
+            setShowCompatibility(false);
+            setSelectedPartNumber("");
+          }}
+          partNumber={selectedPartNumber}
         />
       )}
     </div>

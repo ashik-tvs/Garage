@@ -47,6 +47,7 @@
   display: grid;
   gap: 10px;
   width: 100%;
+
 }
 
 .product1-container.horizontal {
@@ -667,7 +668,7 @@
   transition: background 0.3s ease;
   flex-shrink: 0;
 
-  transform: translateX(-10px); /* 👈 move left */
+  transform: translateX(11px); /* 👈 move left */
 }
 
 
