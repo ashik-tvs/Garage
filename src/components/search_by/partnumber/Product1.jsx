@@ -123,18 +123,18 @@ const Product1 = ({ title, products = [], layout = "horizontal", onAddToCart, on
                   </div>
                 </div>
 
-                {/* Bottom Section - Price and Add Button */}
+                {/* Bottom Section - Add Button and Price */}
                 <div className="aligned-bottom-section">
-                  <div className="aligned-price-section">
-                    <span className="aligned-price">₹ {product.price.toFixed(2)}</span>
-                    <span className="aligned-mrp">₹ {(product.mrp || 0).toFixed(2)}</span>
-                  </div>
                   <button
                     className={`aligned-add-btn ${isInCart(product.cartId || product.partNumber) ? 'added' : ''}`}
                     onClick={() => handleAddClick(product)}
                   >
                     {isInCart(product.cartId || product.partNumber) ? 'Added' : 'Add'}
                   </button>
+                  <div className="aligned-price-section">
+                    <span className="aligned-price">₹ {product.price.toFixed(2)}</span>
+                    <span className="aligned-mrp">₹ {(product.mrp || 0).toFixed(2)}</span>
+                  </div>
                 </div>
               </>
             ) : (
