@@ -35,7 +35,7 @@ const Navigation = ({ breadcrumbs = [] }) => {
 
   // Helper to get full URL
   const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
+    if (!uiAssets[tagName]) return null;
     return apiService.getAssetUrl(uiAssets[tagName]);
   };
 
@@ -52,22 +52,26 @@ const Navigation = ({ breadcrumbs = [] }) => {
   return (
     <div className="nav-breadcrumbs">
       {/* Home Icon */}
-      <img
-        src={getAssetUrl("HOME")}
-        alt="Home"
-        className="nav-home-icon"
-        onClick={() => navigate("/home")}
-        title="Home"
-      />
+      {getAssetUrl("HOME") && (
+        <img
+          src={getAssetUrl("HOME")}
+          alt="Home"
+          className="nav-home-icon"
+          onClick={() => navigate("/home")}
+          title="Home"
+        />
+      )}
 
       {/* Breadcrumb Trail */}
       {breadcrumbs.map((crumb, index) => (
         <React.Fragment key={index}>
-          <img
-            src={getAssetUrl("RIGHT ARROW")}
-            alt=""
-            className="nav-arrow-icon"
-          />
+          {getAssetUrl("RIGHT ARROW") && (
+            <img
+              src={getAssetUrl("RIGHT ARROW")}
+              alt=""
+              className="nav-arrow-icon"
+            />
+          )}
           <span
             className={`nav-breadcrumb-item ${crumb.onClick ? "clickable" : ""}`}
             onClick={crumb.onClick}

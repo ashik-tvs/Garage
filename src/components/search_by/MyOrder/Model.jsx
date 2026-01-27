@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import "../../../styles/search_by/MyOrder/Model.css";
 import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
@@ -50,28 +51,11 @@ const Model = () => {
   }, []);
 
   const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
+    if (!uiAssets[tagName]) return null;
     return apiService.getAssetUrl(uiAssets[tagName]);
   };
 
-  useEffect(() => {
-    // For discontinued and electric variants, fetch without needing a make
-    if (
-      variant === "wide" ||
-      featureLabel === "Discontinued Model" ||
-      variant === "e" ||
-      featureLabel === "Electric"
-    ) {
-      fetchModels();
-    } else if (make) {
-      fetchModels();
-    } else {
-      setLoading(false);
-      setError("No make selected. Please go back and select a make.");
-    }
-  }, [make, variant, featureLabel]);
-
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     // For discontinued model and electric, we don't need a make
     const isDiscontinued =
       variant === "wide" || featureLabel === "Discontinued Model";
@@ -188,64 +172,111 @@ const Model = () => {
           throw new Error("Invalid response format from electric API");
         }
       } else {
-        // Fetch regular models from vehicle-list API
-        console.log(`Fetching models for ${make} from API...`);
-        console.log("Request payload:", {
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: null,
-          aggregate: null,
-          subAggregate: null,
-          make: make,
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        });
+        // Fetch regular models using masterType API with batch loading
+        console.log(`Fetching models for ${make} from API using masterType...`);
+        
+        const BATCH_SIZE = 500;
+        const MAX_BATCHES = 50;
+        const uniqueModels = new Set();
+        let consecutiveErrors = 0;
+        const MAX_CONSECUTIVE_ERRORS = 3;
 
-        response = await apiService.post("/vehicle-list", {
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: null,
-          aggregate: null,
-          subAggregate: null,
-          make: make,
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        });
+        for (let batch = 0; batch < MAX_BATCHES; batch++) {
+          const offset = batch * BATCH_SIZE;
+          
+          console.log(`📦 Fetching batch ${batch + 1} (offset: ${offset}, limit: ${BATCH_SIZE})`);
 
-        console.log("API Response:", response);
-        console.log("API Response type:", typeof response);
-        console.log("Is Array:", Array.isArray(response));
+          try {
+            response = await axios.post(
+              "http://localhost:5000/api/matertype",
+              {
+                partNumber: null,
+                sortOrder: "ASC",
+                customerCode: "0046",
+                aggregate: null,
+                brand: null,
+                fuelType: null,
+                limit: BATCH_SIZE,
+                make: make,
+                masterType: "model",
+                model: null,
+                offset: offset,
+                primary: false,
+                subAggregate: null,
+                variant: null,
+                year: null,
+              },
+              { timeout: 120000 }
+            );
 
-        // Handle different response structures
-        if (Array.isArray(response)) {
-          vehicleData = response;
-        } else if (
-          response &&
-          response.success &&
-          Array.isArray(response.data)
-        ) {
-          vehicleData = response.data;
-        } else if (response && Array.isArray(response.data)) {
-          vehicleData = response.data;
-        } else if (response && response.data) {
-          console.error("Response has data but not an array:", response.data);
-          throw new Error("Invalid response format - data is not an array");
-        } else {
-          console.error("Unexpected response structure:", response);
-          throw new Error("Invalid response format");
+            console.log(`✅ Batch ${batch + 1} response:`, response);
+
+            // Extract master data from response
+            const masterData = response?.data?.data;
+            
+            if (!masterData || !Array.isArray(masterData) || masterData.length === 0) {
+              console.log(`⚠️ Batch ${batch + 1} returned no data. Stopping pagination.`);
+              break;
+            }
+
+            // Extract masterName from each item
+            masterData.forEach((item) => {
+              if (item.masterName && item.masterName.trim() !== "") {
+                uniqueModels.add(item.masterName.trim());
+              }
+            });
+
+            console.log(`📊 Batch ${batch + 1} added ${masterData.length} items. Total unique models: ${uniqueModels.size}`);
+
+            // Reset error counter on success
+            consecutiveErrors = 0;
+
+            // If we got less than BATCH_SIZE items, we've reached the end
+            if (masterData.length < BATCH_SIZE) {
+              console.log(`✅ Received partial batch (${masterData.length} items). End of data reached.`);
+              break;
+            }
+
+          } catch (batchError) {
+            consecutiveErrors++;
+            console.error(`❌ Error fetching batch ${batch + 1}:`, {
+              message: batchError.message,
+              response: batchError.response?.data,
+              status: batchError.response?.status
+            });
+
+            // If this is the first batch and it fails, throw error
+            if (batch === 0) {
+              throw new Error(`Failed to fetch models on first batch: ${batchError.message}`);
+            }
+
+            // If we've had too many consecutive errors, stop trying
+            if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+              console.log(`⚠️ Stopping after ${MAX_CONSECUTIVE_ERRORS} consecutive errors. Using ${uniqueModels.size} models collected so far.`);
+              break;
+            }
+
+            // For subsequent batches, log warning but continue with what we have
+            console.log(`⚠️ Batch ${batch + 1} failed but continuing with ${uniqueModels.size} models collected so far`);
+            break;
+          }
         }
+
+        // Check if we have any models
+        if (uniqueModels.size === 0) {
+          console.log(`⚠️ No models found for ${make}`);
+          setError(`No models available for ${make}. Please try another make.`);
+          setModels([]);
+          setLoading(false);
+          return;
+        }
+
+        // Convert Set to sorted array for vehicleData
+        vehicleData = Array.from(uniqueModels).sort().map(modelName => ({
+          model: modelName
+        }));
+
+        console.log(`✅ Total unique models fetched: ${uniqueModels.size}`);
       }
 
       console.log("Extracted vehicleData:", vehicleData);
@@ -329,16 +360,39 @@ const Model = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [make, variant, featureLabel]);
+
+  useEffect(() => {
+    // For discontinued and electric variants, fetch without needing a make
+    if (
+      variant === "wide" ||
+      featureLabel === "Discontinued Model" ||
+      variant === "e" ||
+      featureLabel === "Electric"
+    ) {
+      fetchModels();
+    } else if (make) {
+      fetchModels();
+    } else {
+      setLoading(false);
+      setError("No make selected. Please go back and select a make.");
+    }
+  }, [make, variant, featureLabel, fetchModels]);
 
   const handleModelClick = (model) => {
     const isDiscontinued =
       variant === "wide" || featureLabel === "Discontinued Model";
     const isElectric = variant === "e" || featureLabel === "Electric";
+    
+    console.log("🚙 Model clicked:", model.name);
+    // Normalize model name to uppercase for API consistency
+    const normalizedModel = model.name.toUpperCase();
+    console.log("🚙 Normalized model:", normalizedModel);
+    
     navigate("/CategoryNew", {
       state: {
         make: isDiscontinued || isElectric ? null : make,
-        model: model.name,
+        model: normalizedModel,
         variant,
         featureLabel,
       },

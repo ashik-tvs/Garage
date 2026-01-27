@@ -44,75 +44,127 @@ const Category = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching categories from API...");
+      console.log("✨ Fetching categories from masterType API...");
 
-      const response = await axios.post(
-        "http://localhost:5000/api/parts-list",
-        {
-          brandPriority: ["VALEO"],
-          limit: 5000, // Increased to get more unique categories
-          offset: 0,
-          sortOrder: "ASC",
-          fieldOrder: null,
-          customerCode: "0046",
-          partNumber: null,
-          model: null,
-          brand: null,
-          subAggregate: null,
-          aggregate: null, // Get all aggregates
-          make: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          timeout: 90000, // 90 second timeout for larger dataset
-        },
-      );
+      const BATCH_SIZE = 500; // Larger batch for masterType API
+      const MAX_BATCHES = 50; // Enough batches
+      const uniqueAggregates = new Set();
+      let offset = 0;
+      let batchCount = 0;
+      let consecutiveEmptyBatches = 0;
+      let consecutiveErrors = 0;
 
-      console.log("API Response:", response);
-      console.log("Response data:", response.data);
+      // Fetch in batches until we stop finding new categories
+      while (batchCount < MAX_BATCHES && consecutiveErrors < 3) {
+        console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`);
 
-      // Check if using mock data
-      if (
-        response.data.message &&
-        response.data.message.includes("mock data")
-      ) {
-        console.warn("⚠️ Using mock category data - external API unavailable");
+        try {
+          const response = await axios.post(
+            "http://localhost:5000/api/matertype",
+            {
+              partNumber: null,
+              sortOrder: "ASC",
+              customerCode: "0046",
+              aggregate: null,
+              brand: null,
+              fuelType: null,
+              limit: BATCH_SIZE,
+              make: null,
+              masterType: "aggregate", // Get all aggregates
+              model: null,
+              offset: offset,
+              primary: false,
+              subAggregate: null,
+              variant: null,
+              year: null,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              timeout: 120000,
+            },
+          );
+
+          console.log(`📥 Batch ${batchCount + 1} response:`, {
+            success: response.data?.success,
+            message: response.data?.message,
+            count: response.data?.count,
+            dataLength: response.data?.data?.length,
+          });
+
+          // Extract master data
+          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+
+          // If no data returned, we've reached the end
+          if (!masterData || masterData.length === 0) {
+            console.log("✅ No more data in this batch");
+            consecutiveEmptyBatches++;
+            if (consecutiveEmptyBatches >= 3) break;
+          } else {
+            consecutiveEmptyBatches = 0;
+            consecutiveErrors = 0; // Reset on success
+          }
+
+          // Count categories before adding new ones
+          const previousSize = uniqueAggregates.size;
+
+          // Extract aggregates from this batch using masterName field
+          masterData.forEach((item) => {
+            if (item.masterName && item.masterName.trim() !== "") {
+              uniqueAggregates.add(item.masterName.trim());
+            }
+          });
+
+          const newCategoriesFound = uniqueAggregates.size - previousSize;
+          console.log(`📊 Found ${newCategoriesFound} new categories (total: ${uniqueAggregates.size})`);
+
+          // If no new categories found in last 3 batches, stop
+          if (newCategoriesFound === 0 && batchCount > 2) {
+            console.log("✅ No new categories found, stopping...");
+            break;
+          }
+        } catch (batchError) {
+          console.error(`❌ Error in batch ${batchCount + 1}:`, {
+            message: batchError.message,
+            status: batchError.response?.status,
+            data: batchError.response?.data,
+          });
+          consecutiveErrors++;
+          
+          // If it's a timeout, stop immediately
+          if (batchError.code === "ECONNABORTED" || batchError.response?.status === 504 || batchError.response?.status === 500) {
+            console.error("⏱️ Timeout/Server error - stopping batch fetch");
+            if (uniqueAggregates.size > 0) {
+              console.log(`💡 Using ${uniqueAggregates.size} categories found so far`);
+              break; // Use what we have
+            } else {
+              console.error("⚠️ Failed on first batch");
+              throw batchError;
+            }
+          }
+          
+          if (consecutiveErrors >= 3) {
+            console.error("⚠️ Too many consecutive errors");
+            throw batchError;
+          }
+        }
+
+        offset += BATCH_SIZE;
+        batchCount++;
       }
 
-      // Handle different response structures
-      let partsData = [];
-      if (Array.isArray(response.data)) {
-        partsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        partsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.parts)) {
-        partsData = response.data.parts;
-      } else {
-        console.error("Unexpected response structure:", response.data);
-        throw new Error("Invalid response format");
+      console.log(`✅ Total unique categories found: ${uniqueAggregates.size}`);
+
+      if (uniqueAggregates.size === 0) {
+        setError("No categories available at the moment.");
+        setLoading(false);
+        return;
       }
 
-      console.log("Parts data:", partsData);
-
-      // Extract unique aggregates (Categories) from the response
-      const uniqueAggregates = [
-        ...new Set(
-          partsData
-            .map((item) => item.aggregate)
-            .filter((aggregate) => aggregate), // Remove null/undefined/empty
-        ),
-      ];
-
-      console.log("Unique aggregates:", uniqueAggregates);
-
-      // Format categories with proper title case and icons
-      const formattedCategories = uniqueAggregates.map((aggregate, index) => ({
+      // Convert Set to sorted Array and format categories
+      const aggregatesArray = Array.from(uniqueAggregates).sort();
+      const formattedCategories = aggregatesArray.map((aggregate, index) => ({
         id: index + 1,
         label: aggregate
           .toLowerCase()
@@ -123,7 +175,7 @@ const Category = () => {
         icon: getIconForCategory(aggregate),
       }));
 
-      console.log("Formatted categories:", formattedCategories);
+      console.log("✅ Formatted categories:", formattedCategories);
 
       // Cache the categories in localStorage
       localStorage.setItem(
@@ -131,11 +183,11 @@ const Category = () => {
         JSON.stringify(formattedCategories),
       );
       localStorage.setItem("categoryCacheTimestamp", Date.now().toString());
-      console.log("Categories cached successfully");
+      console.log("💾 Categories cached successfully");
 
       setCategories(formattedCategories);
     } catch (err) {
-      console.error("Error fetching categories:", err);
+      console.error("❌ Error fetching categories:", err);
       console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
@@ -145,8 +197,17 @@ const Category = () => {
       // Handle errors
       if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
         setError(
-          "Request timeout. The external API is slow or unreachable. Please try again later.",
+          "⏱️ Request timeout. The external API is slow. Please try again later.",
         );
+      } else if (err.response?.status === 504) {
+        setError(
+          "⏱️ Gateway timeout. The external API is taking too long. Please try again later.",
+        );
+      } else if (
+        err.response?.data?.message && 
+        err.response.data.message.includes("Query execution was interrupted")
+      ) {
+        setError("Database timeout. Please try again in a few moments.");
       } else if (
         err.response?.data?.error && 
         typeof err.response.data.error === 'string' && 

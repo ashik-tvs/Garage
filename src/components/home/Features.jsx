@@ -22,8 +22,8 @@ const Features = () => {
   }, []);
 
   const categories = [
-    { id: 1, label: "Fast Movers", tag: "FASTMOVERS", path: "/Category", variant: "fm" },
-    { id: 2, label: "High Value", tag: "HIGHVALUE", path: "/Category", variant: "hv" },
+    { id: 1, label: "Fast Movers", tag: "FASTMOVERS", path: "/MakeNew", variant: "fm" },
+    { id: 2, label: "High Value", tag: "HIGHVALUE", path: "/MakeNew", variant: "hv" },
     { id: 3, label: "CNG", tag: "CNG", path: "/MakeNew", variant: "cng" },
     { id: 4, label: "Discontinued Model", tag: "DISCONTINUE", path: "/Model", variant: "wide" },
     { id: 5, label: "Electric", tag: "ELECTRIC", path: "/Model", variant: "e" },
@@ -50,7 +50,7 @@ const Features = () => {
 
   // Helper to build full asset URL
   const getAssetUrl = (filePath) => {
-    if (!filePath) return "";
+    if (!filePath) return null;
     return apiService.getAssetUrl(filePath);
   };
 
@@ -68,11 +68,13 @@ const Features = () => {
               onKeyDown={(e) => handleKey(e, c)}
             >
               <span className="sixcat-label">{c.label}</span>
-              <img
-                className={`sixcat-icon sixcat-icon--${c.variant}`}
-                src={getAssetUrl(uiAssets[c.tag])}
-                alt={c.label}
-              />
+              {getAssetUrl(uiAssets[c.tag]) && (
+                <img
+                  className={`sixcat-icon sixcat-icon--${c.variant}`}
+                  src={getAssetUrl(uiAssets[c.tag])}
+                  alt={c.label}
+                />
+              )}
             </div>
           ))}
         </div>

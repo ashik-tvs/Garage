@@ -99,7 +99,7 @@ const Brand = () => {
   };
 
   const handleBrandClick = (brand) => {
-    navigate("/Category", {
+    navigate("/CategoryNew", {
       state: {
         brand: brand.name,
         variant,
