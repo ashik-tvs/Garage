@@ -302,8 +302,9 @@ const PartNumber = () => {
   // Detection functions
   const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
   const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
+  const isAggregateOrSubAggregate = (value) => /^[A-Z\s]+$/i.test(value); // Same pattern as service type
 
-  // Keep original case for item name, uppercase for part number
+  // Keep original case for item name, uppercase for part number and aggregate
   const searchKey = isPartNumber(rawSearchKey.replace(/\s+/g, ""))
     ? rawSearchKey.toUpperCase()
     : rawSearchKey;
@@ -666,18 +667,61 @@ const applyCompatibilityFilter = async () => {
       setError(null);
 
       try {
-        // Detect if searchKey is part number (alphanumeric with at least one digit) or item name (letters and spaces only)
+        // Detect search type
         const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
         const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ""));
+        const isAggregateSearch = !isPartNumberSearch && isAggregateOrSubAggregate(searchKey);
 
         console.log("🔍 Search Key:", searchKey);
         console.log("🔍 Is Part Number Search:", isPartNumberSearch);
+        console.log("🔍 Is Aggregate/SubAggregate Search:", isAggregateSearch);
 
         let response;
         if (isPartNumberSearch) {
           // Search by part number
           console.log("➡️ Calling fetchPartsListByPartNumber with:", searchKey);
           response = await fetchPartsListByPartNumber(searchKey);
+        } else if (isAggregateSearch) {
+          // Search by aggregate or subAggregate
+          console.log("➡️ Searching by Aggregate/SubAggregate:", searchKey);
+          const normalizedKey = searchKey.toUpperCase();
+          
+          // First try searching as aggregate
+          let requestBody = {
+            brandPriority: null,
+            limit: 5000,
+            offset: 0,
+            sortOrder: "ASC",
+            fieldOrder: null,
+            customerCode: "0046",
+            partNumber: null,
+            model: null,
+            brand: null,
+            subAggregate: null,
+            aggregate: normalizedKey,
+            make: null,
+            variant: null,
+            fuelType: null,
+            vehicle: null,
+            year: null,
+          };
+          
+          console.log("📤 Trying Aggregate search:", requestBody);
+          response = await apiService.post("/parts-list", requestBody);
+          
+          // If no results, try searching as subAggregate
+          if (!response?.data || response.data.length === 0) {
+            console.log("⚠️ No results for Aggregate, trying SubAggregate...");
+            requestBody = {
+              ...requestBody,
+              aggregate: null,
+              subAggregate: normalizedKey,
+            };
+            console.log("📤 Trying SubAggregate search:", requestBody);
+            response = await apiService.post("/parts-list", requestBody);
+          }
+          
+          console.log("✅ Aggregate/SubAggregate search completed, found:", response?.data?.length || 0, "items");
         } else {
           // Search by item name/description
           console.log("➡️ Calling fetchPartsListByItemName with:", searchKey);
