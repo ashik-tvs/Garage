@@ -8,7 +8,7 @@ import Navigation from "../../Navigation/Navigation";
 import Product1 from "../partnumber/Product1";
 
 /* ---------------- COMPATIBILITY MODAL ---------------- */
-const CompatibilityModal = ({ onClose, partNumber }) => {
+const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -16,6 +16,15 @@ const CompatibilityModal = ({ onClose, partNumber }) => {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const observerTarget = useRef(null);
+
+  // Handle vehicle row click
+  const handleVehicleClick = (vehicle) => {
+    console.log("🚗 Vehicle selected:", vehicle);
+    if (onVehicleSelect) {
+      onVehicleSelect(vehicle);
+    }
+    onClose(); // Close modal after selection
+  };
 
   // Fetch vehicles with pagination
   const fetchVehicles = async (reset = false) => {
@@ -119,7 +128,12 @@ const CompatibilityModal = ({ onClose, partNumber }) => {
             {filteredVehicles.length > 0 ? (
               <>
                 {filteredVehicles.map((v, i) => (
-                  <div key={i} className="vnp-modal-row">
+                  <div 
+                    key={i} 
+                    className="vnp-modal-row"
+                    onClick={() => handleVehicleClick(v)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <span>{v.make}</span>
                     <span>{v.model}</span>
                     <span>{v.variant}</span>
@@ -198,6 +212,11 @@ const Product = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stockData, setStockData] = useState({}); // Store stock info by partNumber
+
+  // Backup states for restoring after vehicle selection
+  const [previousProducts, setPreviousProducts] = useState([]);
+  const [previousSearchFilters, setPreviousSearchFilters] = useState(null);
+  const [isVehicleFiltered, setIsVehicleFiltered] = useState(false);
 
   const isInCart = (partNumber) =>
     cartItems.some((item) => item.partNumber === partNumber);
@@ -301,23 +320,10 @@ const Product = () => {
     console.log("🔄 Initializing search filters...");
     console.log("📍 Breadcrumb context:", { make, model, aggregateName, subAggregateName });
 
-    // Flow 1: Make -> Model -> Category -> SubCategory (Vehicle-based navigation)
-    if (make && model) {
-      console.log("✅ Flow 1: Vehicle-based navigation (Make + Model)");
-      
-      // Set make and model from breadcrumbs
-      setSearchFilters(prev => ({
-        ...prev,
-        make: make,
-        model: model,
-      }));
-
-      // Fetch variants for the selected make and model
-      await fetchVariants(make, model);
-    }
-    // Flow 2: Category -> SubCategory (Category-based navigation)
-    else if (aggregateName && subAggregateName) {
-      console.log("✅ Flow 2: Category-based navigation (Aggregate + SubAggregate)");
+    // Always start with empty search filters and fetch all makes
+    // Don't pre-fill from breadcrumbs - let user select from all available options
+    if (aggregateName && subAggregateName) {
+      console.log("✅ Fetching all makes for category (ignoring breadcrumb make/model)");
       
       // Reset all search filters
       setSearchFilters({
@@ -328,7 +334,7 @@ const Product = () => {
         year: "",
       });
 
-      // Fetch makes for the selected category and subcategory
+      // Fetch all makes for the selected category and subcategory
       await fetchMakes(aggregateName, subAggregateName);
     }
   };
@@ -581,9 +587,29 @@ const Product = () => {
   const handleSearch = () => {
     console.log("🔍 Search initiated with filters:", searchFilters);
     
+    // Clear vehicle filtered state when new search is performed
+    setIsVehicleFiltered(false);
+    setPreviousProducts([]);
+    setPreviousSearchFilters(null);
+    
     // Refetch products with the new search filters
     if (aggregateName && subAggregateName) {
       fetchProductsWithFilters();
+    }
+  };
+
+  // Restore previous state (back functionality)
+  const handleRestorePreviousState = () => {
+    console.log("↩️ Restoring previous state");
+    
+    if (previousProducts.length > 0 && previousSearchFilters) {
+      setProducts(previousProducts);
+      setSearchFilters(previousSearchFilters);
+      setIsVehicleFiltered(false);
+      setPreviousProducts([]);
+      setPreviousSearchFilters(null);
+      
+      console.log("✅ Previous state restored");
     }
   };
 
@@ -812,6 +838,111 @@ const Product = () => {
     setSelectedProduct(product);
     await fetchVehicleCompatibility(product.partNumber);
     setShowCompatibility(true);
+  };
+
+  // Handle vehicle selection from compatibility modal
+  const handleVehicleSelection = async (vehicle) => {
+    console.log("🔍 Fetching products for selected vehicle:", vehicle);
+    
+    // Backup current state before filtering
+    setPreviousProducts(products);
+    setPreviousSearchFilters(searchFilters);
+    setIsVehicleFiltered(true);
+    
+    setLoading(true);
+    setError(null);
+
+    try {
+      const requestBody = {
+        brandPriority: null,
+        limit: 5000,
+        offset: 0,
+        sortOrder: "ASC",
+        fieldOrder: null,
+        customerCode: "0046",
+        partNumber: null,
+        model: vehicle.model?.toUpperCase() || null,
+        brand: null,
+        subAggregate: null,
+        aggregate: null,
+        make: vehicle.make?.toUpperCase() || null,
+        variant: vehicle.variant || null,
+        fuelType: vehicle.fuelType?.toUpperCase() || null,
+        vehicle: null,
+        year: vehicle.year || null,
+      };
+
+      console.log("📤 Request body:", requestBody);
+
+      const response = await apiService.post("/parts-list", requestBody);
+      console.log("✅ Response:", response);
+
+      const partsData = response?.data || [];
+      const totalCount = response?.count || partsData.length;
+
+      console.log("📦 Parts Data Count:", partsData.length);
+      console.log("📊 Total Count:", totalCount);
+
+      // Transform to component structure
+      const transformedProducts = partsData.map((part, index) => ({
+        id: index + 1,
+        partNumber: part.partNumber,
+        name: part.itemDescription,
+        brand: part.brandName || "Unknown",
+        price: parseFloat(part.listPrice) || 0,
+        mrp: parseFloat(part.mrp) || 0,
+        image: NoImage,
+        eta: "1-2 Days",
+        lineCode: part.lineCode,
+        hsnCode: part.hsnCode,
+        aggregate: part.aggregate,
+        subAggregate: part.subAggregate,
+        taxPercent: part.taxpercent,
+      }));
+
+      console.log("🔄 Transformed Products:", transformedProducts.length);
+
+      // Separate myTVS and other products
+      const myTvsProducts = transformedProducts.filter(
+        (item) => item.brand.toUpperCase() === "MYTVS"
+      );
+      const otherProducts = transformedProducts.filter(
+        (item) => item.brand.toUpperCase() !== "MYTVS"
+      );
+
+      console.log("✅ myTVS Products:", myTvsProducts.length);
+      console.log("✅ Other Products:", otherProducts.length);
+
+      setProducts(transformedProducts);
+      
+      // Auto-fill search controls with selected vehicle
+      setSearchFilters({
+        make: vehicle.make || "",
+        model: vehicle.model || "",
+        variant: vehicle.variant || "",
+        fuelType: vehicle.fuelType || "",
+        year: vehicle.year || "",
+      });
+      
+      console.log("✅ Search controls auto-filled:", {
+        make: vehicle.make,
+        model: vehicle.model,
+        variant: vehicle.variant,
+        fuelType: vehicle.fuelType,
+        year: vehicle.year,
+      });
+
+      // Fetch stock and vehicle counts in background
+      fetchStockForProducts(transformedProducts);
+      fetchVehicleCountsForProducts(transformedProducts);
+
+      setLoading(false);
+    } catch (err) {
+      console.error("❌ Error fetching products for vehicle:", err);
+      setError("Failed to load products for selected vehicle. Please try again.");
+      setProducts([]);
+      setLoading(false);
+    }
   };
 
   // Fetch stock status for all products
@@ -1224,6 +1355,16 @@ const Product = () => {
             >
               Search
             </button>
+            
+            {isVehicleFiltered && (
+              <button 
+                className="vnp-search-btn" 
+                onClick={handleRestorePreviousState}
+                style={{ backgroundColor: "#ff6b6b", marginLeft: "10px" }}
+              >
+                Back
+              </button>
+            )}
           </div>
 
           <div className="vnp-search-filters">
@@ -1454,6 +1595,7 @@ const Product = () => {
         <CompatibilityModal
           onClose={() => setShowCompatibility(false)}
           partNumber={selectedProduct.partNumber}
+          onVehicleSelect={handleVehicleSelection}
         />
       )}
     </div>
