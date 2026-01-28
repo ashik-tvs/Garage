@@ -350,10 +350,17 @@ const Sub_Category = () => {
   }
 
   if (selectedAggregate || category) {
+    // Fast Movers and High Value use /Category, others use /CategoryNew
+    const isFastMoversOrHighValue = 
+      variant === "fm" || 
+      variant === "hv" || 
+      featureLabel === "Fast Movers" || 
+      featureLabel === "High Value";
+    
     breadcrumbs.push({
       label: selectedAggregate || category,
       onClick: () =>
-        navigate("/CategoryNew", {
+        navigate(isFastMoversOrHighValue ? "/Category" : "/CategoryNew", {
           state: { make, model, variant, featureLabel, brand, isOnlyWithUs },
         }),
     });

@@ -20,12 +20,35 @@ const Navigation = ({ breadcrumbs = [] }) => {
   const location = useLocation();
   const [uiAssets, setUiAssets] = useState({});
 
-  // Fetch UI assets
+  // Fetch UI assets with caching
   useEffect(() => {
     const fetchUiAssets = async () => {
       try {
+        // Check cache first
+        const cacheKey = "navigation_ui_assets";
+        const cachedData = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (cachedData && cacheTimestamp) {
+          const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+          
+          if (isCacheValid) {
+            console.log("📦 Loading navigation assets from cache");
+            setUiAssets(JSON.parse(cachedData));
+            return;
+          }
+        }
+
+        // Fetch from API
+        console.log("🌐 Fetching navigation assets from API");
         const assets = await apiService.get("/ui-assets");
         setUiAssets(assets.data);
+        
+        // Cache the assets
+        localStorage.setItem(cacheKey, JSON.stringify(assets.data));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        console.log("💾 Navigation assets cached successfully");
       } catch (err) {
         console.error("❌ Failed to load UI assets", err);
       }
