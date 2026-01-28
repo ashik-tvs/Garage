@@ -321,6 +321,7 @@ const PartNumber = () => {
   const [vehicleList, setVehicleList] = useState([]);
   const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
   const [vehicleCount, setVehicleCount] = useState(0);
+  const [totalPartsCount, setTotalPartsCount] = useState(0); // Total count from API
   const [vehicleCounts, setVehicleCounts] = useState({}); // Store count per partNumber
   const [loadingCounts, setLoadingCounts] = useState(true); // Loading state for vehicle counts
   const [openFilter, setOpenFilter] = useState(null);
@@ -730,7 +731,12 @@ const applyCompatibilityFilter = async () => {
 
         console.log("✅ API Response:", response);
         const partsData = response?.data || [];
+        const totalCount = response?.count || partsData.length;
         console.log("📦 Parts Data Count:", partsData.length);
+        console.log("📊 Total Count from API:", totalCount);
+        
+        // Store the total count
+        setTotalPartsCount(totalCount);
 
         // Transform API data to match component structure
         const transformedParts = partsData.map((part, index) => ({
@@ -860,6 +866,11 @@ const applyCompatibilityFilter = async () => {
       <div className="pn-body">
         <div className="pn-search-key">
           Search Key : <b>{searchKey}</b>
+          {totalPartsCount > 0 && (
+            <span style={{ marginLeft: "10px", color: "#666" }}>
+              Compatible with <b style={{ color: "#000" }}>{totalPartsCount.toLocaleString()}</b> items
+            </span>
+          )}
         </div>
 
         {/* FILTERS */}
