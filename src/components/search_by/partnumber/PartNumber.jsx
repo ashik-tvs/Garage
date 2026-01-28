@@ -142,7 +142,7 @@ const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
     </div>
   );
 };
-const CompatibilityModal = ({ onClose, partNumber }) => {
+const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -150,6 +150,15 @@ const CompatibilityModal = ({ onClose, partNumber }) => {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const observerTarget = useRef(null);
+
+  // Handle vehicle row click
+  const handleVehicleClick = (vehicle) => {
+    console.log("🚗 Vehicle selected:", vehicle);
+    if (onVehicleSelect) {
+      onVehicleSelect(vehicle);
+    }
+    onClose(); // Close modal after selection
+  };
 
   // Fetch vehicles with pagination
   const fetchVehicles = async (reset = false) => {
@@ -253,7 +262,12 @@ const CompatibilityModal = ({ onClose, partNumber }) => {
             {filteredVehicles.length > 0 ? (
               <>
                 {filteredVehicles.map((v, i) => (
-                  <div key={i} className="pn-modal-row">
+                  <div 
+                    key={i} 
+                    className="pn-modal-row"
+                    onClick={() => handleVehicleClick(v)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <span>{v.make}</span>
                     <span>{v.model}</span>
                     <span>{v.variant}</span>
@@ -506,16 +520,15 @@ const applyCompatibilityFilter = async () => {
     // Fetch filtered products from parts-list API
     console.log("➡️ Fetching filtered products...");
     
-    const requestBody = {
+    const baseRequestBody = {
       brandPriority: null,
-      limit: 100,
+      limit: 5000,
       offset: 0,
       sortOrder: "ASC",
       fieldOrder: null,
       customerCode: "0046",
       partNumber: null,
       model: selectedModel || null,
-      brand: null,
       subAggregate: null,
       aggregate: null,
       make: selectedMake || null,
@@ -525,17 +538,44 @@ const applyCompatibilityFilter = async () => {
       year: selectedYear || null,
     };
 
-    console.log("📤 Request Body:", requestBody);
+    // Fetch myTVS products specifically
+    const myTvsRequestBody = {
+      ...baseRequestBody,
+      brand: "mytvs",
+    };
 
-    const response = await apiService.post("/parts-list", requestBody);
+    console.log("📤 myTVS Request Body:", myTvsRequestBody);
+
+    // Fetch other brand products
+    const otherBrandsRequestBody = {
+      ...baseRequestBody,
+      brand: null,
+    };
+
+    console.log("📤 Other Brands Request Body:", otherBrandsRequestBody);
+
+    // Make both API calls in parallel
+    const [myTvsResponse, otherBrandsResponse] = await Promise.all([
+      apiService.post("/parts-list", myTvsRequestBody),
+      apiService.post("/parts-list", otherBrandsRequestBody),
+    ]);
     
-    console.log("✅ Filtered Products Response:", response);
+    console.log("✅ myTVS Response:", myTvsResponse);
+    console.log("✅ Other Brands Response:", otherBrandsResponse);
 
-    const partsData = response?.data || [];
-    console.log("📦 Filtered Parts Count:", partsData.length);
+    const myTvsData = myTvsResponse?.data || [];
+    const otherBrandsData = (otherBrandsResponse?.data || []).filter(
+      (item) => item.brandName?.toUpperCase() !== "MYTVS"
+    );
+    
+    const totalCount = (myTvsResponse?.count || 0) + (otherBrandsResponse?.count || 0);
+    
+    console.log("📦 myTVS Parts Count:", myTvsData.length);
+    console.log("📦 Other Brands Parts Count:", otherBrandsData.length);
+    console.log("📊 Total Count:", totalCount);
 
-    // Transform API data to match component structure
-    const transformedParts = partsData.map((part, index) => ({
+    // Transform myTVS data
+    const transformedMyTvsParts = myTvsData.map((part, index) => ({
       id: index + 1,
       brand: part.brandName || "Unknown",
       partNo: part.partNumber,
@@ -553,29 +593,42 @@ const applyCompatibilityFilter = async () => {
       taxPercent: part.taxpercent,
     }));
 
-    console.log("🔄 Transformed Filtered Parts:", transformedParts);
+    // Transform other brands data
+    const transformedOtherParts = otherBrandsData.map((part, index) => ({
+      id: index + 1 + transformedMyTvsParts.length,
+      brand: part.brandName || "Unknown",
+      partNo: part.partNumber,
+      description: part.itemDescription,
+      price: parseFloat(part.listPrice) || 0,
+      mrp: parseFloat(part.mrp) || 0,
+      eta: "1-2 Days",
+      stock: "In stock",
+      vehicles: 12,
+      imageUrl: NoImage,
+      lineCode: part.lineCode,
+      hsnCode: part.hsnCode,
+      aggregate: part.aggregate,
+      subAggregate: part.subAggregate,
+      taxPercent: part.taxpercent,
+    }));
 
-    // Separate myTVS and other brands
-    const myTvsProducts = transformedParts.filter(
-      (item) => item.brand.toUpperCase() === "MYTVS",
-    );
-    const otherProducts = transformedParts.filter(
-      (item) => item.brand.toUpperCase() !== "MYTVS",
-    );
+    console.log("🔄 Transformed myTVS Parts:", transformedMyTvsParts.length);
+    console.log("🔄 Transformed Other Parts:", transformedOtherParts.length);
 
-    console.log("✅ Filtered myTVS Products:", myTvsProducts.length);
-    console.log("✅ Filtered Other Brand Products:", otherProducts.length);
+    console.log("✅ Filtered myTVS Products:", transformedMyTvsParts.length);
+    console.log("✅ Filtered Other Brand Products:", transformedOtherParts.length);
 
     // Update the products displayed on the page
-    setRecommendedProducts(myTvsProducts);
-    setOtherBrandProducts(otherProducts);
+    setRecommendedProducts(transformedMyTvsParts);
+    setOtherBrandProducts(transformedOtherParts);
     
     // Hide loading immediately after products are set
     setLoading(false);
 
     // Fetch stock data and vehicle counts in background (non-blocking)
-    fetchStockForProducts(transformedParts);
-    fetchVehicleCountsForProducts(transformedParts);
+    const allTransformedParts = [...transformedMyTvsParts, ...transformedOtherParts];
+    fetchStockForProducts(allTransformedParts);
+    fetchVehicleCountsForProducts(allTransformedParts);
 
     // Also filter the vehicle compatibility list for the modal
     let filteredVehicles = [...vehicleCompatibilityList];
@@ -601,7 +654,7 @@ const applyCompatibilityFilter = async () => {
     }
 
     setFilteredCompatibility(filteredVehicles);
-    setVehicleCount(response?.count || partsData.length);
+    setVehicleCount(totalCount);
 
     console.log("🎉 Filter applied successfully!");
 
@@ -613,6 +666,144 @@ const applyCompatibilityFilter = async () => {
     setLoading(false);
   }
 };
+
+  // Handle vehicle selection from compatibility modal
+  const handleVehicleSelection = async (vehicle) => {
+    console.log("🚗 Vehicle selected from modal:", vehicle);
+    
+    // Auto-fill filter dropdowns
+    setSelectedMake(vehicle.make || "");
+    setSelectedModel(vehicle.model || "");
+    setSelectedVariant(vehicle.variant || "");
+    setSelectedFuel(vehicle.fuelType || "");
+    setSelectedYear(vehicle.year || "");
+    
+    // Fetch products based on selected vehicle
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("➡️ Fetching products for selected vehicle...");
+      
+      const baseRequestBody = {
+        brandPriority: null,
+        limit: 5000,
+        offset: 0,
+        sortOrder: "ASC",
+        fieldOrder: null,
+        customerCode: "0046",
+        partNumber: null,
+        model: vehicle.model || null,
+        subAggregate: null,
+        aggregate: null,
+        make: vehicle.make || null,
+        variant: vehicle.variant || null,
+        fuelType: vehicle.fuelType || null,
+        vehicle: null,
+        year: vehicle.year || null,
+      };
+
+      // Fetch myTVS products specifically
+      const myTvsRequestBody = {
+        ...baseRequestBody,
+        brand: "mytvs",
+      };
+
+      // Fetch other brand products
+      const otherBrandsRequestBody = {
+        ...baseRequestBody,
+        brand: null,
+      };
+
+      console.log("📤 myTVS Vehicle Filter Request Body:", myTvsRequestBody);
+      console.log("📤 Other Brands Vehicle Filter Request Body:", otherBrandsRequestBody);
+
+      // Make both API calls in parallel
+      const [myTvsResponse, otherBrandsResponse] = await Promise.all([
+        apiService.post("/parts-list", myTvsRequestBody),
+        apiService.post("/parts-list", otherBrandsRequestBody),
+      ]);
+      
+      console.log("✅ myTVS Vehicle Filtered Response:", myTvsResponse);
+      console.log("✅ Other Brands Vehicle Filtered Response:", otherBrandsResponse);
+
+      const myTvsData = myTvsResponse?.data || [];
+      const otherBrandsData = (otherBrandsResponse?.data || []).filter(
+        (item) => item.brandName?.toUpperCase() !== "MYTVS"
+      );
+      
+      const totalCount = (myTvsResponse?.count || 0) + (otherBrandsResponse?.count || 0);
+      console.log("📦 myTVS Filtered Parts Count:", myTvsData.length);
+      console.log("📦 Other Brands Filtered Parts Count:", otherBrandsData.length);
+      console.log("📊 Total Count from API:", totalCount);
+      
+      // Store the total count
+      setTotalPartsCount(totalCount);
+
+      // Transform myTVS data
+      const transformedMyTvsParts = myTvsData.map((part, index) => ({
+        id: index + 1,
+        brand: part.brandName || "Unknown",
+        partNo: part.partNumber,
+        description: part.itemDescription,
+        price: parseFloat(part.listPrice) || 0,
+        mrp: parseFloat(part.mrp) || 0,
+        eta: "1-2 Days",
+        stock: "In stock",
+        vehicles: 12,
+        imageUrl: NoImage,
+        lineCode: part.lineCode,
+        hsnCode: part.hsnCode,
+        aggregate: part.aggregate,
+        subAggregate: part.subAggregate,
+        taxPercent: part.taxpercent,
+      }));
+
+      // Transform other brands data
+      const transformedOtherParts = otherBrandsData.map((part, index) => ({
+        id: index + 1 + transformedMyTvsParts.length,
+        brand: part.brandName || "Unknown",
+        partNo: part.partNumber,
+        description: part.itemDescription,
+        price: parseFloat(part.listPrice) || 0,
+        mrp: parseFloat(part.mrp) || 0,
+        eta: "1-2 Days",
+        stock: "In stock",
+        vehicles: 12,
+        imageUrl: NoImage,
+        lineCode: part.lineCode,
+        hsnCode: part.hsnCode,
+        aggregate: part.aggregate,
+        subAggregate: part.subAggregate,
+        taxPercent: part.taxpercent,
+      }));
+
+      console.log("✅ Filtered myTVS Products:", transformedMyTvsParts.length);
+      console.log("✅ Filtered Other Brand Products:", transformedOtherParts.length);
+
+      // Update products displayed
+      setRecommendedProducts(transformedMyTvsParts);
+      setOtherBrandProducts(transformedOtherParts);
+      setOriginalRecommendedProducts(transformedMyTvsParts);
+      setOriginalOtherBrandProducts(transformedOtherParts);
+      
+      setLoading(false);
+
+      // Fetch stock data and vehicle counts in background
+      const allTransformedParts = [...transformedMyTvsParts, ...transformedOtherParts];
+      fetchStockForProducts(allTransformedParts);
+      fetchVehicleCountsForProducts(allTransformedParts);
+
+      console.log("🎉 Vehicle filter applied successfully!");
+
+    } catch (err) {
+      console.error("❌ Error fetching products for vehicle:", err);
+      setError("Failed to load products. Please try again.");
+      setRecommendedProducts([]);
+      setOtherBrandProducts([]);
+      setLoading(false);
+    }
+  };
 
   const unique = (arr, key) => [
     ...new Set(arr.map((item) => item[key]).filter(Boolean)),
@@ -683,46 +874,230 @@ const applyCompatibilityFilter = async () => {
           console.log("➡️ Calling fetchPartsListByPartNumber with:", searchKey);
           response = await fetchPartsListByPartNumber(searchKey);
         } else if (isAggregateSearch) {
-          // Search by aggregate or subAggregate
-          console.log("➡️ Searching by Aggregate/SubAggregate:", searchKey);
+          // Search by aggregate or subAggregate with batch loading
+          console.log("➡️ Searching by Aggregate/SubAggregate with batch loading:", searchKey);
           const normalizedKey = searchKey.toUpperCase();
           
-          // First try searching as aggregate
-          let requestBody = {
-            brandPriority: null,
-            limit: 5000,
-            offset: 0,
-            sortOrder: "ASC",
-            fieldOrder: null,
-            customerCode: "0046",
-            partNumber: null,
-            model: null,
-            brand: null,
-            subAggregate: null,
-            aggregate: normalizedKey,
-            make: null,
-            variant: null,
-            fuelType: null,
-            vehicle: null,
-            year: null,
-          };
+          const BATCH_SIZE = 100000; // Fetch 1000 items per batch
+          const MAX_BATCHES = 100; // Support up to 300k products
+          let allMyTvsProducts = [];
+          let allOtherProducts = [];
+          let totalMyTvsCount = 0;
+          let totalOtherCount = 0;
           
-          console.log("📤 Trying Aggregate search:", requestBody);
-          response = await apiService.post("/parts-list", requestBody);
+          // Try searching as aggregate first
+          console.log("📤 Trying Aggregate search with batch loading...");
           
-          // If no results, try searching as subAggregate
-          if (!response?.data || response.data.length === 0) {
-            console.log("⚠️ No results for Aggregate, trying SubAggregate...");
-            requestBody = {
-              ...requestBody,
-              aggregate: null,
-              subAggregate: normalizedKey,
+          for (let batchIndex = 0; batchIndex < MAX_BATCHES; batchIndex++) {
+            const offset = batchIndex * BATCH_SIZE;
+            
+            console.log(`📦 Fetching batch ${batchIndex + 1} (offset: ${offset})`);
+            
+            // Fetch myTVS batch
+            const myTvsRequestBody = {
+              brandPriority: null,
+              limit: BATCH_SIZE,
+              offset: offset,
+              sortOrder: "ASC",
+              fieldOrder: null,
+              customerCode: "0046",
+              partNumber: null,
+              model: null,
+              brand: "mytvs",
+              subAggregate: null,
+              aggregate: normalizedKey,
+              make: null,
+              variant: null,
+              fuelType: null,
+              vehicle: null,
+              year: null,
             };
-            console.log("📤 Trying SubAggregate search:", requestBody);
-            response = await apiService.post("/parts-list", requestBody);
+            
+            // Fetch other brands batch
+            const otherBrandsRequestBody = {
+              ...myTvsRequestBody,
+              brand: null,
+            };
+            
+            try {
+              const [myTvsResponse, otherBrandsResponse] = await Promise.all([
+                apiService.post("/parts-list", myTvsRequestBody),
+                apiService.post("/parts-list", otherBrandsRequestBody),
+              ]);
+              
+              const myTvsBatchData = myTvsResponse?.data || [];
+              const otherBrandsBatchData = (otherBrandsResponse?.data || []).filter(
+                (item) => item.brandName?.toUpperCase() !== "MYTVS"
+              );
+              
+              // Store counts from first batch
+              if (batchIndex === 0) {
+                totalMyTvsCount = myTvsResponse?.count || 0;
+                totalOtherCount = otherBrandsResponse?.count || 0;
+                console.log(`📊 Total myTVS Products: ${totalMyTvsCount}`);
+                console.log(`📊 Total Other Brands Products: ${totalOtherCount}`);
+              }
+              
+              allMyTvsProducts = [...allMyTvsProducts, ...myTvsBatchData];
+              allOtherProducts = [...allOtherProducts, ...otherBrandsBatchData];
+              
+              console.log(`✅ Batch ${batchIndex + 1}: Fetched myTVS=${myTvsBatchData.length}, Others=${otherBrandsBatchData.length}`);
+              console.log(`📈 Running Total: myTVS=${allMyTvsProducts.length}/${totalMyTvsCount}, Others=${allOtherProducts.length}/${totalOtherCount}`);
+              
+              // Stop if both batches are empty (no more data from API)
+              if (myTvsBatchData.length === 0 && otherBrandsBatchData.length === 0) {
+                console.log("✅ All batches completed - no more data from API");
+                break;
+              }
+              
+              // Stop if we've fetched all products (running total >= API count)
+              if (allMyTvsProducts.length >= totalMyTvsCount && allOtherProducts.length >= totalOtherCount) {
+                console.log(`✅ All products fetched: myTVS ${allMyTvsProducts.length}/${totalMyTvsCount}, Others ${allOtherProducts.length}/${totalOtherCount}`);
+                break;
+              }
+              
+              // Update UI progressively every 3 batches
+              if ((batchIndex + 1) % 3 === 0 || batchIndex === 0) {
+                const currentMyTvs = allMyTvsProducts.map((part, index) => ({
+                  id: index + 1,
+                  brand: part.brandName || "Unknown",
+                  partNo: part.partNumber,
+                  description: part.itemDescription,
+                  price: parseFloat(part.listPrice) || 0,
+                  mrp: parseFloat(part.mrp) || 0,
+                  eta: "1-2 Days",
+                  stock: "In stock",
+                  vehicles: 12,
+                  imageUrl: NoImage,
+                  lineCode: part.lineCode,
+                  hsnCode: part.hsnCode,
+                  aggregate: part.aggregate,
+                  subAggregate: part.subAggregate,
+                  taxPercent: part.taxpercent,
+                }));
+                
+                const currentOthers = allOtherProducts.map((part, index) => ({
+                  id: index + 1 + currentMyTvs.length,
+                  brand: part.brandName || "Unknown",
+                  partNo: part.partNumber,
+                  description: part.itemDescription,
+                  price: parseFloat(part.listPrice) || 0,
+                  mrp: parseFloat(part.mrp) || 0,
+                  eta: "1-2 Days",
+                  stock: "In stock",
+                  vehicles: 12,
+                  imageUrl: NoImage,
+                  lineCode: part.lineCode,
+                  hsnCode: part.hsnCode,
+                  aggregate: part.aggregate,
+                  subAggregate: part.subAggregate,
+                  taxPercent: part.taxpercent,
+                }));
+                
+                setRecommendedProducts(currentMyTvs);
+                setOtherBrandProducts(currentOthers);
+                setTotalPartsCount(totalMyTvsCount + totalOtherCount);
+                console.log(`🔄 Progressive update: Displaying ${currentMyTvs.length} myTVS + ${currentOthers.length} others`);
+              }
+              
+            } catch (batchError) {
+              console.error(`❌ Error fetching batch ${batchIndex + 1}:`, batchError);
+              // Continue with next batch
+            }
           }
           
-          console.log("✅ Aggregate/SubAggregate search completed, found:", response?.data?.length || 0, "items");
+          // If no results from aggregate, try subAggregate
+          if (allMyTvsProducts.length === 0 && allOtherProducts.length === 0) {
+            console.log("⚠️ No results for Aggregate, trying SubAggregate...");
+            // Reset and try with subAggregate (same batch logic)
+            // For simplicity, using same structure
+            const subAggRequestBody = {
+              brandPriority: null,
+              limit: 5000,
+              offset: 0,
+              sortOrder: "ASC",
+              fieldOrder: null,
+              customerCode: "0046",
+              partNumber: null,
+              model: null,
+              brand: null,
+              subAggregate: normalizedKey,
+              aggregate: null,
+              make: null,
+              variant: null,
+              fuelType: null,
+              vehicle: null,
+              year: null,
+            };
+            response = await apiService.post("/parts-list", subAggRequestBody);
+          } else {
+            // Batch loading completed - products already transformed and set
+            // Final update with all fetched products
+            const finalMyTvs = allMyTvsProducts.map((part, index) => ({
+              id: index + 1,
+              brand: part.brandName || "Unknown",
+              partNo: part.partNumber,
+              description: part.itemDescription,
+              price: parseFloat(part.listPrice) || 0,
+              mrp: parseFloat(part.mrp) || 0,
+              eta: "1-2 Days",
+              stock: "In stock",
+              vehicles: 12,
+              imageUrl: NoImage,
+              lineCode: part.lineCode,
+              hsnCode: part.hsnCode,
+              aggregate: part.aggregate,
+              subAggregate: part.subAggregate,
+              taxPercent: part.taxpercent,
+            }));
+            
+            const finalOthers = allOtherProducts.map((part, index) => ({
+              id: index + 1 + finalMyTvs.length,
+              brand: part.brandName || "Unknown",
+              partNo: part.partNumber,
+              description: part.itemDescription,
+              price: parseFloat(part.listPrice) || 0,
+              mrp: parseFloat(part.mrp) || 0,
+              eta: "1-2 Days",
+              stock: "In stock",
+              vehicles: 12,
+              imageUrl: NoImage,
+              lineCode: part.lineCode,
+              hsnCode: part.hsnCode,
+              aggregate: part.aggregate,
+              subAggregate: part.subAggregate,
+              taxPercent: part.taxpercent,
+            }));
+            
+            console.log(`✅ Final myTVS Products: ${finalMyTvs.length}`);
+            console.log(`✅ Final Other Products: ${finalOthers.length}`);
+            console.log(`✅ Total Fetched: ${finalMyTvs.length + finalOthers.length}`);
+            console.log(`✅ Expected Total: ${totalMyTvsCount + totalOtherCount}`);
+            
+            // Validate counts
+            if (finalMyTvs.length + finalOthers.length !== totalMyTvsCount + totalOtherCount) {
+              console.warn(`⚠️ Count mismatch! Fetched: ${finalMyTvs.length + finalOthers.length}, Expected: ${totalMyTvsCount + totalOtherCount}`);
+            } else {
+              console.log(`✅ Count validation passed: ${finalMyTvs.length + finalOthers.length} = ${totalMyTvsCount + totalOtherCount}`);
+            }
+            
+            setRecommendedProducts(finalMyTvs);
+            setOtherBrandProducts(finalOthers);
+            setOriginalRecommendedProducts(finalMyTvs);
+            setOriginalOtherBrandProducts(finalOthers);
+            setTotalPartsCount(totalMyTvsCount + totalOtherCount);
+            setLoading(false);
+            
+            // Fetch stock and vehicle counts
+            const allTransformed = [...finalMyTvs, ...finalOthers];
+            fetchStockForProducts(allTransformed);
+            fetchVehicleCountsForProducts(allTransformed);
+            
+            // Skip the standard transformation logic below
+            return;
+          }
+          
+          console.log("✅ Aggregate/SubAggregate search completed, total found:", response?.data?.length || 0, "items");
         } else {
           // Search by item name/description
           console.log("➡️ Calling fetchPartsListByItemName with:", searchKey);
@@ -829,29 +1204,65 @@ const applyCompatibilityFilter = async () => {
       }
 
       try {
-        // Fetch all vehicles without filters to populate dropdowns
-        const requestBody = {
-          limit: 100000, // Get all vehicles
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: [searchKey],
-          aggregate: null,
-          subAggregate: null,
-          make: null,
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        };
+        // Detect search type
+        const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ""));
+        const isAggregateSearch = !isPartNumberSearch && isAggregateOrSubAggregate(searchKey);
+        
+        console.log("🚗 Fetching vehicles for filters...");
+        console.log("🔍 Search Type:", isAggregateSearch ? "Aggregate/SubAggregate" : "Part Number");
+
+        let requestBody;
+        
+        if (isAggregateSearch) {
+          // For aggregate/subAggregate search, use aggregate/subAggregate filter
+          const normalizedKey = searchKey.toUpperCase();
+          
+          requestBody = {
+            limit: 100000, // Get all vehicles
+            offset: 0,
+            sortOrder: "ASC",
+            customerCode: "0046",
+            brand: null,
+            partNumber: null,
+            aggregate: normalizedKey,
+            subAggregate: null,
+            make: null,
+            model: null,
+            variant: null,
+            fuelType: null,
+            vehicle: null,
+            year: null,
+          };
+          
+          console.log("📤 Vehicle list request (Aggregate):", requestBody);
+        } else {
+          // For part number search, use partNumber filter
+          requestBody = {
+            limit: 100000, // Get all vehicles
+            offset: 0,
+            sortOrder: "ASC",
+            customerCode: "0046",
+            brand: null,
+            partNumber: [searchKey],
+            aggregate: null,
+            subAggregate: null,
+            make: null,
+            model: null,
+            variant: null,
+            fuelType: null,
+            vehicle: null,
+            year: null,
+          };
+          
+          console.log("📤 Vehicle list request (Part Number):", requestBody);
+        }
 
         const response = await apiService.post("/vehicle-list", requestBody);
         const vehicles = response?.data || [];
+        console.log("✅ Fetched vehicles for filters:", vehicles.length);
         setVehicleList(vehicles);
       } catch (err) {
-        console.error("Error fetching vehicles for filters:", err);
+        console.error("❌ Error fetching vehicles for filters:", err);
         setVehicleList([]);
       }
     };
@@ -1132,7 +1543,7 @@ const applyCompatibilityFilter = async () => {
               <div className="pn-left">
                 {/* myTVS Recommended Products */}
                 <Product1
-                  title="myTVS Recommended Products"
+                  title={`myTVS Recommended Products (${recommendedProducts.length})`}
                   products={recommendedProducts.map((item, index) => ({
                     id: item.id,
                     partNumber: item.partNo,
@@ -1164,7 +1575,7 @@ const applyCompatibilityFilter = async () => {
 
                 {/* Other Products */}
                 <Product1
-                  title="Other Products"
+                  title={`Other Products (${otherBrandProducts.length})`}
                   products={otherBrandProducts.map((item, index) => ({
                     id: item.id,
                     partNumber: item.partNo,
@@ -1239,6 +1650,7 @@ const applyCompatibilityFilter = async () => {
             setSelectedPartNumber("");
           }}
           partNumber={selectedPartNumber}
+          onVehicleSelect={handleVehicleSelection}
         />
       )}
     </div>
