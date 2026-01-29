@@ -20,12 +20,35 @@ const Navigation = ({ breadcrumbs = [] }) => {
   const location = useLocation();
   const [uiAssets, setUiAssets] = useState({});
 
-  // Fetch UI assets
+  // Fetch UI assets with caching
   useEffect(() => {
     const fetchUiAssets = async () => {
       try {
+        // Check cache first
+        const cacheKey = "navigation_ui_assets";
+        const cachedData = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
+
+        if (cachedData && cacheTimestamp) {
+          const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
+          
+          if (isCacheValid) {
+            console.log("📦 Loading navigation assets from cache");
+            setUiAssets(JSON.parse(cachedData));
+            return;
+          }
+        }
+
+        // Fetch from API
+        console.log("🌐 Fetching navigation assets from API");
         const assets = await apiService.get("/ui-assets");
         setUiAssets(assets.data);
+        
+        // Cache the assets
+        localStorage.setItem(cacheKey, JSON.stringify(assets.data));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        console.log("💾 Navigation assets cached successfully");
       } catch (err) {
         console.error("❌ Failed to load UI assets", err);
       }
@@ -35,7 +58,7 @@ const Navigation = ({ breadcrumbs = [] }) => {
 
   // Helper to get full URL
   const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
+    if (!uiAssets[tagName]) return null;
     return apiService.getAssetUrl(uiAssets[tagName]);
   };
 
@@ -52,22 +75,26 @@ const Navigation = ({ breadcrumbs = [] }) => {
   return (
     <div className="nav-breadcrumbs">
       {/* Home Icon */}
-      <img
-        src={getAssetUrl("HOME")}
-        alt="Home"
-        className="nav-home-icon"
-        onClick={() => navigate("/home")}
-        title="Home"
-      />
+      {getAssetUrl("HOME") && (
+        <img
+          src={getAssetUrl("HOME")}
+          alt="Home"
+          className="nav-home-icon"
+          onClick={() => navigate("/home")}
+          title="Home"
+        />
+      )}
 
       {/* Breadcrumb Trail */}
       {breadcrumbs.map((crumb, index) => (
         <React.Fragment key={index}>
-          <img
-            src={getAssetUrl("RIGHT ARROW")}
-            alt=""
-            className="nav-arrow-icon"
-          />
+          {getAssetUrl("RIGHT ARROW") && (
+            <img
+              src={getAssetUrl("RIGHT ARROW")}
+              alt=""
+              className="nav-arrow-icon"
+            />
+          )}
           <span
             className={`nav-breadcrumb-item ${crumb.onClick ? "clickable" : ""}`}
             onClick={crumb.onClick}

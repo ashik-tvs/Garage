@@ -19,6 +19,7 @@ const Sub_Category = () => {
     aggregate,
     featureLabel,
     variant,
+    isOnlyWithUs,
   } = location.state || {};
 
   // Use aggregate from Category.jsx if available, fallback to aggregateName
@@ -51,7 +52,9 @@ const Sub_Category = () => {
   useEffect(() => {
     if (selectedAggregate) {
       // Check cache first
-      const cacheKey = `subCategory_${selectedAggregate}`;
+      const cacheKey = brand 
+        ? `subCategory_${selectedAggregate}_brand_${brand}` 
+        : `subCategory_${selectedAggregate}`;
       const cachedData = localStorage.getItem(cacheKey);
       const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
       const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
@@ -82,64 +85,149 @@ const Sub_Category = () => {
       setLoading(true);
       setError(null);
 
-      console.log("Fetching sub-categories for:", selectedAggregate);
+      console.log("✨ Fetching sub-categories for:", brand ? { selectedAggregate, brand } : { selectedAggregate, make, model });
 
-      const response = await axios.post(
-        "http://localhost:5000/api/parts-list",
-        {
-          brandPriority: null,
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          fieldOrder: null,
-          customerCode: "0046",
-          partNumber: null,
-          model: null,
-          brand: null,
-          subAggregate: null,
-          aggregate: selectedAggregate, // Filter by selected category (e.g., "BATTERY", "STEERING")
-          make: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          timeout: 90000,
-        },
-      );
+      // Use masterType API with batch loading
+      const BATCH_SIZE = 500;
+      const MAX_BATCHES = 50;
+      const uniqueSubAggregates = new Set();
+      let offset = 0;
+      let batchCount = 0;
+      let consecutiveEmptyBatches = 0;
+      let consecutiveErrors = 0;
 
-      console.log("Sub-categories API Response:", response);
+      // Fetch in batches until we stop finding new sub-categories
+      while (batchCount < MAX_BATCHES && consecutiveErrors < 3) {
+        console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset}, limit: ${BATCH_SIZE})`);
+        console.log(`📤 Request params:`, brand ? { brand, aggregate: selectedAggregate } : { make, model, aggregate: selectedAggregate }, `masterType=subAggregate`);
 
-      // Handle different response structures
-      let partsData = [];
-      if (Array.isArray(response.data)) {
-        partsData = response.data;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        partsData = response.data.data;
-      } else if (response.data && Array.isArray(response.data.parts)) {
-        partsData = response.data.parts;
-      } else {
-        console.error("Unexpected response structure:", response.data);
-        throw new Error("Invalid response format");
+        try {
+          const response = await axios.post(
+            "http://localhost:5000/api/matertype",
+            {
+              partNumber: null,
+              sortOrder: "ASC",
+              customerCode: "0046",
+              aggregate: selectedAggregate,
+              brand: brand || null,
+              fuelType: null,
+              limit: BATCH_SIZE,
+              make: brand ? null : (make || null),
+              masterType: "subAggregate",
+              model: brand ? null : (model || null),
+              offset: offset,
+              primary: false,
+              subAggregate: null,
+              variant:  null,
+              year: null,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+              timeout: 120000,
+            },
+          );
+
+          console.log(`📥 Batch ${batchCount + 1} response:`, {
+            success: response.data?.success,
+            message: response.data?.message,
+            count: response.data?.count,
+            dataLength: response.data?.data?.length,
+          });
+
+          // Extract master data
+          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+
+          // If no data returned, we've reached the end
+          if (!masterData || masterData.length === 0) {
+            console.log("✅ No more data in this batch");
+            consecutiveEmptyBatches++;
+            if (consecutiveEmptyBatches >= 3) break;
+          } else {
+            consecutiveEmptyBatches = 0;
+            consecutiveErrors = 0; // Reset error counter on success
+          }
+
+          // Count sub-categories before adding new ones
+          const previousSize = uniqueSubAggregates.size;
+
+          // Extract masterName (sub-aggregate/subcategory name) from each item
+          masterData.forEach((item) => {
+            if (item.masterName && item.masterName.trim() !== "") {
+              uniqueSubAggregates.add(item.masterName.trim());
+            }
+          });
+
+          const newSubCategoriesFound = uniqueSubAggregates.size - previousSize;
+          console.log(`📊 Found ${newSubCategoriesFound} new sub-categories (total: ${uniqueSubAggregates.size})`);
+
+          // Progressive loading: Update UI with sub-categories found so far
+          if (uniqueSubAggregates.size > 0 && batchCount % 2 === 0) {
+            // Update every 2 batches to show progress
+            const subAggregatesArray = Array.from(uniqueSubAggregates).sort();
+            const progressiveSubCategories = subAggregatesArray.map((subAggregate, index) => ({
+              id: index + 1,
+              name: subAggregate
+                .toLowerCase()
+                .split(" ")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" "),
+              subAggregateName: subAggregate,
+              image: getIconForSubCategory(subAggregate),
+            }));
+            setSubCategories(progressiveSubCategories);
+            console.log(`🔄 Progressive update: Showing ${progressiveSubCategories.length} sub-categories`);
+          }
+
+          // If no new sub-categories found in last 3 batches, stop
+          if (newSubCategoriesFound === 0 && batchCount > 2) {
+            console.log("✅ No new sub-categories found, stopping...");
+            break;
+          }
+        } catch (batchError) {
+          consecutiveErrors++;
+          console.error(`❌ Error in batch ${batchCount + 1}:`, {
+            message: batchError.message,
+            status: batchError.response?.status,
+            data: batchError.response?.data,
+            code: batchError.code,
+          });
+
+          // If timeout, stop and use what we have
+          if (batchError.code === "ECONNABORTED" || batchError.response?.status === 504 || batchError.response?.status === 500) {
+            console.error("⏱️ Timeout/Server error - stopping batch fetch");
+            if (uniqueSubAggregates.size > 0) {
+              console.log(`💡 Using ${uniqueSubAggregates.size} sub-categories found so far`);
+              break;
+            } else {
+              // No data collected yet, this is a real error
+              console.error("⚠️ Failed on first batch, cannot proceed");
+              throw batchError;
+            }
+          }
+
+          if (consecutiveErrors >= 3) {
+            console.error("⚠️ Too many consecutive errors");
+            throw batchError;
+          }
+        }
+
+        offset += BATCH_SIZE;
+        batchCount++;
       }
 
-      // Extract unique sub-aggregates (Sub-Categories)
-      const uniqueSubAggregates = [
-        ...new Set(
-          partsData
-            .map((item) => item.subAggregate)
-            .filter((subAggregate) => subAggregate),
-        ),
-      ];
+      console.log(`✅ Total unique sub-categories found: ${uniqueSubAggregates.size}`);
 
-      console.log("Unique sub-aggregates:", uniqueSubAggregates);
+      if (uniqueSubAggregates.size === 0) {
+        setError(`No sub-categories available for ${selectedAggregate}`);
+        setLoading(false);
+        return;
+      }
 
       // Format sub-categories
-      const formattedSubCategories = uniqueSubAggregates.map(
+      const subAggregatesArray = Array.from(uniqueSubAggregates).sort();
+      const formattedSubCategories = subAggregatesArray.map(
         (subAggregate, index) => ({
           id: index + 1,
           name: subAggregate
@@ -152,14 +240,16 @@ const Sub_Category = () => {
         }),
       );
 
-      console.log("Formatted sub-categories:", formattedSubCategories);
+      console.log("✅ Formatted sub-categories:", formattedSubCategories);
 
       // Cache the sub-categories
-      const cacheKey = `subCategory_${selectedAggregate}`;
+      const cacheKey = brand 
+        ? `subCategory_${selectedAggregate}_brand_${brand}` 
+        : `subCategory_${selectedAggregate}`;
       localStorage.setItem(cacheKey, JSON.stringify(formattedSubCategories));
       localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
       console.log(
-        `Sub-categories for ${selectedAggregate} cached successfully`,
+        `💾 Sub-categories for ${selectedAggregate} cached successfully`,
       );
 
       setSubCategories(formattedSubCategories);
@@ -229,6 +319,16 @@ const Sub_Category = () => {
   // Build breadcrumbs array
   const breadcrumbs = [];
 
+  if (brand) {
+    breadcrumbs.push({
+      label: brand,
+      onClick: () =>
+        navigate("/brand", {
+          state: { variant, featureLabel, isOnlyWithUs },
+        }),
+    });
+  }
+
   if (make) {
     breadcrumbs.push({
       label: make,
@@ -250,11 +350,18 @@ const Sub_Category = () => {
   }
 
   if (selectedAggregate || category) {
+    // Fast Movers and High Value use /Category, others use /CategoryNew
+    const isFastMoversOrHighValue = 
+      variant === "fm" || 
+      variant === "hv" || 
+      featureLabel === "Fast Movers" || 
+      featureLabel === "High Value";
+    
     breadcrumbs.push({
       label: selectedAggregate || category,
       onClick: () =>
-        navigate("/CategoryNew", {
-          state: { make, model, variant, featureLabel },
+        navigate(isFastMoversOrHighValue ? "/Category" : "/CategoryNew", {
+          state: { make, model, variant, featureLabel, brand, isOnlyWithUs },
         }),
     });
   }
@@ -269,7 +376,8 @@ const Sub_Category = () => {
       <div className="sub-category-main">
         {/* Sub Categories */}
         <div className="sub-category-content">
-          {loading ? (
+          {loading && subCategories.length === 0 ? (
+            // Initial loading skeleton
             <div className="sub-category-grid">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div
@@ -314,35 +422,37 @@ const Sub_Category = () => {
                 Retry
               </button>
             </div>
-          ) : subCategories.length === 0 ? (
+          ) : subCategories.length === 0 && !loading ? (
             <div className="sub-category-empty">
               <p style={{ textAlign: "center", padding: "20px" }}>
                 No subcategories found for {selectedAggregate || category}.
               </p>
             </div>
           ) : (
-            <div className="sub-category-grid">
-              {subCategories.map((subCategory) => (
-                <div
-                  key={subCategory.id}
-                  className="sub-category-item"
-                  onClick={() => handleSubCategoryClick(subCategory)}
-                >
-                  <div className="sub-category-image-wrapper">
-                    <OciImage
-                      partNumber={subCategory.subAggregateName}
-                      folder="subcategories"
-                      fallbackImage={subCategory.image}
-                      className="sub-category-image"
-                      alt={subCategory.name}
-                    />
+            <>
+              <div className="sub-category-grid">
+                {subCategories.map((subCategory) => (
+                  <div
+                    key={subCategory.id}
+                    className="sub-category-item"
+                    onClick={() => handleSubCategoryClick(subCategory)}
+                  >
+                    <div className="sub-category-image-wrapper">
+                      <OciImage
+                        partNumber={subCategory.subAggregateName}
+                        folder="subcategories"
+                        fallbackImage={subCategory.image}
+                        className="sub-category-image"
+                        alt={subCategory.name}
+                      />
+                    </div>
+                    <div className="sub-category-label">
+                      <span title={subCategory.name}>{subCategory.name}</span>
+                    </div>
                   </div>
-                  <div className="sub-category-label">
-                    <span title={subCategory.name}>{subCategory.name}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 

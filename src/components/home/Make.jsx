@@ -46,60 +46,118 @@ const Make = () => {
       setError(null);
       setUsingFallback(false);
 
-      console.log("Fetching makes from API...");
+      console.log("✨ Fetching makes from masterType API...");
 
-      const response = await apiService.post("/vehicle-list", {
-        limit: 50000,
-        offset: 0,
-        sortOrder: "ASC",
-        customerCode: "0046",
-        brand: null,
-        partNumber: null,
-        aggregate: null,
-        subAggregate: null,
-        make: null, // Get all makes
-        model: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null,
-      });
+      const BATCH_SIZE = 500; // Larger batch for masterType API
+      const MAX_BATCHES = 50; // Enough batches
+      const uniqueMakes = new Set();
+      let offset = 0; 
+      let batchCount = 0;
+      let consecutiveEmptyBatches = 0;
+      let consecutiveErrors = 0;
 
-      console.log("API Response:", response);
+      // Fetch in batches until we stop finding new makes
+      while (batchCount < MAX_BATCHES && consecutiveErrors < 3) {
+        console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`);
 
-      // Response structure: { success: true, message: "...", count: 235485, data: [...] }
-      // Since apiService.post() returns res.data, response IS the data object
-      const vehicleData = Array.isArray(response?.data) ? response.data : [];
+        try {
+          const response = await apiService.post("/filter", {
+            partNumber: null,
+            sortOrder: "ASC",
+            customerCode: "0046",
+            aggregate: null,
+            brand: null,
+            fuelType: null,
+            limit: BATCH_SIZE,
+            make: null,
+            masterType: "make", // Get all makes
+            model: null,
+            offset: offset,
+            primary: false,
+            subAggregate: null,
+            variant: null,
+            year: null,
+          });
 
-      console.log("Vehicle data count:", vehicleData.length);
+          console.log(`📥 Batch ${batchCount + 1} response:`, {
+            success: response?.success,
+            message: response?.message,
+            count: response?.count,
+            dataLength: response?.data?.length,
+          });
 
-      if (vehicleData.length === 0) {
-        console.warn("No vehicle data received from API");
+          // Extract master data
+          const masterData = Array.isArray(response?.data) ? response.data : [];
+
+          // If no data returned, we've reached the end
+          if (!masterData || masterData.length === 0) {
+            console.log("✅ No more data in this batch");
+            consecutiveEmptyBatches++;
+            if (consecutiveEmptyBatches >= 3) break;
+          } else {
+            consecutiveEmptyBatches = 0;
+            consecutiveErrors = 0; // Reset error counter on success
+          }
+
+          // Count makes before adding new ones
+          const previousSize = uniqueMakes.size;
+
+          // Extract makes from this batch using masterName field
+          masterData.forEach((item) => {
+            if (item.masterName && item.masterName.trim() !== "") {
+              uniqueMakes.add(item.masterName.trim());
+            }
+          });
+
+          const newMakesFound = uniqueMakes.size - previousSize;
+          console.log(`📊 Found ${newMakesFound} new makes (total: ${uniqueMakes.size})`);
+
+          // If no new makes found in last 3 batches, stop
+          if (newMakesFound === 0 && batchCount > 2) {
+            console.log("✅ No new makes found, stopping...");
+            break;
+          }
+        } catch (batchError) {
+          console.error(`❌ Error in batch ${batchCount + 1}:`, {
+            message: batchError.message,
+            status: batchError.response?.status,
+            data: batchError.response?.data,
+          });
+          consecutiveErrors++;
+          
+          // If it's a timeout, stop immediately and use what we have
+          if (batchError.code === "ECONNABORTED" || batchError.response?.status === 504 || batchError.response?.status === 500) {
+            console.error("⏱️ Timeout/Server error - stopping batch fetch");
+            if (uniqueMakes.size > 0) {
+              console.log(`💡 Using ${uniqueMakes.size} makes found so far`);
+              break; // Use what we have
+            } else {
+              console.error("⚠️ Failed on first batch");
+              throw batchError;
+            }
+          }
+          
+          if (consecutiveErrors >= 3) {
+            console.error("⚠️ Too many consecutive errors");
+            throw batchError;
+          }
+        }
+
+        offset += BATCH_SIZE;
+        batchCount++;
+      }
+
+      console.log(`✅ Total unique makes found: ${uniqueMakes.size}`);
+
+      if (uniqueMakes.size === 0) {
         setError("No makes available at the moment.");
         setLoading(false);
         return;
       }
 
-      // Extract unique makes
-      const uniqueMakes = [
-        ...new Set(
-          vehicleData
-            .map((item) => item.make)
-            .filter((make) => make && make.trim() !== ""), // Remove null/undefined/empty
-        ),
-      ].sort(); // Sort alphabetically
-
-      console.log("Unique makes found:", uniqueMakes.length, uniqueMakes);
-
-      if (uniqueMakes.length === 0) {
-        console.warn("No makes found in vehicle data");
-        setError("No makes available.");
-        setLoading(false);
-        return;
-      }
-
-      // Format makes with proper title case and icons
-      const formattedMakes = uniqueMakes.map((make, index) => ({
+      // Convert Set to sorted Array and format makes
+      const makesArray = Array.from(uniqueMakes).sort();
+      const formattedMakes = makesArray.map((make, index) => ({
         id: index + 1,
         name: make
           .toLowerCase()
@@ -109,7 +167,7 @@ const Make = () => {
         makeName: make,
       }));
 
-      console.log("Formatted makes:", formattedMakes);
+      console.log("✅ Formatted makes:", formattedMakes);
 
       // Cache the makes
       localStorage.setItem("makeCache", JSON.stringify(formattedMakes));
@@ -118,7 +176,7 @@ const Make = () => {
 
       setMakes(formattedMakes);
     } catch (err) {
-      console.error("Error fetching makes:", err);
+      console.error("❌ Error fetching makes:", err);
       console.error("Error details:", {
         message: err.message,
         response: err.response?.data,
@@ -130,8 +188,14 @@ const Make = () => {
       let errorMessage = "Failed to load makes. ";
 
       if (err.code === "ECONNABORTED" || err.message.includes("timeout")) {
-        errorMessage =
-          "⏱️ Request timeout. The API is taking too long to respond. Please try again later.";
+        errorMessage = "⏱️ Request timeout. The API is slow. Please try again later.";
+      } else if (err.response?.status === 504) {
+        errorMessage = "⏱️ Gateway timeout. The external API is taking too long. Please try again later.";
+      } else if (
+        err.response?.data?.message &&
+        err.response.data.message.includes("Query execution was interrupted")
+      ) {
+        errorMessage = "Database timeout. Please try again in a few moments.";
       } else if (err.response) {
         const status = err.response.status;
         const errorType = err.response.data?.error;

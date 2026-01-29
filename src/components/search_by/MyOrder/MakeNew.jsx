@@ -216,9 +216,14 @@ const MakeNew = () => {
       setLoading(false);
     }
   };  const handleMakeClick = (make) => {
+    console.log("🚗 Make clicked:", make.name);
+    // Normalize make name to uppercase for API consistency
+    const normalizedMake = make.name.toUpperCase();
+    console.log("🚗 Normalized make:", normalizedMake);
+    
     navigate("/Model", { 
       state: { 
-        make: make.name,
+        make: normalizedMake,
         variant,
         featureLabel
       } 
