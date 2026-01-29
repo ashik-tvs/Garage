@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/CategoryNew.css";
-import axios from "axios";
+import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
 import Navigation from "../../Navigation/Navigation";
 import NoImage from "../../../assets/No Image.png";
@@ -103,31 +103,23 @@ const CategoryNew = () => {
         console.log(`🔍 Batch ${batchCount + 1} request body:`, JSON.stringify(requestBody, null, 2));
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/matertype",
-            requestBody,
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              timeout: 120000,
-            },
-          );
+          const response = await apiService.post("/matertype", requestBody);
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
-            success: response.data?.success,
-            message: response.data?.message,
-            count: response.data?.count,
-            dataLength: response.data?.data?.length,
+            success: response?.success,
+            message: response?.message,
+            count: response?.count,
+            dataLength: response?.data?.length,
           });
 
           if (batchCount === 0) {
-            console.log(`🔍 First batch full response:`, response.data);
-            console.log(`🔍 First batch response.data.data:`, response.data?.data);
+            console.log(`🔍 First batch full response:`, response);
+            console.log(`🔍 First batch response.data:`, response?.data);
           }
 
           // Extract master data
-          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+          // apiService.post returns the response body directly, so response.data is the array
+          const masterData = Array.isArray(response?.data) ? response.data : [];
           
           if (batchCount === 0) {
             console.log(`🔍 First batch masterData:`, masterData);

@@ -231,6 +231,8 @@ const Product = () => {
     subCategory,
     aggregateName,
     subAggregateName,
+    featureLabel, // Track which feature flow (Fast Movers, CNG, etc.)
+    variant,
   } = location.state || {};
 
   // Generate cache key based on navigation context
@@ -1197,75 +1199,12 @@ const Product = () => {
     );
   };
 
-  // Build breadcrumbs array for navigation
-  const breadcrumbs = [];
-
-  if (make) {
-    breadcrumbs.push({
-      label: make,
-      onClick: () =>
-        navigate("/MakeNew", {
-          state: {
-            variant: location.state?.variant,
-            featureLabel: location.state?.featureLabel,
-          },
-        }),
-    });
-  }
-
-  if (model) {
-    breadcrumbs.push({
-      label: model,
-      onClick: () =>
-        navigate("/Model", {
-          state: {
-            make,
-            variant: location.state?.variant,
-            featureLabel: location.state?.featureLabel,
-          },
-        }),
-    });
-  }
-
-  if (aggregateName || category) {
-    breadcrumbs.push({
-      label: aggregateName || category,
-      onClick: () =>
-        navigate("/Category", {
-          state: {
-            make,
-            model,
-            variant: location.state?.variant,
-            featureLabel: location.state?.featureLabel,
-          },
-        }),
-    });
-  }
-
-  if (subAggregateName || subCategory) {
-    breadcrumbs.push({
-      label: subAggregateName || subCategory?.name || subCategory,
-      onClick: () =>
-        navigate("/sub_category", {
-          state: {
-            make,
-            model,
-            brand,
-            category: aggregateName || category,
-            aggregate: aggregateName || category,
-            aggregateName: aggregateName || category,
-            variant: location.state?.variant,
-            featureLabel: location.state?.featureLabel,
-          },
-        }),
-    });
-  }
-
   return (
     <div className="vnp-container">
       {/* ---------- TOP SECTION ---------- */}
       <div className="vnp-top-row">
-        <Navigation breadcrumbs={breadcrumbs} />
+        {/* Navigation component auto-generates breadcrumbs based on route and state */}
+        <Navigation />
 
         <div className="vnp-search-controls">
           <div className="vnp-search-main">

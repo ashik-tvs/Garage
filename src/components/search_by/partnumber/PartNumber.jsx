@@ -25,7 +25,6 @@ const alignedProducts = [
   {
     id: 4,
     partNo: "SA233663824",
-
     brand: "Mobil",
     description: "Brake Fluid",
     price: 315,
