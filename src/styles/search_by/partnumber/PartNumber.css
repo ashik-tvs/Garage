@@ -54,8 +54,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
+    font-family: Inter, sans-serif !important;  font-weight: 500;
 }
 
 .pn-control-dropdown:focus {
@@ -86,8 +85,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
+    font-family: Inter, sans-serif !important;  font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -110,8 +108,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
+    font-family: Inter, sans-serif !important;  font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -157,8 +154,7 @@
   border: 2px solid #E5E7EB;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
-  font-size: 12px;
+    font-family: Inter, sans-serif !important;  font-size: 12px;
   font-weight: 400;
   color: #374151;
   user-select: none;

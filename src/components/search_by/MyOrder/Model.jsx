@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import axios from "axios";
 import "../../../styles/search_by/MyOrder/Model.css";
 import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
@@ -50,28 +51,11 @@ const Model = () => {
   }, []);
 
   const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
+    if (!uiAssets[tagName]) return null;
     return apiService.getAssetUrl(uiAssets[tagName]);
   };
 
-  useEffect(() => {
-    // For discontinued and electric variants, fetch without needing a make
-    if (
-      variant === "wide" ||
-      featureLabel === "Discontinued Model" ||
-      variant === "e" ||
-      featureLabel === "Electric"
-    ) {
-      fetchModels();
-    } else if (make) {
-      fetchModels();
-    } else {
-      setLoading(false);
-      setError("No make selected. Please go back and select a make.");
-    }
-  }, [make, variant, featureLabel]);
-
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     // For discontinued model and electric, we don't need a make
     const isDiscontinued =
       variant === "wide" || featureLabel === "Discontinued Model";
@@ -91,10 +75,10 @@ const Model = () => {
       const cacheKey = isDiscontinued
         ? "models_discontinued"
         : isElectric
-        ? "models_electric"
-        : variant
-        ? `models_${variant}_${make}`
-        : `models_${make}`;
+          ? "models_electric"
+          : variant
+            ? `models_${variant}_${make}`
+            : `models_${make}`;
       const cachedData = localStorage.getItem(cacheKey);
       const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
       const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
@@ -107,8 +91,8 @@ const Model = () => {
           const cacheMsg = isDiscontinued
             ? "Loading discontinued models from cache..."
             : isElectric
-            ? "Loading electric models from cache..."
-            : `Loading models for ${make} from cache...`;
+              ? "Loading electric models from cache..."
+              : `Loading models for ${make} from cache...`;
           console.log(cacheMsg);
           try {
             // Cached data is now just model names, need to format with icons
@@ -168,7 +152,7 @@ const Model = () => {
         } else {
           console.error(
             "Unexpected discontinued response structure:",
-            response
+            response,
           );
           throw new Error("Invalid response format from discontinued API");
         }
@@ -188,64 +172,132 @@ const Model = () => {
           throw new Error("Invalid response format from electric API");
         }
       } else {
-        // Fetch regular models from vehicle-list API
-        console.log(`Fetching models for ${make} from API...`);
-        console.log("Request payload:", {
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: null,
-          aggregate: null,
-          subAggregate: null,
-          make: make,
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        });
+        // Fetch regular models using masterType API with batch loading
+        console.log(`Fetching models for ${make} from API using masterType...`);
 
-        response = await apiService.post("/vehicle-list", {
-          limit: 5000,
-          offset: 0,
-          sortOrder: "ASC",
-          customerCode: "0046",
-          brand: null,
-          partNumber: null,
-          aggregate: null,
-          subAggregate: null,
-          make: make,
-          model: null,
-          variant: null,
-          fuelType: null,
-          vehicle: null,
-          year: null,
-        });
+        const BATCH_SIZE = 500;
+        const MAX_BATCHES = 50;
+        const uniqueModels = new Set();
+        let consecutiveErrors = 0;
+        const MAX_CONSECUTIVE_ERRORS = 3;
 
-        console.log("API Response:", response);
-        console.log("API Response type:", typeof response);
-        console.log("Is Array:", Array.isArray(response));
+        for (let batch = 0; batch < MAX_BATCHES; batch++) {
+          const offset = batch * BATCH_SIZE;
 
-        // Handle different response structures
-        if (Array.isArray(response)) {
-          vehicleData = response;
-        } else if (
-          response &&
-          response.success &&
-          Array.isArray(response.data)
-        ) {
-          vehicleData = response.data;
-        } else if (response && Array.isArray(response.data)) {
-          vehicleData = response.data;
-        } else if (response && response.data) {
-          console.error("Response has data but not an array:", response.data);
-          throw new Error("Invalid response format - data is not an array");
-        } else {
-          console.error("Unexpected response structure:", response);
-          throw new Error("Invalid response format");
+          console.log(
+            `📦 Fetching batch ${batch + 1} (offset: ${offset}, limit: ${BATCH_SIZE})`,
+          );
+
+          try {
+            response = await apiService.post(
+              "/filter",
+              {
+                partNumber: null,
+                sortOrder: "ASC",
+                customerCode: "0046",
+                aggregate: null,
+                brand: null,
+                fuelType: null,
+                limit: BATCH_SIZE,
+                make: make,
+                masterType: "model",
+                model: null,
+                offset: offset,
+                primary: false,
+                subAggregate: null,
+                variant: null,
+                year: null,
+              },
+              {
+                timeout: 120000,
+              },
+            );
+
+            console.log(`✅ Batch ${batch + 1} response:`, response);
+
+            // Extract master data from response
+            const masterData = response?.data?.data || response?.data;
+
+            if (
+              !masterData ||
+              !Array.isArray(masterData) ||
+              masterData.length === 0
+            ) {
+              console.log(
+                `⚠️ Batch ${batch + 1} returned no data. Stopping pagination.`,
+              );
+              break;
+            }
+
+            // Extract masterName from each item
+            masterData.forEach((item) => {
+              if (item.masterName && item.masterName.trim() !== "") {
+                uniqueModels.add(item.masterName.trim());
+              }
+            });
+
+            console.log(
+              `📊 Batch ${batch + 1} added ${masterData.length} items. Total unique models: ${uniqueModels.size}`,
+            );
+
+            // Reset error counter on success
+            consecutiveErrors = 0;
+
+            // If we got less than BATCH_SIZE items, we've reached the end
+            if (masterData.length < BATCH_SIZE) {
+              console.log(
+                `✅ Received partial batch (${masterData.length} items). End of data reached.`,
+              );
+              break;
+            }
+          } catch (batchError) {
+            consecutiveErrors++;
+            console.error(`❌ Error fetching batch ${batch + 1}:`, {
+              message: batchError.message,
+              response: batchError.response?.data,
+              status: batchError.response?.status,
+            });
+
+            // If this is the first batch and it fails, throw error
+            if (batch === 0) {
+              throw new Error(
+                `Failed to fetch models on first batch: ${batchError.message}`,
+              );
+            }
+
+            // If we've had too many consecutive errors, stop trying
+            if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+              console.log(
+                `⚠️ Stopping after ${MAX_CONSECUTIVE_ERRORS} consecutive errors. Using ${uniqueModels.size} models collected so far.`,
+              );
+              break;
+            }
+
+            // For subsequent batches, log warning but continue with what we have
+            console.log(
+              `⚠️ Batch ${batch + 1} failed but continuing with ${uniqueModels.size} models collected so far`,
+            );
+            break;
+          }
         }
+
+        // Check if we have any models
+        if (uniqueModels.size === 0) {
+          console.log(`⚠️ No models found for ${make}`);
+          setError(`No models available for ${make}. Please try another make.`);
+          setModels([]);
+          setLoading(false);
+          return;
+        }
+
+        // Convert Set to sorted array for vehicleData
+        vehicleData = Array.from(uniqueModels)
+          .sort()
+          .map((modelName) => ({
+            model: modelName,
+          }));
+
+        console.log(`✅ Total unique models fetched: ${uniqueModels.size}`);
       }
 
       console.log("Extracted vehicleData:", vehicleData);
@@ -256,8 +308,8 @@ const Model = () => {
         const errorMsg = isDiscontinued
           ? "No discontinued models found."
           : isElectric
-          ? "No electric models found."
-          : `No models found for ${make}. Please try another make.`;
+            ? "No electric models found."
+            : `No models found for ${make}. Please try another make.`;
         setError(errorMsg);
         setModels([]);
         setLoading(false);
@@ -276,7 +328,7 @@ const Model = () => {
               const isValid = model && model.trim() !== "";
               if (!isValid) console.log("Filtered out invalid model:", model);
               return isValid;
-            })
+            }),
         ),
       ];
 
@@ -287,8 +339,8 @@ const Model = () => {
         const errorMsg = isDiscontinued
           ? "No discontinued models available."
           : isElectric
-          ? "No electric models available."
-          : `No models available for ${make}.`;
+            ? "No electric models available."
+            : `No models available for ${make}.`;
         setError(errorMsg);
         setModels([]);
         setLoading(false);
@@ -310,13 +362,13 @@ const Model = () => {
         const cacheMsg = isDiscontinued
           ? `Discontinued models cached successfully (${modelNamesOnly.length} models)`
           : isElectric
-          ? `Electric models cached successfully (${modelNamesOnly.length} models)`
-          : `Models for ${make} cached successfully (${modelNamesOnly.length} models)`;
+            ? `Electric models cached successfully (${modelNamesOnly.length} models)`
+            : `Models for ${make} cached successfully (${modelNamesOnly.length} models)`;
         console.log(cacheMsg);
       } catch (quotaError) {
         console.warn(
           "Failed to cache models (storage quota exceeded):",
-          quotaError
+          quotaError,
         );
         // Continue without caching - the app will still work
       }
@@ -329,16 +381,39 @@ const Model = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [make, variant, featureLabel]);
+
+  useEffect(() => {
+    // For discontinued and electric variants, fetch without needing a make
+    if (
+      variant === "wide" ||
+      featureLabel === "Discontinued Model" ||
+      variant === "e" ||
+      featureLabel === "Electric"
+    ) {
+      fetchModels();
+    } else if (make) {
+      fetchModels();
+    } else {
+      setLoading(false);
+      setError("No make selected. Please go back and select a make.");
+    }
+  }, [make, variant, featureLabel, fetchModels]);
 
   const handleModelClick = (model) => {
     const isDiscontinued =
       variant === "wide" || featureLabel === "Discontinued Model";
     const isElectric = variant === "e" || featureLabel === "Electric";
+
+    console.log("🚙 Model clicked:", model.name);
+    // Normalize model name to uppercase for API consistency
+    const normalizedModel = model.name.toUpperCase();
+    console.log("🚙 Normalized model:", normalizedModel);
+
     navigate("/CategoryNew", {
       state: {
         make: isDiscontinued || isElectric ? null : make,
-        model: model.name,
+        model: normalizedModel,
         variant,
         featureLabel,
       },
@@ -351,9 +426,10 @@ const Model = () => {
   if (make) {
     breadcrumbs.push({
       label: make,
-      onClick: () => navigate('/MakeNew', { 
-        state: { variant, featureLabel } 
-      })
+      onClick: () =>
+        navigate("/MakeNew", {
+          state: { variant, featureLabel },
+        }),
     });
   }
 
@@ -364,19 +440,18 @@ const Model = () => {
       </div>
 
       <div className="model-grid-wrapper">
-{loading ? (
-  <div className="model-row">
-    {Array.from({ length: 8 }).map((_, index) => (
-      <div key={index} className="model-card skeleton-card">
-        <div className="model-card-content">
-          <div className="skeleton skeleton-image"></div>
-          <div className="skeleton skeleton-text"></div>
-        </div>
-      </div>
-    ))}
-  </div>
-)
-: error ? (
+        {loading ? (
+          <div className="model-row">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="model-card skeleton-card">
+                <div className="model-card-content">
+                  <div className="skeleton skeleton-image"></div>
+                  <div className="skeleton skeleton-text"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
           <div style={{ textAlign: "center", padding: "40px", color: "red" }}>
             <p>{error}</p>
             <button

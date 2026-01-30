@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import NoImage from "../../../assets/No Image.png";
 import BrandSkeleton from "../../skeletonLoading/BrandSkeleton";
 import "../../../styles/search_by/MyOrder/Brand.css";
 import apiService from "../../../services/apiservice";
 import Navigation from "../../Navigation/Navigation";
-
-// Brand Images
-import myTVS from "../../../assets/Brands/MYTVS.png";
-import Filtron from "../../../assets/Brands/FILTRON.png";
-import MFC from "../../../assets/Brands/MFC.png";
+import OciImage from "../../oci_image/ociImages.jsx";
+import NoImage from "../../../assets/No Image.png";
 
 const Brand = () => {
   const navigate = useNavigate();
@@ -20,13 +16,6 @@ const Brand = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Brand image mapping
-  const brandImageMap = {
-    FILTRON: Filtron,
-    MFC: MFC,
-    MYTVS: myTVS,
-  };
-
   useEffect(() => {
     fetchBrands();
   }, []);
@@ -36,90 +25,83 @@ const Brand = () => {
       setLoading(true);
       setError(null);
 
-      // Check if coming from "Only with us" feature
       const isOnlyWithUs =
         variant === "logo" || featureLabel === "Only with us";
 
-      if (isOnlyWithUs) {
-        // Fetch brands from only-with-us API
-        console.log("Fetching brands from only-with-us API...");
-        const response = await apiService.get("/only-with-us");
-
-        console.log("Only-with-us API Response:", response);
-
-        // Handle response structure
-        let onlyWithUsData = [];
-        if (Array.isArray(response)) {
-          onlyWithUsData = response;
-        } else if (response && Array.isArray(response.data)) {
-          onlyWithUsData = response.data;
-        } else {
-          console.error("Unexpected response structure:", response);
-          throw new Error("Invalid response format");
-        }
-
-        // Extract unique brands
-        const uniqueBrands = [
-          ...new Set(
-            onlyWithUsData.map((item) => item.brand).filter((brand) => brand),
-          ),
-        ];
-
-        console.log("Unique brands:", uniqueBrands);
-
-        if (uniqueBrands.length === 0) {
-          setError('No brands found for "Only with us".');
-          setBrands([]);
-          setLoading(false);
-          return;
-        }
-
-        // Format brands with images
-        const formattedBrands = uniqueBrands.map((brandName, index) => ({
-          id: index + 1,
-          name: brandName,
-          image: brandImageMap[brandName.toUpperCase()] || NoImage,
-        }));
-
-        setBrands(formattedBrands);
-      } else {
-        // Default brands for other flows
-        setBrands([
-          { id: 1, name: "FILTRON", image: Filtron },
-          { id: 2, name: "MFC", image: MFC },
-          { id: 3, name: "MYTVS", image: myTVS },
-        ]);
+      if (!isOnlyWithUs) {
+        setError("Invalid flow. Only-with-us source not detected.");
+        setBrands([]);
+        return;
       }
+
+      console.log("Fetching brands from Only-With-Us API...");
+
+
+      const response = await apiService.get("/only-with-us");
+
+      console.log("API Response:", response);
+
+      // Backend returns: { success: true, data: [...] }
+      const onlyWithUsData = response?.data || [];
+
+      if (!Array.isArray(onlyWithUsData)) {
+        throw new Error("Invalid API response structure");
+      }
+
+      // ✅ Extract unique brands
+      const uniqueBrands = [
+        ...new Set(
+          onlyWithUsData
+            .map(item => item.brand?.trim())
+            .filter(Boolean)
+        ),
+      ];
+
+      if (uniqueBrands.length === 0) {
+        setError("No brands found.");
+        setBrands([]);
+        return;
+      }
+
+      // ✅ Format brands (OCI image will resolve dynamically)
+      const formattedBrands = uniqueBrands.map((brandName, index) => ({
+        id: index + 1,
+        name: brandName,
+      }));
+
+      setBrands(formattedBrands);
+
     } catch (err) {
-      console.error("Error fetching brands:", err);
-      setError("Failed to load brands. Please try again.");
+      console.error("Brand fetch error:", err);
+      setError("Failed to load brands.");
+      setBrands([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleBrandClick = (brand) => {
-    navigate("/Category", {
+    navigate("/CategoryNew", {
       state: {
         brand: brand.name,
         variant,
         featureLabel,
-        isOnlyWithUs: variant === "logo" || featureLabel === "Only with us",
+        isOnlyWithUs: true,
       },
     });
   };
 
   return (
     <div className="brand-container">
-      {/* Top Section with Navigation */}
+      {/* Navigation */}
       <div className="brand-top-section">
         <Navigation breadcrumbs={[{ label: "Brand" }]} />
       </div>
 
-      {/* Loading State */}
+      {/* Loading */}
       {loading && <BrandSkeleton count={6} />}
 
-      {/* Error State */}
+      {/* Error */}
       {error && (
         <div className="brands-error">
           <p>{error}</p>
@@ -134,14 +116,19 @@ const Brand = () => {
               key={brand.id}
               className="brand-card"
               onClick={() => handleBrandClick(brand)}
-              style={{ cursor: "pointer" }}
             >
               <div className="brand-image-wrapper">
-                <img
-                  src={brand.image}
-                  alt={brand.name}
+                <OciImage
+                  partNumber={brand.name}   // 🔥 brand name used as OCI filename
+                  folder="brand"            // 🔥 uses Partsmart/PartsmartImages/brand/
+                  fallbackImage={NoImage}
                   className="brand-image"
+                  alt={brand.name}
                 />
+              </div>
+
+              <div className="brand-name">
+                {brand.name}
               </div>
             </div>
           ))}

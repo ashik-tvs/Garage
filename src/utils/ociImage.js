@@ -1,11 +1,9 @@
-import axios from "axios";
 import NoImage from "../assets/No Image.png";
+import apiService from "../services/apiservice";   // ✅ uses unified apiService
 
 /* ============================
    CONFIG
 ============================ */
-const OCI_API = "http://localhost:5000/api/oci/read";
-
 const FOLDER_MAP = {
   make: "Partsmart/PartsmartImages/PV/Make/",
   model: "Partsmart/PartsmartImages/PV/Model/",
@@ -21,7 +19,7 @@ const EXTENSIONS = [
 ];
 
 /* ============================
-   IN-MEMORY CACHE
+   CACHE (IN-MEMORY)
 ============================ */
 const imageCache = new Map();
 
@@ -83,7 +81,7 @@ export const getOciImage = async (folder, fileName) => {
 
     const cacheKey = `${folder}_${fileName}`;
 
-    // ✅ CACHE HIT
+    /* ---------- CACHE HIT ---------- */
     if (imageCache.has(cacheKey)) {
       return imageCache.get(cacheKey);
     }
@@ -91,35 +89,62 @@ export const getOciImage = async (folder, fileName) => {
     const basePath = FOLDER_MAP[folder];
     const fileNames = buildFileNames(fileName);
 
+    /* ---------- SEARCH LOGIC ---------- */
     for (const name of fileNames) {
       for (const ext of EXTENSIONS) {
         const fullPath = `${basePath}${name}.${ext}`;
 
         try {
-          const res = await axios.get(OCI_API, {
+          /* ===== OCI CALL USING apiService ===== */
+          const blob = await apiService.getBlob("/oci/read", {
             params: { name: fullPath },
-            responseType: "blob",
           });
 
-          const url = URL.createObjectURL(res.data);
+          const url = URL.createObjectURL(blob);
 
-          // ✅ CACHE SUCCESS
+          /* ---------- CACHE SUCCESS ---------- */
           imageCache.set(cacheKey, url);
 
           return url;
-        } catch {
-          // Silent retry
+
+        } catch (err) {
+          // silent retry
         }
       }
     }
 
     console.warn(`🟡 OCI image missing: ${folder}/${fileName}`);
 
-    // ❌ CACHE FAILURE
+    /* ---------- CACHE FAILURE ---------- */
     imageCache.set(cacheKey, NoImage);
     return NoImage;
+
   } catch (err) {
     console.error("🔴 OCI Image Resolver Error:", err);
     return NoImage;
   }
+};
+
+/* ============================
+   OPTIONAL UTILITIES
+============================ */
+
+// Clear all cached images (memory cleanup)
+export const clearOciImageCache = () => {
+  for (const url of imageCache.values()) {
+    if (typeof url === "string" && url.startsWith("blob:")) {
+      URL.revokeObjectURL(url); // prevent memory leak
+    }
+  }
+  imageCache.clear();
+};
+
+// Remove single cached image
+export const removeOciImageFromCache = (folder, fileName) => {
+  const key = `${folder}_${fileName}`;
+  const url = imageCache.get(key);
+  if (url?.startsWith("blob:")) {
+    URL.revokeObjectURL(url);
+  }
+  imageCache.delete(key);
 };

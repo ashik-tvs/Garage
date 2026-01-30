@@ -57,7 +57,7 @@
 
 /* Name */
 .profile-name {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-weight: 600;
   font-size: 16px;
   color: #383838;
@@ -66,7 +66,7 @@
 
 /* Email */
 .profile-email {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 13px;
   color: #9e9e9e;
   margin: 0;
@@ -90,7 +90,7 @@
 
 .profile-logout-btn span {
   color: #ffffff;
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-weight: 500;
 }
 
@@ -116,7 +116,7 @@
 
 /* Labels */
 .profile-label {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: #67748e;
@@ -124,7 +124,7 @@
 
 /* Separator */
 .separator-text {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: #67748e;
@@ -133,7 +133,7 @@
 
 /* Values */
 .profile-value {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: #383838;

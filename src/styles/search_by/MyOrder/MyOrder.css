@@ -2,8 +2,7 @@
 .myorder-container {
   padding: 20px 40px;
   background: #FFFFFF;
-  font-family: 'Poppins', sans-serif;
-}
+    font-family: Inter, sans-serif !important;}
 
 /* Top Bar with Back Button, Breadcrumb and Filters */
 .myorder-top-bar {

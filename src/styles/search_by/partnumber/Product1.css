@@ -744,3 +744,202 @@
     font-size: 13px;
   }
 }
+/* ================= ROOT ================= */
+
+.product1-section { width: 100%; margin-bottom: 16px; }
+.aligned-section { margin-bottom: 30px; }
+
+.product1-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+}
+
+/* ================= GRID ================= */
+
+.product1-container{
+  display:grid;
+  gap:14px;
+  width:100%;
+  align-items:stretch;
+}
+
+.product1-container.horizontal{
+  grid-template-columns:repeat(3,1fr);
+}
+
+.product1-container.vertical{
+  grid-template-columns:1fr;
+}
+
+/* ================= CARD ================= */
+
+.product1-card{
+  background:#fff;
+  border:1px solid #e0e0e0;
+  border-radius:8px;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  height:200px;          /* FIXED HEIGHT */
+  min-height:200px;
+  max-height:200px;
+  overflow:hidden;
+  box-sizing:border-box;
+  position:relative;
+}
+
+.product1-container.vertical .product1-card,
+.aligned-card{
+  height:170px;
+  min-height:170px;
+  max-height:170px;
+}
+
+/* ================= CONTENT ================= */
+
+.product1-content{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex:1;
+  overflow:hidden;
+}
+
+.product1-info{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  flex:1;
+  overflow:hidden;
+}
+
+/* ================= IMAGE ================= */
+
+.product1-image-wrapper,
+.aligned-image-wrapper{
+  width:72px;
+  height:72px;
+  flex-shrink:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fafafa;
+  border-radius:6px;
+}
+
+.product1-image,
+.aligned-image{
+  max-width:100%;
+  max-height:100%;
+  object-fit:contain;
+}
+
+/* ================= TEXT ================= */
+
+.product1-name,
+.aligned-name{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.product1-code,
+.aligned-code{
+  font-size:12px;
+  color:#666;
+}
+
+/* ================= PRICE ================= */
+
+.product1-price-section,
+.aligned-bottom-section{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:auto;
+}
+
+.product1-price,
+.aligned-price{
+  font-size:15px;
+  font-weight:600;
+}
+
+.product1-mrp,
+.aligned-mrp{
+  font-size:12px;
+  color:#a90000;
+  text-decoration:line-through;
+}
+
+/* ================= BUTTON ================= */
+
+.product1-add-btn,
+.aligned-add-btn{
+  background:#FF4D01;
+  color:#fff;
+  border:none;
+  border-radius:6px;
+  padding:6px 14px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.product1-add-btn.added,
+.aligned-add-btn.added{
+  background:#10b981;
+}
+
+/* ================= TAGS ================= */
+
+.product1-tags,
+.aligned-tags{
+  display:flex;
+  gap:6px;
+  overflow:hidden;
+}
+
+.product1-tag,
+.aligned-tag{
+  font-size:10px;
+  padding:3px 7px;
+  border-radius:4px;
+  white-space:nowrap;
+}
+
+/* ================= COMPATIBILITY ================= */
+
+.product1-compatible{
+  display:flex;
+  justify-content:space-between;
+  font-size:11px;
+  color:#666;
+  border-top:1px solid #eee;
+  padding-top:6px;
+  margin-top:6px;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1200px){
+  .product1-container.horizontal{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:768px){
+  .product1-container.horizontal{
+    grid-template-columns:1fr;
+  }
+
+  .product1-card{
+    height:210px;
+  }
+
+  .aligned-card{
+    height:180px;
+  }
+}

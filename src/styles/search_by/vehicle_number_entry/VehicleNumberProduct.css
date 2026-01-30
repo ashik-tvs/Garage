@@ -1,6 +1,6 @@
 .vnp-vehicle-info-part,
 .vnp-vehicle-info-separator {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: #444;
@@ -81,8 +81,7 @@
   text-overflow: ellipsis;
   cursor: pointer;
   /* transition: border-color 0.2s; */
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
+    font-family: Inter, sans-serif !important;  font-weight: 500;
   /* color: #667085; */
 }
 
@@ -115,8 +114,7 @@
   border-radius: 6px;
   cursor: pointer;
   font-size: 12px;
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
+    font-family: Inter, sans-serif !important;  font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -188,8 +186,7 @@
 }
 
 .vnp-num-part {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;
@@ -203,8 +200,7 @@
 }
 
 .vnp-sep {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;
@@ -339,7 +335,7 @@
 }
 
 .vnp-breadcrumb-text {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: #444;
@@ -364,7 +360,7 @@ padding: 6px 12px;
 }
 
 .vnp-vehicle-info {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: #444;
@@ -516,7 +512,7 @@ padding: 6px 12px;
 }
 
 .vnp-section-title {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 18px;
   font-weight: 600;
   color: #424242;
@@ -607,7 +603,7 @@ padding: 6px 12px;
 .vnp-badge {
   padding: 4px 8px;
   border-radius: 4px;
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 10px;
   font-weight: 400;
   max-width: 85px;
@@ -714,7 +710,7 @@ padding: 6px 12px;
 }
 
 .vnp-code {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 14px;
   font-weight: 400;
   color: #666;
@@ -722,7 +718,7 @@ padding: 6px 12px;
 }
 
 .vnp-name {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 12px;
   font-weight: 400;
   color: #333;
@@ -808,14 +804,14 @@ padding: 6px 12px;
 }
 
 .vnp-price-current {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 14px;
   font-weight: 600;
   color: #333;
 }
 
 .vnp-price-original {
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 16px;
   font-weight: 400;
   color: #cd6363;
@@ -862,7 +858,7 @@ padding: 6px 12px;
   color: #fff;
   border: none;
   border-radius: 6px;
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -973,8 +969,7 @@ padding: 6px 12px;
   border: 2px solid #E5E7EB;
   border-radius: 8px;
   cursor: pointer;
-  font-family: 'Poppins', sans-serif;
-  font-size: 13px;
+    font-family: Inter, sans-serif !important;  font-size: 13px;
   font-weight: 400;
   color: #374151;
   user-select: none;
@@ -1274,5 +1269,5 @@ max-height: 300px;
   text-align: center;
   color: #999;
   font-size: 14px;
-  font-family: "Poppins", sans-serif;
+  font-family: Inter, sans-serif;
 }

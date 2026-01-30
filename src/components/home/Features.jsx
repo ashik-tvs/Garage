@@ -50,7 +50,7 @@ const Features = () => {
 
   // Helper to build full asset URL
   const getAssetUrl = (filePath) => {
-    if (!filePath) return "";
+    if (!filePath) return null;
     return apiService.getAssetUrl(filePath);
   };
 
@@ -68,11 +68,13 @@ const Features = () => {
               onKeyDown={(e) => handleKey(e, c)}
             >
               <span className="sixcat-label">{c.label}</span>
-              <img
-                className={`sixcat-icon sixcat-icon--${c.variant}`}
-                src={getAssetUrl(uiAssets[c.tag])}
-                alt={c.label}
-              />
+              {getAssetUrl(uiAssets[c.tag]) && (
+                <img
+                  className={`sixcat-icon sixcat-icon--${c.variant}`}
+                  src={getAssetUrl(uiAssets[c.tag])}
+                  alt={c.label}
+                />
+              )}
             </div>
           ))}
         </div>
