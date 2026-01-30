@@ -1277,8 +1277,8 @@ const applyCompatibilityFilter = async () => {
         <div className="pn-search-key">
           Search Key : <b>{searchKey}</b>
           {totalPartsCount > 0 && (
-            <span style={{ marginLeft: "10px", color: "#666" }}>
-              Compatible with <b style={{ color: "#000" }}>{totalPartsCount.toLocaleString()}</b> items
+            <span style={{ marginLeft: "10px" }}>
+              Compatible with <b >{totalPartsCount.toLocaleString()}</b> items
             </span>
           )}
         </div>
