@@ -236,6 +236,7 @@ const Make = () => {
       state: {
         make: make.name,
         makeName: make.makeName,
+        fromHome: true, // Flag to indicate navigation from Home page
       },
     });
   };

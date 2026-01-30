@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/CategoryNew.css";
 import apiService from "../../../services/apiservice";
-import OciImage from "../../oci_image/ociImages";
+import OciImage from "../../oci_image/ociImages.jsx";
 import Navigation from "../../Navigation/Navigation";
 import NoImage from "../../../assets/No Image.png";
 
@@ -10,10 +10,10 @@ const CategoryNew = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // Extract state variables including make, model, variant, and brand
-  const { featureLabel, make, model, variant, brand, isOnlyWithUs } = location.state || {};
+  const { featureLabel, make, model, variant, brand, isOnlyWithUs, fromHome } = location.state || {};
 
   console.log("🔍 CategoryNew mounted with location.state:", location.state);
-  console.log("🔍 Extracted values:", { featureLabel, make, model, variant, brand, isOnlyWithUs });
+  console.log("🔍 Extracted values:", { featureLabel, make, model, variant, brand, isOnlyWithUs, fromHome });
 
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -279,6 +279,7 @@ const CategoryNew = () => {
         variant,
         brand,
         isOnlyWithUs,
+        fromHome, // Pass through fromHome flag
       },
     });
   };

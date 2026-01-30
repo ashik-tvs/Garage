@@ -34,6 +34,7 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
     featureLabel,
     variant,
     isOnlyWithUs,
+    fromHome, // Flag to indicate if navigation started from Home page
   } = location.state || {};
 
   // Auto-generate breadcrumbs based on route and state
@@ -120,16 +121,23 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
       else if (hasMake && hasModel) {
         crumbs.push({
           label: make,
-          onClick: () => navigate("/MakeNew", { state: { variant } }),
+          onClick: () => {
+            // If came from Home page, go back to Home; otherwise go to MakeNew
+            if (fromHome) {
+              navigate("/home", { state: { variant } });
+            } else {
+              navigate("/MakeNew", { state: { variant } });
+            }
+          },
         });
         crumbs.push({
           label: model,
-          onClick: () => navigate("/Model", { state: { make, variant } }),
+          onClick: () => navigate("/Model", { state: { make, variant, fromHome } }),
         });
         if (hasCategory) {
           crumbs.push({
             label: aggregateName || category,
-            onClick: () => navigate("/CategoryNew", { state: { make, model, variant } }),
+            onClick: () => navigate("/CategoryNew", { state: { make, model, variant, fromHome } }),
           });
         }
       }
@@ -149,6 +157,7 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
               variant,
               featureLabel: hasFeature ? featureLabel : undefined,
               isOnlyWithUs: hasBrand && featureLabel === "Only with us",
+              fromHome, // Preserve fromHome flag
             },
           }),
         });
@@ -202,12 +211,22 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
           onClick: () => navigate("/home", { state: { variant } }),
         });
       } else if (hasMake && hasModel) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { variant } }) });
-        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant } }) });
+        crumbs.push({ 
+          label: make, 
+          onClick: () => {
+            // If came from Home page, go back to Home; otherwise go to MakeNew
+            if (fromHome) {
+              navigate("/home", { state: { variant } });
+            } else {
+              navigate("/MakeNew", { state: { variant } });
+            }
+          }
+        });
+        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant, fromHome } }) });
         if (hasCategory) {
           crumbs.push({
             label: aggregateName || category,
-            onClick: () => navigate("/CategoryNew", { state: { make, model, variant } }),
+            onClick: () => navigate("/CategoryNew", { state: { make, model, variant, fromHome } }),
           });
         }
       }
@@ -216,7 +235,10 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
     else if (currentPath === "/CategoryNew") {
       if (hasFeature) {
         if (featureLabel === "CNG" && hasMake) {
-          crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }) });
+          crumbs.push({ 
+            label: make, 
+            onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } })
+          });
           if (hasModel) {
             crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, featureLabel, variant } }) });
           }
@@ -226,14 +248,34 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
           crumbs.push({ label: brand, onClick: () => navigate("/brand", { state: { featureLabel, variant } }) });
         }
       } else if (hasMake && hasModel) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { variant } }) });
-        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant } }) });
+        crumbs.push({ 
+          label: make, 
+          onClick: () => {
+            // If came from Home page, go back to Home; otherwise go to MakeNew
+            if (fromHome) {
+              navigate("/home", { state: { variant } });
+            } else {
+              navigate("/MakeNew", { state: { variant } });
+            }
+          }
+        });
+        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant, fromHome } }) });
       }
     }
     // Model page breadcrumbs
     else if (currentPath === "/Model") {
       if (hasMake) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }) });
+        crumbs.push({ 
+          label: make, 
+          onClick: () => {
+            // If came from Home page, go back to Home; otherwise go to MakeNew
+            if (fromHome) {
+              navigate("/home", { state: { featureLabel, variant } });
+            } else {
+              navigate("/MakeNew", { state: { featureLabel, variant } });
+            }
+          }
+        });
       }
     }
 

@@ -2,19 +2,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Model.css";
 import apiService from "../../../services/apiservice";
-import OciImage from "../../oci_image/ociImages";
+import OciImage from "../../oci_image/ociImages.jsx";
 import noImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
 
 const Model = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { make, variant, featureLabel } = location.state || {};
+  const { make, variant, featureLabel, fromHome } = location.state || {};
 
   console.log("Model component - Received state:", {
     make,
     variant,
     featureLabel,
+    fromHome,
   });
 
   const [showNameModal, setShowNameModal] = useState(false);
@@ -397,6 +398,7 @@ const Model = () => {
         model: normalizedModel,
         variant,
         featureLabel,
+        fromHome, // Pass through fromHome flag
       },
     });
   };

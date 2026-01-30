@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import apiService from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
-import OciImage from "../../oci_image/ociImages";
+import OciImage from "../../oci_image/ociImages.jsx";
 import Navigation from "../../Navigation/Navigation";
 import "../../../styles/home/SubCategory.css";
 
@@ -19,6 +19,7 @@ const Sub_Category = () => {
     featureLabel,
     variant,
     isOnlyWithUs,
+    fromHome, // Extract fromHome flag
   } = location.state || {};
 
   // Use aggregate from Category.jsx if available, fallback to aggregateName
@@ -293,6 +294,7 @@ const Sub_Category = () => {
         subAggregateName: subCategory.subAggregateName,
         featureLabel,
         variant,
+        fromHome, // Pass through fromHome flag
       },
     });
   };
