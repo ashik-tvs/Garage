@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
-import apiService, { fetchMasterList, fetchVehicleListByPartNumber } from "../../../services/apiservice";
+import apiService, {
+  fetchMasterList,
+  fetchVehicleListByPartNumber,
+} from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
 import Product1 from "../partnumber/Product1";
@@ -34,7 +37,11 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
     const currentOffset = reset ? 0 : offset;
 
     try {
-      const response = await fetchVehicleListByPartNumber(partNumber, 50, currentOffset);
+      const response = await fetchVehicleListByPartNumber(
+        partNumber,
+        50,
+        currentOffset,
+      );
       const newVehicles = response?.data || [];
       const count = response?.count || 0;
 
@@ -44,8 +51,8 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
         setVehicles(newVehicles);
         setOffset(50);
       } else {
-        setVehicles(prev => [...prev, ...newVehicles]);
-        setOffset(prev => prev + 50);
+        setVehicles((prev) => [...prev, ...newVehicles]);
+        setOffset((prev) => prev + 50);
       }
 
       // Check if there are more vehicles to load
@@ -66,12 +73,12 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
   // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         if (entries[0].isIntersecting && hasMore && !loading) {
           fetchVehicles();
         }
       },
-      { threshold: 1.0 }
+      { threshold: 1.0 },
     );
 
     const currentTarget = observerTarget.current;
@@ -128,11 +135,11 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
             {filteredVehicles.length > 0 ? (
               <>
                 {filteredVehicles.map((v, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="vnp-modal-row"
                     onClick={() => handleVehicleClick(v)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: "pointer" }}
                   >
                     <span>{v.make}</span>
                     <span>{v.model}</span>
@@ -143,9 +150,13 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
                 ))}
                 {/* Infinite scroll trigger */}
                 {hasMore && !searchTerm && (
-                  <div 
-                    ref={observerTarget} 
-                    style={{ height: '20px', padding: '10px', textAlign: 'center' }}
+                  <div
+                    ref={observerTarget}
+                    style={{
+                      height: "20px",
+                      padding: "10px",
+                      textAlign: "center",
+                    }}
                   >
                     {loading && <span>Loading more...</span>}
                   </div>
@@ -251,20 +262,24 @@ const Product = () => {
 
   const cachedState = getCachedState();
 
-  const [filters, setFilters] = useState(cachedState?.filters || {
-    year: "",
-    fuelType: "",
-    eta: "",
-  });
+  const [filters, setFilters] = useState(
+    cachedState?.filters || {
+      year: "",
+      fuelType: "",
+      eta: "",
+    },
+  );
 
   // Main search filter states (vnp-search-main)
-  const [searchFilters, setSearchFilters] = useState(cachedState?.searchFilters || {
-    make: "",
-    model: "",
-    variant: "",
-    fuelType: "",
-    year: "",
-  });
+  const [searchFilters, setSearchFilters] = useState(
+    cachedState?.searchFilters || {
+      make: "",
+      model: "",
+      variant: "",
+      fuelType: "",
+      year: "",
+    },
+  );
 
   // Dropdown options for main search filters
   const [dropdownOptions, setDropdownOptions] = useState({
@@ -296,7 +311,11 @@ const Product = () => {
     if (aggregateName && subAggregateName) {
       // Check if we have valid cached data (less than 5 minutes old)
       const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-      if (cachedState && cachedState.timestamp && (Date.now() - cachedState.timestamp < CACHE_DURATION)) {
+      if (
+        cachedState &&
+        cachedState.timestamp &&
+        Date.now() - cachedState.timestamp < CACHE_DURATION
+      ) {
         console.log("✅ Using cached data");
         setProducts(cachedState.products || []);
         setStockData(cachedState.stockData || {});
@@ -320,13 +339,20 @@ const Product = () => {
   // Initialize search filters based on breadcrumb navigation flow
   const initializeSearchFilters = async () => {
     console.log("🔄 Initializing search filters...");
-    console.log("📍 Breadcrumb context:", { make, model, aggregateName, subAggregateName });
+    console.log("📍 Breadcrumb context:", {
+      make,
+      model,
+      aggregateName,
+      subAggregateName,
+    });
 
     // Always start with empty search filters and fetch all makes
     // Don't pre-fill from breadcrumbs - let user select from all available options
     if (aggregateName && subAggregateName) {
-      console.log("✅ Fetching all makes for category (ignoring breadcrumb make/model)");
-      
+      console.log(
+        "✅ Fetching all makes for category (ignoring breadcrumb make/model)",
+      );
+
       // Reset all search filters
       setSearchFilters({
         make: "",
@@ -344,7 +370,7 @@ const Product = () => {
   // Fetch Makes (for Flow 2: Category -> SubCategory)
   const fetchMakes = async (aggregate, subAggregate) => {
     try {
-      setLoadingDropdowns(prev => ({ ...prev, makes: true }));
+      setLoadingDropdowns((prev) => ({ ...prev, makes: true }));
       console.log("🔍 Fetching makes for:", { aggregate, subAggregate });
 
       const response = await fetchMasterList({
@@ -356,22 +382,21 @@ const Product = () => {
 
       console.log("✅ Makes response:", response);
 
-      const makes = response?.data?.map(item => item.masterName) || [];
-      setDropdownOptions(prev => ({ ...prev, makes }));
+      const makes = response?.data?.map((item) => item.masterName) || [];
+      setDropdownOptions((prev) => ({ ...prev, makes }));
       console.log("📋 Makes loaded:", makes.length);
-
     } catch (error) {
       console.error("❌ Error fetching makes:", error);
-      setDropdownOptions(prev => ({ ...prev, makes: [] }));
+      setDropdownOptions((prev) => ({ ...prev, makes: [] }));
     } finally {
-      setLoadingDropdowns(prev => ({ ...prev, makes: false }));
+      setLoadingDropdowns((prev) => ({ ...prev, makes: false }));
     }
   };
 
   // Fetch Models (for selected Make)
   const fetchModels = async (selectedMake) => {
     try {
-      setLoadingDropdowns(prev => ({ ...prev, models: true }));
+      setLoadingDropdowns((prev) => ({ ...prev, models: true }));
       console.log("🔍 Fetching models for make:", selectedMake);
 
       const response = await fetchMasterList({
@@ -384,22 +409,21 @@ const Product = () => {
 
       console.log("✅ Models response:", response);
 
-      const models = response?.data?.map(item => item.masterName) || [];
-      setDropdownOptions(prev => ({ ...prev, models }));
+      const models = response?.data?.map((item) => item.masterName) || [];
+      setDropdownOptions((prev) => ({ ...prev, models }));
       console.log("📋 Models loaded:", models.length);
-
     } catch (error) {
       console.error("❌ Error fetching models:", error);
-      setDropdownOptions(prev => ({ ...prev, models: [] }));
+      setDropdownOptions((prev) => ({ ...prev, models: [] }));
     } finally {
-      setLoadingDropdowns(prev => ({ ...prev, models: false }));
+      setLoadingDropdowns((prev) => ({ ...prev, models: false }));
     }
   };
 
   // Fetch Variants (for selected Make and Model)
   const fetchVariants = async (selectedMake, selectedModel) => {
     try {
-      setLoadingDropdowns(prev => ({ ...prev, variants: true }));
+      setLoadingDropdowns((prev) => ({ ...prev, variants: true }));
       console.log("🔍 Fetching variants for:", { selectedMake, selectedModel });
 
       const response = await fetchMasterList({
@@ -413,23 +437,30 @@ const Product = () => {
 
       console.log("✅ Variants response:", response);
 
-      const variants = response?.data?.map(item => item.masterName) || [];
-      setDropdownOptions(prev => ({ ...prev, variants }));
+      const variants = response?.data?.map((item) => item.masterName) || [];
+      setDropdownOptions((prev) => ({ ...prev, variants }));
       console.log("📋 Variants loaded:", variants.length);
-
     } catch (error) {
       console.error("❌ Error fetching variants:", error);
-      setDropdownOptions(prev => ({ ...prev, variants: [] }));
+      setDropdownOptions((prev) => ({ ...prev, variants: [] }));
     } finally {
-      setLoadingDropdowns(prev => ({ ...prev, variants: false }));
+      setLoadingDropdowns((prev) => ({ ...prev, variants: false }));
     }
   };
 
   // Fetch Fuel Types (for selected Variant)
-  const fetchFuelTypes = async (selectedMake, selectedModel, selectedVariant) => {
+  const fetchFuelTypes = async (
+    selectedMake,
+    selectedModel,
+    selectedVariant,
+  ) => {
     try {
-      setLoadingDropdowns(prev => ({ ...prev, fuelTypes: true }));
-      console.log("🔍 Fetching fuel types for:", { selectedMake, selectedModel, selectedVariant });
+      setLoadingDropdowns((prev) => ({ ...prev, fuelTypes: true }));
+      console.log("🔍 Fetching fuel types for:", {
+        selectedMake,
+        selectedModel,
+        selectedVariant,
+      });
 
       const response = await fetchMasterList({
         masterType: "fuelType",
@@ -443,23 +474,32 @@ const Product = () => {
 
       console.log("✅ Fuel Types response:", response);
 
-      const fuelTypes = response?.data?.map(item => item.masterName) || [];
-      setDropdownOptions(prev => ({ ...prev, fuelTypes }));
+      const fuelTypes = response?.data?.map((item) => item.masterName) || [];
+      setDropdownOptions((prev) => ({ ...prev, fuelTypes }));
       console.log("📋 Fuel Types loaded:", fuelTypes.length);
-
     } catch (error) {
       console.error("❌ Error fetching fuel types:", error);
-      setDropdownOptions(prev => ({ ...prev, fuelTypes: [] }));
+      setDropdownOptions((prev) => ({ ...prev, fuelTypes: [] }));
     } finally {
-      setLoadingDropdowns(prev => ({ ...prev, fuelTypes: false }));
+      setLoadingDropdowns((prev) => ({ ...prev, fuelTypes: false }));
     }
   };
 
   // Fetch Years (for selected Fuel Type)
-  const fetchYears = async (selectedMake, selectedModel, selectedVariant, selectedFuelType) => {
+  const fetchYears = async (
+    selectedMake,
+    selectedModel,
+    selectedVariant,
+    selectedFuelType,
+  ) => {
     try {
-      setLoadingDropdowns(prev => ({ ...prev, years: true }));
-      console.log("🔍 Fetching years for:", { selectedMake, selectedModel, selectedVariant, selectedFuelType });
+      setLoadingDropdowns((prev) => ({ ...prev, years: true }));
+      console.log("🔍 Fetching years for:", {
+        selectedMake,
+        selectedModel,
+        selectedVariant,
+        selectedFuelType,
+      });
 
       const response = await fetchMasterList({
         masterType: "year",
@@ -473,15 +513,14 @@ const Product = () => {
 
       console.log("✅ Years response:", response);
 
-      const years = response?.data?.map(item => item.masterName) || [];
-      setDropdownOptions(prev => ({ ...prev, years }));
+      const years = response?.data?.map((item) => item.masterName) || [];
+      setDropdownOptions((prev) => ({ ...prev, years }));
       console.log("📋 Years loaded:", years.length);
-
     } catch (error) {
       console.error("❌ Error fetching years:", error);
-      setDropdownOptions(prev => ({ ...prev, years: [] }));
+      setDropdownOptions((prev) => ({ ...prev, years: [] }));
     } finally {
-      setLoadingDropdowns(prev => ({ ...prev, years: false }));
+      setLoadingDropdowns((prev) => ({ ...prev, years: false }));
     }
   };
 
@@ -497,7 +536,7 @@ const Product = () => {
     });
 
     // Reset dependent dropdowns
-    setDropdownOptions(prev => ({
+    setDropdownOptions((prev) => ({
       ...prev,
       models: [],
       variants: [],
@@ -513,7 +552,7 @@ const Product = () => {
   // Handle Model selection (cascading)
   const handleModelChange = async (selectedModel) => {
     console.log("🔄 Model changed:", selectedModel);
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       model: selectedModel,
       variant: "",
@@ -522,7 +561,7 @@ const Product = () => {
     }));
 
     // Reset dependent dropdowns
-    setDropdownOptions(prev => ({
+    setDropdownOptions((prev) => ({
       ...prev,
       variants: [],
       fuelTypes: [],
@@ -537,7 +576,7 @@ const Product = () => {
   // Handle Variant selection (cascading)
   const handleVariantChange = async (selectedVariant) => {
     console.log("🔄 Variant changed:", selectedVariant);
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       variant: selectedVariant,
       fuelType: "",
@@ -545,41 +584,55 @@ const Product = () => {
     }));
 
     // Reset dependent dropdowns
-    setDropdownOptions(prev => ({
+    setDropdownOptions((prev) => ({
       ...prev,
       fuelTypes: [],
       years: [],
     }));
 
     if (selectedVariant && searchFilters.make && searchFilters.model) {
-      await fetchFuelTypes(searchFilters.make, searchFilters.model, selectedVariant);
+      await fetchFuelTypes(
+        searchFilters.make,
+        searchFilters.model,
+        selectedVariant,
+      );
     }
   };
 
   // Handle Fuel Type selection (cascading)
   const handleFuelTypeChange = async (selectedFuelType) => {
     console.log("🔄 Fuel Type changed:", selectedFuelType);
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       fuelType: selectedFuelType,
       year: "",
     }));
 
     // Reset dependent dropdowns
-    setDropdownOptions(prev => ({
+    setDropdownOptions((prev) => ({
       ...prev,
       years: [],
     }));
 
-    if (selectedFuelType && searchFilters.make && searchFilters.model && searchFilters.variant) {
-      await fetchYears(searchFilters.make, searchFilters.model, searchFilters.variant, selectedFuelType);
+    if (
+      selectedFuelType &&
+      searchFilters.make &&
+      searchFilters.model &&
+      searchFilters.variant
+    ) {
+      await fetchYears(
+        searchFilters.make,
+        searchFilters.model,
+        searchFilters.variant,
+        selectedFuelType,
+      );
     }
   };
 
   // Handle Year selection
   const handleYearChange = (selectedYear) => {
     console.log("🔄 Year changed:", selectedYear);
-    setSearchFilters(prev => ({
+    setSearchFilters((prev) => ({
       ...prev,
       year: selectedYear,
     }));
@@ -588,12 +641,12 @@ const Product = () => {
   // Handle Search button click
   const handleSearch = () => {
     console.log("🔍 Search initiated with filters:", searchFilters);
-    
+
     // Clear vehicle filtered state when new search is performed
     setIsVehicleFiltered(false);
     setPreviousProducts([]);
     setPreviousSearchFilters(null);
-    
+
     // Refetch products with the new search filters
     if (aggregateName && subAggregateName) {
       fetchProductsWithFilters();
@@ -603,14 +656,14 @@ const Product = () => {
   // Restore previous state (back functionality)
   const handleRestorePreviousState = () => {
     console.log("↩️ Restoring previous state");
-    
+
     if (previousProducts.length > 0 && previousSearchFilters) {
       setProducts(previousProducts);
       setSearchFilters(previousSearchFilters);
       setIsVehicleFiltered(false);
       setPreviousProducts([]);
       setPreviousSearchFilters(null);
-      
+
       console.log("✅ Previous state restored");
     }
   };
@@ -669,7 +722,9 @@ const Product = () => {
       fetchVehicleCountsForProducts(formattedProducts); // Non-blocking
     } catch (err) {
       console.error("❌ Error fetching filtered products:", err);
-      setError(`Failed to load products: ${err.message || "Please try again."}`);
+      setError(
+        `Failed to load products: ${err.message || "Please try again."}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -731,7 +786,7 @@ const Product = () => {
 
       // Fetch stock status for all products
       fetchStockForProducts(formattedProducts);
-      
+
       // Fetch vehicle compatibility counts for all products (non-blocking)
       fetchVehicleCountsForProducts(formattedProducts);
     } catch (err) {
@@ -752,55 +807,66 @@ const Product = () => {
   // Fetch vehicle compatibility count for each product (in batches)
   const fetchVehicleCountsForProducts = async (productsList) => {
     setLoadingCounts(true);
-    console.log("🔍 Fetching vehicle counts for", productsList.length, "products");
-    
+    console.log(
+      "🔍 Fetching vehicle counts for",
+      productsList.length,
+      "products",
+    );
+
     const BATCH_SIZE = 5; // Fetch 5 at a time
     const batches = [];
-    
+
     // Split into batches
     for (let i = 0; i < productsList.length; i += BATCH_SIZE) {
       batches.push(productsList.slice(i, i + BATCH_SIZE));
     }
-    
+
     // Fetch batches progressively
     for (let i = 0; i < batches.length; i++) {
       const batch = batches[i];
       console.log(`🔄 Fetching batch ${i + 1}/${batches.length}`);
-      
+
       const countPromises = batch.map(async (product) => {
         try {
-          const response = await fetchVehicleListByPartNumber(product.partNumber, 1, 0);
+          const response = await fetchVehicleListByPartNumber(
+            product.partNumber,
+            1,
+            0,
+          );
           return {
             partNumber: product.partNumber,
             count: response?.count || 0,
           };
         } catch (err) {
-          console.error(`❌ Error fetching vehicle count for ${product.partNumber}:`, err);
+          console.error(
+            `❌ Error fetching vehicle count for ${product.partNumber}:`,
+            err,
+          );
           return {
             partNumber: product.partNumber,
             count: 0,
           };
         }
       });
-      
+
       try {
         const countResults = await Promise.all(countPromises);
-        
+
         // Update state incrementally after each batch
-        setVehicleCounts(prev => {
+        setVehicleCounts((prev) => {
           const updated = { ...prev };
           countResults.forEach((result) => {
             updated[result.partNumber] = result.count;
           });
           return updated;
         });
-        
+
         console.log(`✅ Batch ${i + 1} completed:`, countResults);
       } catch (err) {
         console.error("❌ Error fetching batch:", err);
       }
     }
-    
+
     setLoadingCounts(false);
     console.log("🎉 All vehicle counts fetched");
   };
@@ -809,7 +875,7 @@ const Product = () => {
   const fetchVehicleCompatibility = async (partNumber) => {
     try {
       console.log("🔍 Fetching vehicle compatibility for:", partNumber);
-      
+
       const response = await apiService.post("/vehicle-list", {
         partNumber: partNumber,
         customerCode: "0046",
@@ -845,12 +911,12 @@ const Product = () => {
   // Handle vehicle selection from compatibility modal
   const handleVehicleSelection = async (vehicle) => {
     console.log("🔍 Fetching products for selected vehicle:", vehicle);
-    
+
     // Backup current state before filtering
     setPreviousProducts(products);
     setPreviousSearchFilters(searchFilters);
     setIsVehicleFiltered(true);
-    
+
     setLoading(true);
     setError(null);
 
@@ -906,17 +972,17 @@ const Product = () => {
 
       // Separate myTVS and other products
       const myTvsProducts = transformedProducts.filter(
-        (item) => item.brand.toUpperCase() === "MYTVS"
+        (item) => item.brand.toUpperCase() === "MYTVS",
       );
       const otherProducts = transformedProducts.filter(
-        (item) => item.brand.toUpperCase() !== "MYTVS"
+        (item) => item.brand.toUpperCase() !== "MYTVS",
       );
 
       console.log("✅ myTVS Products:", myTvsProducts.length);
       console.log("✅ Other Products:", otherProducts.length);
 
       setProducts(transformedProducts);
-      
+
       // Auto-fill search controls with selected vehicle
       setSearchFilters({
         make: vehicle.make || "",
@@ -925,7 +991,7 @@ const Product = () => {
         fuelType: vehicle.fuelType || "",
         year: vehicle.year || "",
       });
-      
+
       console.log("✅ Search controls auto-filled:", {
         make: vehicle.make,
         model: vehicle.model,
@@ -941,7 +1007,9 @@ const Product = () => {
       setLoading(false);
     } catch (err) {
       console.error("❌ Error fetching products for vehicle:", err);
-      setError("Failed to load products for selected vehicle. Please try again.");
+      setError(
+        "Failed to load products for selected vehicle. Please try again.",
+      );
       setProducts([]);
       setLoading(false);
     }
@@ -1201,14 +1269,14 @@ const Product = () => {
 
   return (
     <div className="vnp-container">
+      <Navigation />
       {/* ---------- TOP SECTION ---------- */}
       <div className="vnp-top-row">
         {/* Navigation component auto-generates breadcrumbs based on route and state */}
-        <Navigation />
 
         <div className="vnp-search-controls">
           <div className="vnp-search-main">
-            <select 
+            <select
               className="vnp-control-dropdown"
               value={searchFilters.make}
               onChange={(e) => handleMakeChange(e.target.value)}
@@ -1224,7 +1292,7 @@ const Product = () => {
               ))}
             </select>
 
-            <select 
+            <select
               className="vnp-control-dropdown"
               value={searchFilters.model}
               onChange={(e) => handleModelChange(e.target.value)}
@@ -1240,14 +1308,16 @@ const Product = () => {
               ))}
             </select>
 
-            <select 
+            <select
               className="vnp-control-dropdown"
               value={searchFilters.variant}
               onChange={(e) => handleVariantChange(e.target.value)}
               disabled={!searchFilters.model || loadingDropdowns.variants}
             >
               <option value="">
-                {loadingDropdowns.variants ? "Loading Variants..." : "Select Variant"}
+                {loadingDropdowns.variants
+                  ? "Loading Variants..."
+                  : "Select Variant"}
               </option>
               {dropdownOptions.variants.map((variantOption, index) => (
                 <option key={index} value={variantOption}>
@@ -1256,14 +1326,16 @@ const Product = () => {
               ))}
             </select>
 
-            <select 
+            <select
               className="vnp-control-dropdown"
               value={searchFilters.fuelType}
               onChange={(e) => handleFuelTypeChange(e.target.value)}
               disabled={!searchFilters.variant || loadingDropdowns.fuelTypes}
             >
               <option value="">
-                {loadingDropdowns.fuelTypes ? "Loading Fuel Types..." : "Select Fuel type"}
+                {loadingDropdowns.fuelTypes
+                  ? "Loading Fuel Types..."
+                  : "Select Fuel type"}
               </option>
               {dropdownOptions.fuelTypes.map((fuelOption, index) => (
                 <option key={index} value={fuelOption}>
@@ -1272,7 +1344,7 @@ const Product = () => {
               ))}
             </select>
 
-            <select 
+            <select
               className="vnp-control-dropdown"
               value={searchFilters.year}
               onChange={(e) => handleYearChange(e.target.value)}
@@ -1288,16 +1360,13 @@ const Product = () => {
               ))}
             </select>
 
-            <button 
-              className="vnp-search-btn" 
-              onClick={handleSearch}
-            >
+            <button className="vnp-search-btn" onClick={handleSearch}>
               Search
             </button>
-            
+
             {isVehicleFiltered && (
-              <button 
-                className="vnp-search-btn" 
+              <button
+                className="vnp-search-btn"
                 onClick={handleRestorePreviousState}
                 style={{ backgroundColor: "#ff6b6b", marginLeft: "10px" }}
               >
@@ -1443,7 +1512,9 @@ const Product = () => {
                 brand: product.brand,
                 price: product.price,
                 mrp: product.mrp,
-                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                stockStatus: stockData[product.partNumber]?.inStock
+                  ? "in stock"
+                  : "out of stock",
                 deliveryTime: product.eta,
                 compatibleVehicles: vehicleCounts[product.partNumber] || 0,
               }))}
@@ -1475,7 +1546,9 @@ const Product = () => {
                 brand: product.brand,
                 price: product.price,
                 mrp: product.mrp,
-                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                stockStatus: stockData[product.partNumber]?.inStock
+                  ? "in stock"
+                  : "out of stock",
                 deliveryTime: product.eta,
                 compatibleVehicles: vehicleCounts[product.partNumber] || 0,
               }))}
@@ -1509,7 +1582,9 @@ const Product = () => {
                 brand: product.brand,
                 price: product.price,
                 mrp: product.mrp,
-                stockStatus: stockData[product.partNumber]?.inStock ? "in stock" : "out of stock",
+                stockStatus: stockData[product.partNumber]?.inStock
+                  ? "in stock"
+                  : "out of stock",
                 deliveryTime: product.eta,
               }))}
               layout="vertical"
