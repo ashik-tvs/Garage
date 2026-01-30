@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import CategorySkeleton from "../skeletonLoading/CategorySkeleton";
+import apiService from "../../services/apiservice";
 // import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
 import OciImage from "../oci_image/ociImages";
@@ -56,11 +57,13 @@ const Category = () => {
 
       // Fetch in batches until we stop finding new categories
       while (batchCount < MAX_BATCHES && consecutiveErrors < 3) {
-        console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`);
+        console.log(
+          `📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`,
+        );
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/matertype",
+          const response = await apiService.post(
+            "/filter",
             {
               partNumber: null,
               sortOrder: "ASC",
@@ -85,6 +88,8 @@ const Category = () => {
               timeout: 120000,
             },
           );
+console.log("RAW API RESPONSE:", response.data);
+console.log("RAW FULL RESPONSE:", response);
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
             success: response.data?.success,
@@ -94,7 +99,19 @@ const Category = () => {
           });
 
           // Extract master data
-          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+          let masterData = [];
+
+          if (Array.isArray(response.data)) {
+            masterData = response.data; // direct array response
+          } else if (Array.isArray(response.data?.data)) {
+            masterData = response.data.data;
+          } else if (Array.isArray(response.data?.result)) {
+            masterData = response.data.result;
+          } else if (Array.isArray(response.data?.data?.data)) {
+            masterData = response.data.data.data;
+          } else {
+            console.error("❌ Unknown API structure:", response.data);
+          }
 
           // If no data returned, we've reached the end
           if (!masterData || masterData.length === 0) {
@@ -111,13 +128,22 @@ const Category = () => {
 
           // Extract aggregates from this batch using masterName field
           masterData.forEach((item) => {
-            if (item.masterName && item.masterName.trim() !== "") {
-              uniqueAggregates.add(item.masterName.trim());
+            const aggregateValue =
+              item.aggregate ||
+              item.aggregateName ||
+              item.masterName ||
+              item.master_value ||
+              item.value;
+
+            if (aggregateValue && String(aggregateValue).trim() !== "") {
+              uniqueAggregates.add(String(aggregateValue).trim());
             }
           });
 
           const newCategoriesFound = uniqueAggregates.size - previousSize;
-          console.log(`📊 Found ${newCategoriesFound} new categories (total: ${uniqueAggregates.size})`);
+          console.log(
+            `📊 Found ${newCategoriesFound} new categories (total: ${uniqueAggregates.size})`,
+          );
 
           // If no new categories found in last 3 batches, stop
           if (newCategoriesFound === 0 && batchCount > 2) {
@@ -131,19 +157,25 @@ const Category = () => {
             data: batchError.response?.data,
           });
           consecutiveErrors++;
-          
+
           // If it's a timeout, stop immediately
-          if (batchError.code === "ECONNABORTED" || batchError.response?.status === 504 || batchError.response?.status === 500) {
+          if (
+            batchError.code === "ECONNABORTED" ||
+            batchError.response?.status === 504 ||
+            batchError.response?.status === 500
+          ) {
             console.error("⏱️ Timeout/Server error - stopping batch fetch");
             if (uniqueAggregates.size > 0) {
-              console.log(`💡 Using ${uniqueAggregates.size} categories found so far`);
+              console.log(
+                `💡 Using ${uniqueAggregates.size} categories found so far`,
+              );
               break; // Use what we have
             } else {
               console.error("⚠️ Failed on first batch");
               throw batchError;
             }
           }
-          
+
           if (consecutiveErrors >= 3) {
             console.error("⚠️ Too many consecutive errors");
             throw batchError;
@@ -204,13 +236,13 @@ const Category = () => {
           "⏱️ Gateway timeout. The external API is taking too long. Please try again later.",
         );
       } else if (
-        err.response?.data?.message && 
+        err.response?.data?.message &&
         err.response.data.message.includes("Query execution was interrupted")
       ) {
         setError("Database timeout. Please try again in a few moments.");
       } else if (
-        err.response?.data?.error && 
-        typeof err.response.data.error === 'string' && 
+        err.response?.data?.error &&
+        typeof err.response.data.error === "string" &&
         err.response.data.error.includes("timeout")
       ) {
         setError("External API timeout. Please try again in a moment.");

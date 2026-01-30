@@ -2,8 +2,7 @@
   padding: 0px 0px 20px 0px;
   background: #fff;
   border-radius: 8px;
-  font-family: 'Poppins', sans-serif;
-}
+    font-family: Inter, sans-serif !important;}
 
 .srp-content {
   padding: 0px 20px 0px 20px;
@@ -27,8 +26,7 @@
   position: absolute;
   left: 0.07px;
   top: 0;
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   color: #424242;
@@ -165,8 +163,7 @@
 }
 
 .srp-num-part {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;
@@ -181,8 +178,7 @@
 }
 
 .srp-sep {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;

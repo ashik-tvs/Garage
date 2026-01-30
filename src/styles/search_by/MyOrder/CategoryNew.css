@@ -1,197 +1,198 @@
-/* CategoryNew Page - Full Width Layout */
+/* ===============================
+   CategoryNew Page Layout
+================================ */
 
-/* Container for full width */
+/* Container */
 .category-new-container {
-     position: relative;
-    width: 100%;
-    min-height: 760px;
-    background: #ffffff;
-    padding: 10px 20px;
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+  padding: 10px 20px;
+  box-sizing: border-box;
 }
 
-/* Header Section */
+/* Header */
 .category-new-header {
-      position: relative;
-    width: 100%;
-    /* height: 74px; */
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
 }
 
-/* Main content to use full width without sidebar */
+/* Main */
 .category-new-main {
-display: flex;
-    flex-direction: row;
-    position: relative;
-    width: 100%;
-    padding: 15px 20px;
-    gap: 30px;
+  width: 100%;
+  padding: 15px 0;
 }
 
-/* Make content area full width */
+/* Content */
 .category-new-content {
   width: 100%;
-  max-width: 100%;
-  flex: 1;
 }
 
-/* Adjust grid to fill full width with proper spacing */
+/* ===============================
+   Grid System
+================================ */
+
 .category-new-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 14px;
   width: 100%;
+  justify-items: center;
 }
 
-/* Category items */
+/* ===============================
+   Category Card
+================================ */
+
 .category-new-item {
   width: 100%;
-  max-width: 127px;
+  max-width: 130px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
   cursor: pointer;
-  transition: transform 0.3s ease;
-  border: 2px solid #f1efef;
+  transition: all 0.25s ease;
+  border: 1px solid #eaeaea;
   border-radius: 12px;
   background: #fff;
+  padding: 0px 0px;
+  box-sizing: border-box;
 }
 
-/* Image Wrapper */
+.category-new-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ===============================
+   Image
+================================ */
+
 .category-new-image-wrapper {
-  width: 68px;
-  height: 68px;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: none;
 }
 
 .category-new-image {
-  width: 68px;
-  height: 57px;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
-/* Category Label */
+/* ===============================
+   Label
+================================ */
+
 .category-new-label {
-  position: relative;
-  width: 127px;
-  height: 30px;
+  width: 100%;
+  min-height: 32px;
   background: #f3f3f3;
+  border-radius: 0px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 10px;
+  padding: 4px 6px;
   box-sizing: border-box;
-  flex: none;
 }
 
 .category-new-label span {
-  font-family: "Poppins", sans-serif;
-  font-style: normal;
+  font-family: Inter, sans-serif;
   font-weight: 400;
   font-size: 12px;
-  line-height: 24px;
+  line-height: 14px;
   color: #424242;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   width: 100%;
-  cursor: pointer;
-  position: relative;
 }
 
-/* Error State */
+/* ===============================
+   Error
+================================ */
+
 .category-new-error {
   padding: 20px;
   text-align: center;
+  color: red;
 }
 
-/* Skeleton Loading */
+/* ===============================
+   Skeleton
+================================ */
+
 .skeleton-cat-item {
   opacity: 0.7;
   pointer-events: none;
 }
 
 .skeleton-cat-image {
-  width: 68px;
-  height: 57px;
+  width: 72px;
+  height: 72px;
+  border-radius: 6px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
-  border-radius: 4px;
 }
 
-.skeleton-cat-text {
+.skeleton-sub-text {
   width: 80%;
-  height: 16px;
+  height: 12px;
+  margin-top: 8px;
+  border-radius: 4px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
-  border-radius: 4px;
 }
 
 @keyframes loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ===============================
+   Responsive
+================================ */
+
+@media (max-width: 1200px) {
+  .category-new-grid {
+    gap: 12px;
   }
 }
 
-/* Responsive adjustments */
-@media screen and (max-width: 1400px) {
+@media (max-width: 768px) {
   .category-new-grid {
-    grid-template-columns: repeat(8, 1fr);
-  }
-  
-  .category-new-item {
-    width: 120px;
-    max-width: 120px;
-  }
-}
-
-@media screen and (max-width: 1200px) {
-  .category-new-grid {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: 10px;
   }
-  
+
   .category-new-item {
-    width: 115px;
-    max-width: 115px;
+    max-width: 110px;
+    min-height: 130px;
+  }
+
+  .category-new-image-wrapper {
+    width: 60px;
+    height: 60px;
   }
 }
 
-@media screen and (max-width: 768px) {
-  .category-new-container {
-    padding: 15px;
-  }
-  
-  .category-new-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-  }
-  
-  .category-new-item {
-    width: 100px;
-    max-width: 100px;
-  }
-}
-
-@media screen and (max-width: 480px) {
+@media (max-width: 480px) {
   .category-new-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
-  
+
   .category-new-item {
-    width: 90px;
-    max-width: 90px;
+    max-width: 100%;
+    min-height: 120px;
   }
 }

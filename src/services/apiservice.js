@@ -1,59 +1,80 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
 
-// ✅ Hardcoded backend URL
-const BASE_URL = "http://localhost:5000/api";
+/* ============================
+   BASE CONFIG
+============================ */
+const BASE_URL = "http://localhost:5000/api";   // ✅ ONE BASE URL FOR ALL
 
-// Create axios instance
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 120000, // Increased to 120 seconds for slow external APIs
-  headers: {
-    "Content-Type": "application/json",
-  },
+  timeout: 120000,
 });
 
-// Attach retry logic
+/* ============================
+   RETRY CONFIG
+============================ */
 axiosRetry(apiClient, {
-  retries: 1, // Only retry once to avoid long waits
+  retries: 1,
   retryDelay: (retryCount) => {
     console.log(`⏳ Retry attempt ${retryCount}`);
-    return retryCount * 2000; // 2 seconds between retries
+    return retryCount * 2000;
   },
   retryCondition: (error) => {
-    // Don't retry on 502, 503, 504, or timeout errors - these indicate upstream issues
-    if (error.code === 'ECONNABORTED') return false; // No retry on timeout
+    if (error.code === "ECONNABORTED") return false;
+
     if (error.response) {
       const status = error.response.status;
-      // Don't retry on gateway errors or service unavailable
       if (status === 502 || status === 503 || status === 504) return false;
-      // Only retry on temporary server errors
       return status === 500;
     }
-    // Retry on network errors only
+
     return axiosRetry.isNetworkError(error);
   },
 });
 
-// Attach token automatically (but NOT for public external API endpoints)
+/* ============================
+   REQUEST INTERCEPTOR
+============================ */
 apiClient.interceptors.request.use(
   (config) => {
-    // ❌ Do NOT attach JWT token for external API proxy endpoints
-    const publicEndpoints = ['/vehicle-list', '/parts-list', '/related', '/stock-list', '/filter', '/search'];
-    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
-    
-    if (!isPublicEndpoint) {
-      const token = localStorage.getItem("token");
-      if (token) config.headers.Authorization = `Bearer ${token}`;
+    // Default headers
+    if (!config.headers["Content-Type"] && !config.responseType) {
+      config.headers["Content-Type"] = "application/json";
     }
+
+    // Public endpoints (no token)
+    const publicEndpoints = [
+      "/vehicle-list",
+      "/parts-list",
+      "/related",
+      "/stock-list",
+      "/filter",
+      "/search",
+      "/oci/read",        // ✅ OCI must be public
+    ];
+
+    const isPublic = publicEndpoints.some((ep) =>
+      config.url?.includes(ep)
+    );
+
+    if (!isPublic) {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// Global auth error handling
+/* ============================
+   RESPONSE INTERCEPTOR
+============================ */
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => response,   // ✅ do not unwrap (blob safe)
   (error) => {
     if (error.response?.status === 401) {
       localStorage.clear();
@@ -63,16 +84,44 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Unified API methods
+/* ============================
+   UNIFIED API SERVICE
+============================ */
 const apiService = {
-  get: (url, params = {}) => apiClient.get(url, { params }).then(res => res.data),
-  post: (url, data = {}) => apiClient.post(url, data).then(res => res.data),
-  put: (url, data = {}) => apiClient.put(url, data).then(res => res.data),
-  delete: (url) => apiClient.delete(url).then(res => res.data),
+  /* -------- RAW REQUEST -------- */
+  request: (config) => apiClient.request(config).then(res => res.data),
 
-  // Helper to get full URL for static assets
+  /* -------- JSON METHODS -------- */
+  get: (url, config = {}) =>
+    apiClient.get(url, { ...config, responseType: "json" }).then(res => res.data),
+
+  post: (url, data = {}, config = {}) =>
+    apiClient.post(url, data, { ...config, responseType: "json" }).then(res => res.data),
+
+  put: (url, data = {}, config = {}) =>
+    apiClient.put(url, data, { ...config, responseType: "json" }).then(res => res.data),
+
+  delete: (url, config = {}) =>
+    apiClient.delete(url, { ...config, responseType: "json" }).then(res => res.data),
+
+  /* -------- BINARY / IMAGE -------- */
+  getBlob: (url, config = {}) =>
+    apiClient.get(url, {
+      ...config,
+      responseType: "blob",
+      headers: {
+        Accept: "image/*",
+        ...(config.headers || {}),
+      },
+    }).then(res => res.data),
+
+  /* -------- ASSET URL -------- */
   getAssetUrl: (filePath) => `http://localhost:5000${filePath}`,
 };
+
+/* ============================
+   BUSINESS APIs
+============================ */
 
 // Fetch parts list by part number
 export const fetchPartsListByPartNumber = async (partNumber) => {
@@ -83,7 +132,7 @@ export const fetchPartsListByPartNumber = async (partNumber) => {
     sortOrder: "ASC",
     fieldOrder: null,
     customerCode: "0046",
-    partNumber: partNumber,
+    partNumber,
     model: null,
     brand: null,
     subAggregate: null,
@@ -98,13 +147,11 @@ export const fetchPartsListByPartNumber = async (partNumber) => {
   return apiService.post("/parts-list", requestBody);
 };
 
-// Fetch parts list by item description (item name search)
-// Note: API doesn't have itemDescription in request body, so we search with broad filters
-// and filter by itemDescription on the client side
+// Fetch parts list by item name
 export const fetchPartsListByItemName = async (itemName) => {
   const requestBody = {
     brandPriority: ["VALEO"],
-    limit: 1000, // Increased limit to get more results for filtering
+    limit: 1000,
     offset: 0,
     sortOrder: "ASC",
     fieldOrder: null,
@@ -112,7 +159,7 @@ export const fetchPartsListByItemName = async (itemName) => {
     partNumber: null,
     model: null,
     brand: null,
-    subAggregate: null, // Can't filter by itemDescription in API
+    subAggregate: null,
     aggregate: null,
     make: null,
     variant: null,
@@ -122,23 +169,22 @@ export const fetchPartsListByItemName = async (itemName) => {
   };
 
   const response = await apiService.post("/parts-list", requestBody);
-  
-  // Filter results by itemDescription on client side
+
   if (response?.data && Array.isArray(response.data)) {
-    const filtered = response.data.filter(item => 
+    const filtered = response.data.filter(item =>
       item.itemDescription?.toLowerCase().includes(itemName.toLowerCase())
     );
     return { ...response, data: filtered };
   }
-  
+
   return response;
 };
 
-// Fetch vehicle list by part number
+// Fetch vehicle list
 export const fetchVehicleListByPartNumber = async (partNumber, limit = 10, offset = 0) => {
   const requestBody = {
-    limit: limit,
-    offset: offset,
+    limit,
+    offset,
     sortOrder: "ASC",
     customerCode: "0046",
     brand: null,
@@ -156,7 +202,7 @@ export const fetchVehicleListByPartNumber = async (partNumber, limit = 10, offse
   return apiService.post("/vehicle-list", requestBody);
 };
 
-// Fetch master list (make, model, variant, fuelType, year) for cascading dropdowns
+// Fetch master list
 export const fetchMasterList = async ({
   masterType,
   make = null,
@@ -175,7 +221,7 @@ export const fetchMasterList = async ({
     fuelType: null,
     limit,
     make,
-    masterType, // "make", "model", "variant", "fuelType", "year"
+    masterType,
     model,
     offset: 0,
     primary: false,
@@ -184,7 +230,10 @@ export const fetchMasterList = async ({
     year: null,
   };
 
-  return apiService.post("/matertype", requestBody);
+  return apiService.post("/filter", requestBody);
 };
 
+/* ============================
+   EXPORT
+============================ */
 export default apiService;

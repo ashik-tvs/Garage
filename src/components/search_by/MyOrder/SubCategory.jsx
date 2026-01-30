@@ -102,8 +102,8 @@ const Sub_Category = () => {
         console.log(`📤 Request params:`, brand ? { brand, aggregate: selectedAggregate } : { make, model, aggregate: selectedAggregate }, `masterType=subAggregate`);
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/matertype",
+          const response = await apiService.post(
+            "/filter",
             {
               partNumber: null,
               sortOrder: "ASC",
@@ -137,7 +137,23 @@ const Sub_Category = () => {
           });
 
           // Extract master data
-          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+let masterData = [];
+
+if (Array.isArray(response.data)) {
+  masterData = response.data; // direct array response
+} 
+else if (Array.isArray(response.data?.data)) {
+  masterData = response.data.data; // { data: [] }
+}
+else if (Array.isArray(response.data?.rows)) {
+  masterData = response.data.rows; // { rows: [] }
+}
+else if (Array.isArray(response.data?.result)) {
+  masterData = response.data.result; // { result: [] }
+}
+else {
+  console.error("❌ Unknown API response structure:", response.data);
+}
 
           // If no data returned, we've reached the end
           if (!masterData || masterData.length === 0) {

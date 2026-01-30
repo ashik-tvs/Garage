@@ -81,8 +81,7 @@
   height: 24px;
   left: calc(50% - 380px/2);
   top: 234px;
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 400;
   font-size: 14px;
   line-height: 24px;

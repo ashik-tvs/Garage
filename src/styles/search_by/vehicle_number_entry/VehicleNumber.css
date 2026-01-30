@@ -107,8 +107,7 @@
 }
 
 .Vne-num-part {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;
@@ -122,8 +121,7 @@
 }
 
 .Vne-sep {
-  font-family: 'Poppins', sans-serif;
-  font-style: normal;
+    font-family: Inter, sans-serif !important;  font-style: normal;
   font-weight: 500;
   font-size: 14px;
   line-height: 128.91%;
