@@ -17,6 +17,10 @@ const Model = () => {
     variant,
     featureLabel,
   });
+
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [selectedModelName, setSelectedModelName] = useState("");
+
   const getOciModelFileName = (modelName) => {
     if (!modelName) return null;
 
@@ -399,6 +403,17 @@ const Model = () => {
     });
   };
 
+  const handleNameClick = (e, modelName) => {
+    e.stopPropagation(); // Prevent card click
+    setSelectedModelName(modelName);
+    setShowNameModal(true);
+  };
+
+  const closeModal = () => {
+    setShowNameModal(false);
+    setSelectedModelName("");
+  };
+
   // Build breadcrumbs array
   const breadcrumbs = [];
 
@@ -470,7 +485,11 @@ const Model = () => {
                     alt={model.name}
                   />
 
-                  <p className="model-name" title={model.name}>
+                  <p 
+                    className="model-name" 
+                    title={model.name}
+                    onClick={(e) => handleNameClick(e, model.name)}
+                  >
                     {model.name}
                   </p>
                 </div>
@@ -479,6 +498,23 @@ const Model = () => {
           </div>
         )}
       </div>
+
+      {/* Modal for showing full model name */}
+      {showNameModal && (
+        <div className="model-name-modal-overlay" onClick={closeModal}>
+          <div className="model-name-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="model-name-modal-header">
+              <h3>Model Name</h3>
+              <button className="model-name-modal-close" onClick={closeModal}>
+                ×
+              </button>
+            </div>
+            <div className="model-name-modal-content">
+              <p>{selectedModelName}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
