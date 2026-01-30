@@ -388,11 +388,11 @@ const CategoryNew = () => {
                 ))}
               </div>
               {/* Loading indicator for additional batches */}
-              {loading && categories.length > 0 && (
+              {/* {loading && categories.length > 0 && (
                 <div style={{ textAlign: "center", padding: "20px", color: "#666" }}>
                   <p>Loading more categories...</p>
                 </div>
-              )}
+              )} */}
             </>
           )}
         </div>

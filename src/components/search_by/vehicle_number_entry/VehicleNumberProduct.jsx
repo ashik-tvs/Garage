@@ -1299,7 +1299,7 @@ const Product = () => {
               <button 
                 className="vnp-search-btn" 
                 onClick={handleRestorePreviousState}
-                style={{ backgroundColor: "#ff6b6b", marginLeft: "10px" }}
+                style={{ backgroundColor: "#ff6b6b", marginLeft: "0px" }}
               >
                 Back
               </button>
