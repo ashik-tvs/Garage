@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import CategorySkeleton from "../skeletonLoading/CategorySkeleton";
 // import NoImage from "../../assets/No Image.png";
 import "../../styles/home/Category.css";
 import OciImage from "../oci_image/ociImages";
+import apiService from "../../services/apiservice";
 
 const Category = () => {
   const navigate = useNavigate();
@@ -59,8 +59,8 @@ const Category = () => {
         console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`);
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/matertype",
+          const response = await apiService.post(
+            "/matertype",
             {
               partNumber: null,
               sortOrder: "ASC",
@@ -77,24 +77,18 @@ const Category = () => {
               subAggregate: null,
               variant: null,
               year: null,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              timeout: 120000,
-            },
+            }
           );
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
-            success: response.data?.success,
-            message: response.data?.message,
-            count: response.data?.count,
-            dataLength: response.data?.data?.length,
+            success: response?.success,
+            message: response?.message,
+            count: response?.count,
+            dataLength: response?.data?.length,
           });
 
           // Extract master data
-          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+          const masterData = Array.isArray(response?.data) ? response.data : [];
 
           // If no data returned, we've reached the end
           if (!masterData || masterData.length === 0) {

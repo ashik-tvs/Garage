@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import apiService from "../../../services/apiservice";
 import NoImage from "../../../assets/No Image.png";
 import OciImage from "../../oci_image/ociImages";
@@ -102,8 +101,8 @@ const Sub_Category = () => {
         console.log(`📤 Request params:`, brand ? { brand, aggregate: selectedAggregate } : { make, model, aggregate: selectedAggregate }, `masterType=subAggregate`);
 
         try {
-          const response = await axios.post(
-            "http://localhost:5000/api/matertype",
+          const response = await apiService.post(
+            "/matertype",
             {
               partNumber: null,
               sortOrder: "ASC",
@@ -120,24 +119,18 @@ const Sub_Category = () => {
               subAggregate: null,
               variant:  null,
               year: null,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              timeout: 120000,
-            },
+            }
           );
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
-            success: response.data?.success,
-            message: response.data?.message,
-            count: response.data?.count,
-            dataLength: response.data?.data?.length,
+            success: response?.success,
+            message: response?.message,
+            count: response?.count,
+            dataLength: response?.data?.length,
           });
 
           // Extract master data
-          const masterData = Array.isArray(response.data?.data) ? response.data.data : [];
+          const masterData = Array.isArray(response?.data) ? response.data : [];
 
           // If no data returned, we've reached the end
           if (!masterData || masterData.length === 0) {

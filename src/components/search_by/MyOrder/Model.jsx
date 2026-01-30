@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
 import "../../../styles/search_by/MyOrder/Model.css";
 import apiService from "../../../services/apiservice";
 import OciImage from "../../oci_image/ociImages";
@@ -191,8 +190,8 @@ const Model = () => {
           console.log(`📦 Fetching batch ${batch + 1} (offset: ${offset}, limit: ${BATCH_SIZE})`);
 
           try {
-            response = await axios.post(
-              "http://localhost:5000/api/matertype",
+            response = await apiService.post(
+              "/matertype",
               {
                 partNumber: null,
                 sortOrder: "ASC",
@@ -209,14 +208,13 @@ const Model = () => {
                 subAggregate: null,
                 variant: null,
                 year: null,
-              },
-              { timeout: 120000 }
+              }
             );
 
             console.log(`✅ Batch ${batch + 1} response:`, response);
 
             // Extract master data from response
-            const masterData = response?.data?.data;
+            const masterData = response?.data;
             
             if (!masterData || !Array.isArray(masterData) || masterData.length === 0) {
               console.log(`⚠️ Batch ${batch + 1} returned no data. Stopping pagination.`);
