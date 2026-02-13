@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { verifyOTPAPI } from "../../services/api";
 import apiService from "../../services/apiservice";
 import "../../styles/Login/ForgotFlow.css";
 
@@ -26,9 +27,21 @@ const VerifyOtp = () => {
     e.preventDefault();
     setError("");
 
+    if (!otp || otp.trim().length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+
     try {
-      await apiService.post("/auth/verify-reset-otp", { email, otp });
-      navigate("/reset-password", { state: { email, otp } });
+      // Convert OTP to number before sending
+      const otpNumber = parseInt(otp, 10);
+      const response = await verifyOTPAPI(email, otpNumber);
+      
+      if (response.success) {
+        navigate("/");  // Go to login after successful verification
+      } else {
+        setError(response.message || "Invalid OTP");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Invalid OTP");
     }
@@ -36,10 +49,11 @@ const VerifyOtp = () => {
 
   const handleResend = async () => {
     try {
-      await apiService.post("/auth/forgot-password", { email });
+      await apiService.post("/auth/resend-otp", { email });
       setTimer(60);
-    } catch {
-      setError("Failed to resend OTP");
+      setError("");  // Clear any previous errors
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to resend OTP");
     }
   };
 
@@ -52,9 +66,11 @@ const VerifyOtp = () => {
 
         <input
           type="text"
-          placeholder="Enter OTP"
+          placeholder="Enter 6-digit OTP"
           value={otp}
-          onChange={(e) => setOtp(e.target.value)}
+          onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+          maxLength={6}
+          pattern="\d{6}"
           required
         />
 

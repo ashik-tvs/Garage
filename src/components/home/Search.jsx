@@ -1,17 +1,24 @@
-import React, { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { AiOutlineCamera } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-import apiService from "../../services/apiservice";
+import { generalSearchAPI, labourAPI } from "../../services/api";
+import { getAssets, getAsset } from "../../utils/assets";
 import SearchIcon from "../../assets/search/search.png";
 import ImageUpload from "./ImageUpload";
 import "../../styles/home/Search.css";
+import "../../styles/skeleton/skeleton.css";
 
 const Search = () => {
   const navigate = useNavigate();
+  const [assets, setAssets] = useState({});
   const fileInputRef = useRef(null);
-  const [bannerUrl, setBannerUrl] = useState(""); // Only banner
+  
+  // Load assets
+  useEffect(() => {
+    getAssets().then(setAssets);
+  }, []);
   const [searchValue, setSearchValue] = useState("");
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -31,7 +38,6 @@ const Search = () => {
     /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i.test(value);
   // Part number: alphanumeric with optional hyphens, must contain at least one digit
   const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9\-]+$/i.test(value);
-  const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
 
   // Fetch autocomplete suggestions
   const fetchSuggestions = async (searchKey) => {
@@ -44,34 +50,87 @@ const Search = () => {
     try {
       setLoading(true);
       
-      // Detect if searchKey is a part number (alphanumeric with optional hyphens, contains digit)
-      const normalizedKey = searchKey.trim().replace(/\s+/g, "");
-      const looksLikePartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(normalizedKey);
-      
-      // Send request with searchKey - API will handle both part number and item description
-      const response = await apiService.post("/search", {
-        customerCode: "0046",
-        searchKey: searchKey.trim(),
-        partNumber: looksLikePartNumber ? searchKey.trim() : null,
-      });
+      // Fetch both parts and labour search using centralized API functions
+      const [partsResponse, labourResponse] = await Promise.allSettled([
+        // Parts search - Use generalSearchAPI with correct request body
+        generalSearchAPI({
+          customerCode: "0046",
+          searchKey: searchKey.trim()
+        }),
+        // Labour search - Use labourAPI with correct request body
+        labourAPI()
+      ]);
 
-      console.log("Search API Response:", response);
-      console.log("Search type detected:", looksLikePartNumber ? "Part Number" : "Item Description");
+      console.log("Parts API Response:", partsResponse);
+      console.log("Labour API Response:", labourResponse);
 
-      // Handle API response structure: { success, message, data: [...] }
-      let data = [];
-      if (response?.success && response?.data && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (response?.data && Array.isArray(response.data)) {
-        data = response.data;
-      } else if (Array.isArray(response)) {
-        data = response;
+      let allSuggestions = [];
+
+      // Process parts suggestions
+      if (partsResponse.status === 'fulfilled' && partsResponse.value) {
+        const response = partsResponse.value;
+        let partsData = [];
+        if (response?.success && response?.data && Array.isArray(response.data)) {
+          partsData = response.data;
+        } else if (response?.data && Array.isArray(response.data)) {
+          partsData = response.data;
+        } else if (Array.isArray(response)) {
+          partsData = response;
+        }
+
+        // Mark parts suggestions
+        const partsSuggestions = partsData.map(item => ({
+          ...item,
+          type: 'part'
+        }));
+        allSuggestions.push(...partsSuggestions);
       }
 
-      console.log("Parsed suggestions:", data);
+      // Process labour suggestions
+      if (labourResponse.status === 'fulfilled' && labourResponse.value) {
+        const labourData = labourResponse.value;
+        
+        if (labourData?.requestSuccessful && labourData?.labourSubcategory) {
+          const searchLower = searchKey.toLowerCase();
+          const labourSuggestions = [];
 
-      if (data.length > 0) {
-        setSuggestions(data);
+          // Search through all labour subcategories
+          Object.entries(labourData.labourSubcategory).forEach(([categoryId, subcategoryArray]) => {
+            if (Array.isArray(subcategoryArray)) {
+              subcategoryArray.forEach((item) => {
+                const itemKeys = Object.keys(item);
+                if (itemKeys.length > 0) {
+                  const subcategoryData = item[itemKeys[0]];
+                  
+                  if (subcategoryData?.LabourSubcategoryName) {
+                    const serviceName = subcategoryData.LabourSubcategoryName.trim();
+                    
+                    // Check if service name matches search query
+                    if (serviceName.toLowerCase().includes(searchLower)) {
+                      labourSuggestions.push({
+                        id: itemKeys[0],
+                        partNumber: serviceName,
+                        itemName: serviceName,
+                        searchValue: serviceName,
+                        categoryId: categoryId,
+                        type: 'labour'
+                      });
+                    }
+                  }
+                }
+              });
+            }
+          });
+
+          // Limit labour suggestions to avoid overwhelming the dropdown
+          allSuggestions.push(...labourSuggestions.slice(0, 5));
+        }
+      }
+
+      console.log("All suggestions:", allSuggestions);
+
+      if (allSuggestions.length > 0) {
+        setSuggestions(allSuggestions);
         setShowSuggestions(true);
       } else {
         setSuggestions([]);
@@ -94,10 +153,32 @@ const Search = () => {
   };
 
   // Handle suggestion click
-  const handleSuggestionClick = (suggestion, e) => {
+  const handleSuggestionClick = (suggestion) => {
     console.log("=== SUGGESTION CLICKED ===");
     console.log("Full suggestion object:", suggestion);
 
+    // Check if this is a labour service suggestion
+    if (suggestion.type === 'labour') {
+      console.log("Labour service selected:", suggestion.itemName);
+      
+      // Set the search value
+      setSearchValue(suggestion.itemName);
+      
+      // Hide suggestions
+      setShowSuggestions(false);
+      setSuggestions([]);
+      
+      // Navigate to service type page
+      navigate("/search-by-service-type", { 
+        state: { 
+          serviceType: suggestion.itemName,
+          categoryId: suggestion.categoryId
+        } 
+      });
+      return;
+    }
+
+    // Handle parts suggestions (existing logic)
     // Determine if the typed search value looks like a part number
     const typedValue = searchValue.trim().replace(/\s+/g, "");
     const isTypedPartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(typedValue);
@@ -121,14 +202,35 @@ const Search = () => {
   };
 
   // Calculate dropdown position
-  useEffect(() => {
+  const updateDropdownPosition = () => {
     if (showSuggestions && inputRef.current) {
       const rect = inputRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
+        top: rect.bottom,
+        left: rect.left,
         width: rect.width,
       });
+    }
+  };
+
+  useEffect(() => {
+    updateDropdownPosition();
+  }, [showSuggestions]);
+
+  // Update position on scroll
+  useEffect(() => {
+    if (showSuggestions) {
+      const handleScroll = () => {
+        updateDropdownPosition();
+      };
+
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleScroll);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleScroll);
+      };
     }
   }, [showSuggestions]);
 
@@ -167,8 +269,25 @@ const Search = () => {
         state: { partNumber: noSpaceValue },
       });
     } else {
-      // Item name search - navigate to PartNumber page with item name
-      navigate("/search-by-part-number", { state: { partNumber: rawValue } });
+      // Check if the search term might be a service type
+      // If it contains service-related keywords, try service type search first
+      const serviceKeywords = ['r&r', 'repair', 'replace', 'service', 'maintenance', 'belt', 'gas', 'blower', 'compressor', 'filter', 'brake', 'door', 'glass', 'seat', 'engine', 'oil'];
+      const isLikelyService = serviceKeywords.some(keyword => 
+        rawValue.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      if (isLikelyService) {
+        // Try service type search first
+        navigate("/search-by-service-type", { 
+          state: { 
+            serviceType: rawValue,
+            searchQuery: rawValue
+          } 
+        });
+      } else {
+        // Item name search - navigate to PartNumber page with item name
+        navigate("/search-by-part-number", { state: { partNumber: rawValue } });
+      }
     }
   };
 
@@ -191,23 +310,6 @@ const Search = () => {
     setShowImageUpload(false);
   };
 
-  // ===============================
-  // Fetch only banner from backend
-  // ===============================
-  useEffect(() => {
-    const fetchBanner = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        if (assets?.data?.BANNER) {
-          setBannerUrl(apiService.getAssetUrl(assets.data.BANNER));
-        }
-      } catch (err) {
-        console.error("❌ Failed to load banner", err);
-      }
-    };
-
-    fetchBanner();
-  }, []);
   // Detect if current search is a part number search
   const isPartNumberSearch = /^(?=.*\d)[A-Z0-9\-]+$/i.test(
     searchValue.trim().replace(/\s+/g, "")
@@ -218,7 +320,7 @@ const Search = () => {
       <div
         className="search-banner-container"
         style={{
-          backgroundImage: `url(${bannerUrl})`,
+          backgroundImage: `url(${getAsset('BANNER', assets)})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -242,7 +344,28 @@ const Search = () => {
                 onKeyDown={handleSearch}
               />
 
-              {loading && <div className="search-loader">...</div>}
+              {loading && (
+                <div className="skeleton-list" style={{ 
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  background: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  zIndex: 1000,
+                  padding: '8px'
+                }}>
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="skeleton-card" style={{ 
+                      padding: '8px',
+                      marginBottom: '4px'
+                    }}>
+                      <div className="skeleton skeleton-text medium"></div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <HiOutlineMicrophone
                 className="search-mic"
@@ -279,32 +402,45 @@ const Search = () => {
           <div
             className="search-suggestions-portal"
             style={{
-              position: "fixed",
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
               width: `${dropdownPosition.width}px`,
-              zIndex: 999999,
             }}
           >
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="search-suggestion-item"
+                className={`search-suggestion-item ${suggestion.type === 'labour' ? 'labour-suggestion' : 'part-suggestion'}`}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  handleSuggestionClick(suggestion, e);
+                  handleSuggestionClick(suggestion);
                 }}
               >
-                <div className="suggestion-part-number">
-                  {suggestion.partNumber || suggestion.searchValue}
-                </div>
-                {!isPartNumberSearch && (
-                  <div className="suggestion-item-name">
-                    {suggestion.itemName ||
-                      (suggestion.aggregate && suggestion.subAggregate
-                        ? `${suggestion.aggregate} - ${suggestion.subAggregate}`
-                        : suggestion.aggregate || suggestion.subAggregate)}
+                {suggestion.type === 'labour' ? (
+                  // Labour service suggestion
+                  <div className="suggestion-labour-service">
+                    <div className="suggestion-service-name">
+                      🔧 {suggestion.itemName}
+                    </div>
+                    <div className="suggestion-service-type">
+                      Service Type
+                    </div>
                   </div>
+                ) : (
+                  // Parts suggestion (existing layout)
+                  <>
+                    <div className="suggestion-part-number">
+                      {suggestion.partNumber || suggestion.searchValue}
+                    </div>
+                    {!isPartNumberSearch && (
+                      <div className="suggestion-item-name">
+                        {suggestion.itemName ||
+                          (suggestion.aggregate && suggestion.subAggregate
+                            ? `${suggestion.aggregate} - ${suggestion.subAggregate}`
+                            : suggestion.aggregate || suggestion.subAggregate)}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ))}

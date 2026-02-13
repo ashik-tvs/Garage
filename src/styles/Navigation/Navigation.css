@@ -4,16 +4,19 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  margin-bottom: 0;
+  margin: 0;
+  padding: 15px 20px;
   font-size: 14px;
   flex-wrap: nowrap;
   flex-shrink: 1;
   white-space: nowrap;
   overflow-x: auto;
-  max-width: 30%;
+  max-width: 100%;
   scrollbar-width: none; /* Hide scrollbar for Firefox */
   -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
-  padding: 12px 0;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .nav-breadcrumbs::-webkit-scrollbar {
@@ -70,6 +73,7 @@
   .nav-breadcrumbs {
     font-size: 12px;
     gap: 6px;
+    padding: 12px 15px;
   }
 
   .nav-home-icon {
@@ -92,6 +96,7 @@
   .nav-breadcrumbs {
     font-size: 10px;
     gap: 4px;
+    padding: 10px 10px;
   }
 
   .nav-home-icon {

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import "../../../styles/search_by/MyOrder/Model.css";
-import apiService from "../../../services/apiservice";
+import "../../../styles/skeleton/skeleton.css";
+import { masterListAPI, discontinuedModelAPI, electricAPI } from "../../../services/api";
 import OciImage from "../../oci_image/ociImages";
-import noImage from "../../../assets/No Image.png";
+import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
 
 const Model = () => {
@@ -33,27 +34,6 @@ const Model = () => {
   const [models, setModels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [uiAssets, setUiAssets] = useState({});
-
-  /* ===============================
-     FETCH UI ASSETS
-     =============================== */
-  useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data);
-      } catch (error) {
-        console.error("❌ Error fetching UI assets:", error);
-      }
-    };
-    fetchUiAssets();
-  }, []);
-
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return null;
-    return apiService.getAssetUrl(uiAssets[tagName]);
-  };
 
   const fetchModels = useCallback(async () => {
     // For discontinued model and electric, we don't need a make
@@ -141,11 +121,16 @@ const Model = () => {
       if (isDiscontinued) {
         // Fetch discontinued models from dedicated API
         console.log("Fetching discontinued models from API...");
-        response = await apiService.get("/discontinue-model");
+        
+        // Call centralized Discontinued Model API (GET method, no request body)
+        response = await discontinuedModelAPI();
+        
         console.log("Discontinued API Response:", response);
 
         // Extract data from response
         if (response && response.success && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (response && Array.isArray(response.data)) {
           vehicleData = response.data;
         } else if (Array.isArray(response)) {
           vehicleData = response;
@@ -159,11 +144,16 @@ const Model = () => {
       } else if (isElectric) {
         // Fetch electric models from dedicated API
         console.log("Fetching electric models from API...");
-        response = await apiService.get("/electric");
+        
+        // Call centralized Electric API (GET method, no request body)
+        response = await electricAPI();
+        
         console.log("Electric API Response:", response);
 
         // Extract data from response
         if (response && response.success && Array.isArray(response.data)) {
+          vehicleData = response.data;
+        } else if (response && Array.isArray(response.data)) {
           vehicleData = response.data;
         } else if (Array.isArray(response)) {
           vehicleData = response;
@@ -189,8 +179,7 @@ const Model = () => {
           );
 
           try {
-            response = await apiService.post(
-              "/filter",
+            response = await masterListAPI(
               {
                 partNumber: null,
                 sortOrder: "ASC",
@@ -443,10 +432,10 @@ const Model = () => {
         {loading ? (
           <div className="model-row">
             {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="model-card skeleton-card">
+              <div key={index} className="model-card skeleton-model-item">
                 <div className="model-card-content">
-                  <div className="skeleton skeleton-image"></div>
-                  <div className="skeleton skeleton-text"></div>
+                  <div className="skeleton skeleton-model-image"></div>
+                  <div className="skeleton skeleton-model-text"></div>
                 </div>
               </div>
             ))}
@@ -475,7 +464,7 @@ const Model = () => {
           </div>
         ) : (
           <div className="model-row">
-            {models.map((model) => (
+            {models.map((model, index) => (
               <div
                 key={model.id}
                 className="model-card"
@@ -486,9 +475,11 @@ const Model = () => {
                     partNumber={model.name}
                     make={make} // ✅ PASS MAKE
                     folder="model"
-                    fallbackImage={noImage}
+                    fallbackImage={NoImage}
                     className="model-image"
                     alt={model.name}
+                    priority={index < 6} // First 6 images are high priority
+                    lazy={index >= 6} // Rest are lazy loaded
                   />
 
                   <p className="model-name" title={model.name}>

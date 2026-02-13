@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import apiService from "../../services/apiservice";
+import { masterListAPI } from "../../services/api";
 import OciImage from "../oci_image/ociImages.jsx";
 import NoImage from "../../assets/No Image.png";
 import MakeSkeleton from "../skeletonLoading/MakeSkeleton";
 import "../../styles/home/Make.css";
+import "../../styles/skeleton/skeleton.css";
 
 const Make = () => {
   const navigate = useNavigate();
@@ -30,8 +31,12 @@ const Make = () => {
 
       if (isCacheValid) {
         console.log("💾 Loading makes from cache...");
-        setMakes(JSON.parse(cachedMakes));
+        const cachedData = JSON.parse(cachedMakes);
+        setMakes(cachedData);
         setLoading(false);
+        
+        // Preload visible images in background
+        // smartPreload(cachedData, 9, preloadMakeImages);
         return;
       }
     }
@@ -61,7 +66,7 @@ const Make = () => {
         console.log(`📦 Fetching batch ${batchCount + 1} (offset: ${offset})...`);
 
         try {
-          const response = await apiService.post("/filter", {
+          const response = await masterListAPI({
             partNumber: null,
             sortOrder: "ASC",
             customerCode: "0046",
@@ -87,7 +92,11 @@ const Make = () => {
           });
 
           // Extract master data
-          const masterData = Array.isArray(response?.data) ? response.data : [];
+          const masterData = Array.isArray(response) 
+            ? response 
+            : Array.isArray(response?.data) 
+            ? response.data 
+            : [];
 
           // If no data returned, we've reached the end
           if (!masterData || masterData.length === 0) {
@@ -175,6 +184,12 @@ const Make = () => {
       console.log("💾 Makes cached successfully");
 
       setMakes(formattedMakes);
+      
+      // Preload visible images after setting makes
+      // setTimeout(() => {
+      //   smartPreload(formattedMakes, 9, preloadMakeImages);
+      // }, 100);
+      
     } catch (err) {
       console.error("❌ Error fetching makes:", err);
       console.error("Error details:", {
@@ -276,7 +291,7 @@ const Make = () => {
         </div>
       ) : (
         <div className="grid-container">
-          {visibleMakes.map((make) => (
+          {visibleMakes.map((make, index) => (
             <div
               key={make.id}
               className="brand-card"

@@ -1,0 +1,82 @@
+/* OCI Image - Clean Loading States */
+.oci-loading {
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.oci-error {
+  filter: grayscale(0.3);
+}
+
+/* Responsive image optimization */
+.oci-optimized {
+  object-fit: contain;
+  max-width: 100%;
+  height: auto;
+  transition: opacity 0.3s ease;
+}
+
+/* High priority images */
+.oci-priority {
+  will-change: transform;
+}
+
+/* OCI Image Skeleton Loading */
+.oci-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: oci-shimmer 1.5s infinite;
+  border-radius: 4px;
+  min-height: 60px; /* Minimum height for skeleton */
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes oci-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Skeleton variations for different image sizes */
+.brand-img.oci-skeleton,
+.make-img.oci-skeleton {
+  min-height: 80px;
+  aspect-ratio: 1;
+}
+
+.cat-img.oci-skeleton,
+.category-image.oci-skeleton,
+.category-new-image.oci-skeleton {
+  min-height: 100px;
+  aspect-ratio: 1;
+}
+
+.sub-category-image.oci-skeleton {
+  min-height: 80px;
+  aspect-ratio: 1;
+}
+
+.model-image.oci-skeleton {
+  min-height: 120px;
+  aspect-ratio: 4/3;
+}
+
+.pr-image.oci-skeleton {
+  min-height: 100px;
+  aspect-ratio: 1;
+}
+
+/* Smooth transitions */
+.oci-optimized:not(.oci-skeleton) {
+  opacity: 1;
+}
+
+.oci-skeleton {
+  opacity: 0.7;
+}

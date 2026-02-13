@@ -80,6 +80,7 @@
 
 /* Autocomplete Suggestions Dropdown - Portal Style */
 .search-suggestions-portal {
+  position: fixed;
   background: #fff;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
@@ -87,6 +88,7 @@
   max-height: 300px;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
 }
 
 .search-suggestion-item {
@@ -102,6 +104,41 @@
 
 .search-suggestion-item:last-child {
   border-bottom: none;
+}
+
+/* Labour suggestion styling */
+.labour-suggestion {
+  background: #f8f9ff;
+  border-left: 3px solid #ff6a00;
+}
+
+.labour-suggestion:hover {
+  background: #f0f2ff;
+}
+
+.suggestion-labour-service {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-service-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.suggestion-service-type {
+  font-size: 11px;
+  color: #ff6a00;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Parts suggestion styling */
+.part-suggestion {
+  background: #fff;
 }
 
 .suggestion-part-number {

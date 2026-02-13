@@ -2,16 +2,15 @@
 
 .cart-page {
   display: flex;
-  /* justify-content: space-between; */
   align-items: flex-start;
-  max-width: 93%;
-  margin: 10px 20px 10px 20px ;
-  padding: 0 20px;
+  max-width: 100%;
+  margin: 10px 20px;
+  padding: 0;
   gap: 3%;
 }
 
 .cart-header{
-  padding: 15px 40px;
+  padding: 0;
 }
 /* Left Section */
 .cart-left {

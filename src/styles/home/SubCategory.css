@@ -9,20 +9,11 @@
 
 /* Header Section */
 .sub-category-header {
-  /* position: relative;
-  width: 100%;
-  height: 74px;
-  display: flex;
-  align-items: center;
-  padding: 0 20px;
-  margin-bottom: 10px;
-  gap: 18px; */
   position: relative;
   width: 100%;
-  /* height: 74px; */
   display: flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 0;
 }
 
 .back-button {
@@ -262,7 +253,11 @@
   font-size: 12px;
   line-height: 24px;
   color: #ffffff;
-  flex: none;
+  flex: 1; /* Allow it to take available space */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Add ... for truncated text */
+  min-width: 0; /* Allow flex item to shrink below content size */
 }
 
 .service-type-icon {
@@ -292,7 +287,8 @@
   flex-direction: column;
   gap: 10px;
   height: auto;
-  overflow: hidden;
+  max-height: 500px; /* Allow more height */
+  overflow-y: auto; /* Enable scrolling instead of hiding */
   box-sizing: border-box;
 }
 
@@ -388,7 +384,8 @@
   }
 
   .service-type-list {
-    height: 355px;
+    max-height: 500px; /* Allow more height in responsive mode */
+    overflow-y: auto; /* Enable scrolling */
   }
 }
 
@@ -490,6 +487,9 @@
 
   .service-type-header span {
     font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .service-type-item {

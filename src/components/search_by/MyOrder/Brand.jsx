@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import BrandSkeleton from "../../skeletonLoading/BrandSkeleton";
 import "../../../styles/search_by/MyOrder/Brand.css";
-import apiService from "../../../services/apiservice";
+import { onlyWithUsAPI } from "../../../services/api";
 import Navigation from "../../Navigation/Navigation";
 import OciImage from "../../oci_image/ociImages.jsx";
 import NoImage from "../../../assets/No Image.png";
@@ -36,15 +36,20 @@ const Brand = () => {
 
       console.log("Fetching brands from Only-With-Us API...");
 
-
-      const response = await apiService.get("/only-with-us");
+      // Call centralized Only With Us API (GET method, no request body)
+      const response = await onlyWithUsAPI();
 
       console.log("API Response:", response);
 
-      // Backend returns: { success: true, data: [...] }
-      const onlyWithUsData = response?.data || [];
-
-      if (!Array.isArray(onlyWithUsData)) {
+      // Handle response structure
+      let onlyWithUsData = [];
+      if (response && response.success && Array.isArray(response.data)) {
+        onlyWithUsData = response.data;
+      } else if (response && Array.isArray(response.data)) {
+        onlyWithUsData = response.data;
+      } else if (Array.isArray(response)) {
+        onlyWithUsData = response;
+      } else {
         throw new Error("Invalid API response structure");
       }
 

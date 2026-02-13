@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import apiService from "../../../services/apiservice";
+import { partRelationsAPI, partsListAPI, vehicleListAPI, stockListAPI } from "../../../services/api";
+import { getAssets, getAsset } from "../../../utils/assets";
 import Search from "../../home/Search";
 import { useCart } from "../../../context/CartContext";
 import {
@@ -11,6 +12,7 @@ import {
 import NoImage from "../../../assets/No Image.png";
 import Product1 from "./Product1";
 import "../../../styles/search_by/partnumber/PartNumber.css";
+import "../../../styles/skeleton/skeleton.css";
 
 const alignedProducts = [
   {
@@ -71,76 +73,6 @@ const Filter = ({
   );
 };
 
-/* ---------------- PRODUCT CARD ---------------- */
-
-const ProductCard = ({ item, onOpenCompatibility, vehicleCount }) => {
-  const { cartItems, addToCart, removeFromCart } = useCart();
-  const localPartNumber =
-    item.localPartNumber || `${item.partNo}_${item.brand}`;
-  const cartKey = `${item.partNo}_${item.brand}`;
-
-  const isAdded = cartItems.some(
-    (cartItem) => cartItem.partNumber === localPartNumber,
-  );
-  const handleCart = () => {
-    if (isAdded) {
-      removeFromCart(localPartNumber);
-    } else {
-      addToCart({
-        ...item,
-        partNumber: localPartNumber,
-        listPrice: item.price,
-        image: item.imageUrl, // ✅ IMAGE PASSED TO CART
-      });
-    }
-  };
-
-  return (
-    <div className="pn-card">
-      <div className="pn-card-row">
-        <div className="pn-card-body">
-          <div className="pn-tags">
-            <span className="pn-tag-brand">{item.brand}</span>
-            <span className="pn-tag-stock">{item.stock}</span>
-            <span className="pn-tag-eta">{item.eta}</span>
-          </div>
-
-          <p className="pn-part">{item.partNo}</p>
-          <p className="pn-name pn-truncate" title={item.description}>
-            {item.description}
-          </p>
-
-          <div className="pn-price-row">
-            <span className="pn-price">₹ {item.price}</span>
-            <span className="pn-mrp">₹ {item.mrp}</span>
-          </div>
-        </div>
-        <div className="pn-card-actions">
-          <div>
-            <img src={item.imageUrl} alt="" className="pn-product-img" />
-          </div>
-          <div>
-            <button
-              className={`pn-add-btn ${isAdded ? "pn-added" : ""}`}
-              onClick={handleCart}
-            >
-              {isAdded ? "Added" : "Add"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="pn-compatible-row" onClick={onOpenCompatibility}>
-        <div>
-          {" "}
-          Compatible with{" "}
-          <b className="pn-count-vehicle">{vehicleCount || 0}</b> vehicles
-        </div>
-        <span className="pn-arrow">›</span>
-      </div>
-    </div>
-  );
-};
 const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicles, setVehicles] = useState([]);
@@ -285,11 +217,25 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
                 )}
               </>
             ) : loading && vehicles.length === 0 ? (
-              <div
-                className="pn-no-results"
-                style={{ padding: "20px", textAlign: "center" }}
-              >
-                Loading vehicles...
+              <div className="skeleton-list" style={{ padding: "20px" }}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="skeleton-card" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '12px',
+                    border: '1px solid #eee',
+                    borderRadius: '4px',
+                    background: '#fff',
+                    marginBottom: '8px'
+                  }}>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div
@@ -310,7 +256,15 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
 
 const PartNumber = () => {
   const { state } = useLocation();
+  const [assets, setAssets] = useState({});
   const rawSearchKey = state?.partNumber || "";
+const [alignedProducts, setAlignedProducts] = useState([]);
+const [alignedLoading, setAlignedLoading] = useState(false);
+  
+  // Load assets
+  useEffect(() => {
+    getAssets().then(setAssets);
+  }, []);
 
   // Detection functions
   const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
@@ -338,7 +292,6 @@ const PartNumber = () => {
   const [vehicleCounts, setVehicleCounts] = useState({}); // Store count per partNumber
   const [loadingCounts, setLoadingCounts] = useState(true); // Loading state for vehicle counts
   const [openFilter, setOpenFilter] = useState(null);
-  const [uiAssets, setUiAssets] = useState({});
   const [stockData, setStockData] = useState({}); // Store stock info by partNumber
 
   // Handler for opening compatibility modal
@@ -347,24 +300,72 @@ const PartNumber = () => {
     setShowCompatibility(true);
   };
 
-  // Fetch UI assets
   useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data);
-      } catch (err) {
-        console.error("❌ Failed to load UI assets", err);
-      }
-    };
-    fetchUiAssets();
-  }, []);
+  if (!searchKey || !isPartNumber(searchKey)) return;
 
-  // Helper to get full URL
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
-    return apiService.getAssetUrl(uiAssets[tagName]);
+  const fetchAlignedProducts = async () => {
+    setAlignedLoading(true);
+
+    try {
+      // 1️⃣ Get related part numbers
+      const relationRes = await partRelationsAPI({
+        customerCode: "0046",
+        partNumber: searchKey,
+        type: "crossReference",
+      });
+
+      const relatedPartNumbers = relationRes?.data?.data || [];
+
+
+      if (relatedPartNumbers.length === 0) {
+        setAlignedProducts([]);
+        setAlignedLoading(false);
+        return;
+      }
+
+      // 2️⃣ Fetch product details for aligned parts
+      const partsRes = await partsListAPI({
+        brandPriority: ["VALEO"],
+        limit: 100,
+        offset: 0,
+        sortOrder: "ASC",
+        fieldOrder: null,
+        customerCode: "0046",
+        partNumber: relatedPartNumbers,
+        model: null,
+        brand: null,
+        subAggregate: null,
+        aggregate: null,
+        make: null,
+        variant: null,
+        fuelType: null,
+        vehicle: null,
+        year: null,
+      });
+
+      const alignedParts = (partsRes?.data || []).map((part, index) => ({
+        id: index + 1,
+        partNo: part.partNumber,
+        brand: part.brandName,
+        description: part.itemDescription,
+        price: Number(part.listPrice) || 0,
+        mrp: Number(part.mrp) || 0,
+        imageUrl: NoImage,
+        eta: "1-2 Days",
+        stock: "In stock",
+      }));
+
+      setAlignedProducts(alignedParts);
+    } catch (err) {
+      console.error("❌ Failed to fetch aligned products", err);
+      setAlignedProducts([]);
+    } finally {
+      setAlignedLoading(false);
+    }
   };
+
+  fetchAlignedProducts();
+}, [searchKey]);
 
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
@@ -449,7 +450,7 @@ const PartNumber = () => {
   const fetchStockForProducts = async (productsList) => {
     const stockPromises = productsList.map(async (product) => {
       try {
-        const response = await apiService.post("/stock-list", {
+        const response = await stockListAPI({
           customerCode: "0046",
           partNumber: product.partNo,
           inventoryName: null,
@@ -555,8 +556,8 @@ const applyCompatibilityFilter = async () => {
 
     // Make both API calls in parallel
     const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-      apiService.post("/parts-list", myTvsRequestBody),
-      apiService.post("/parts-list", otherBrandsRequestBody),
+      partsListAPI(myTvsRequestBody),
+      partsListAPI(otherBrandsRequestBody),
     ]);
     
     console.log("✅ myTVS Response:", myTvsResponse);
@@ -719,8 +720,8 @@ const applyCompatibilityFilter = async () => {
 
       // Make both API calls in parallel
       const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-        apiService.post("/parts-list", myTvsRequestBody),
-        apiService.post("/parts-list", otherBrandsRequestBody),
+        partsListAPI(myTvsRequestBody),
+        partsListAPI(otherBrandsRequestBody),
       ]);
       
       console.log("✅ myTVS Vehicle Filtered Response:", myTvsResponse);
@@ -920,8 +921,8 @@ const applyCompatibilityFilter = async () => {
             
             try {
               const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-                apiService.post("/parts-list", myTvsRequestBody),
-                apiService.post("/parts-list", otherBrandsRequestBody),
+                partsListAPI(myTvsRequestBody),
+                partsListAPI(otherBrandsRequestBody),
               ]);
               
               const myTvsBatchData = myTvsResponse?.data || [];
@@ -1028,7 +1029,7 @@ const applyCompatibilityFilter = async () => {
               vehicle: null,
               year: null,
             };
-            response = await apiService.post("/parts-list", subAggRequestBody);
+            response = await partsListAPI(subAggRequestBody);
           } else {
             // Batch loading completed - products already transformed and set
             // Final update with all fetched products
@@ -1256,7 +1257,7 @@ const applyCompatibilityFilter = async () => {
           console.log("📤 Vehicle list request (Part Number):", requestBody);
         }
 
-        const response = await apiService.post("/vehicle-list", requestBody);
+        const response = await vehicleListAPI(requestBody);
         const vehicles = response?.data || [];
         console.log("✅ Fetched vehicles for filters:", vehicles.length);
         setVehicleList(vehicles);
@@ -1376,14 +1377,6 @@ const applyCompatibilityFilter = async () => {
                 </option>
               ))}
             </select>
-
-            <button
-              className="pn-search-btn"
-              onClick={applyCompatibilityFilter}
-            >
-              Search
-            </button>
-
             <button
               className="pn-clear-btn"
               onClick={() => {
@@ -1406,8 +1399,16 @@ const applyCompatibilityFilter = async () => {
                 console.log("✅ Filters cleared and products restored to original state");
               }}
             >
-              Clear
+              X
             </button>
+            <button
+              className="pn-search-btn"
+              onClick={applyCompatibilityFilter}
+            >
+              Search
+            </button>
+
+
           </div>
 
           <div className="pn-right-filters">
@@ -1423,28 +1424,36 @@ const applyCompatibilityFilter = async () => {
                 }}
               >
                 <span>{rightFilters.year || "Year"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
-              {openFilter === "year" && (
-                <div
-                  className="pn-filter-dropdown"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {["2024", "2023", "2022", "2021", "2020"].map((option) => (
-                    <div
-                      key={option}
-                      className="pn-filter-option"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRightFilters((prev) => ({ ...prev, year: option }));
-                        setOpenFilter(null);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+{openFilter === "year" && (
+  <div
+    className="pn-filter-dropdown"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {years.length ? (
+      years
+        .slice()
+        .sort((a, b) => b - a)
+        .map((option) => (
+          <div
+            key={option}
+            className="pn-filter-option"
+            onClick={(e) => {
+              e.stopPropagation();
+              setRightFilters((prev) => ({ ...prev, year: option }));
+              setOpenFilter(null);
+            }}
+          >
+            {option}
+          </div>
+        ))
+    ) : (
+      <div className="pn-filter-option">No years available</div>
+    )}
+  </div>
+)}
+
             </div>
 
             <div
@@ -1459,28 +1468,36 @@ const applyCompatibilityFilter = async () => {
                 }}
               >
                 <span>{rightFilters.fuelType || "Fuel type"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
-              {openFilter === "fuelType" && (
-                <div
-                  className="pn-filter-dropdown"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {["Petrol", "Diesel", "CNG", "Electric"].map((option) => (
-                    <div
-                      key={option}
-                      className="pn-filter-option"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRightFilters((prev) => ({ ...prev, fuelType: option }));
-                        setOpenFilter(null);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+             {openFilter === "fuelType" && (
+  <div
+    className="pn-filter-dropdown"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {fuelTypes.length ? (
+      fuelTypes.map((option) => (
+        <div
+          key={option}
+          className="pn-filter-option"
+          onClick={(e) => {
+            e.stopPropagation();
+            setRightFilters((prev) => ({
+              ...prev,
+              fuelType: option,
+            }));
+            setOpenFilter(null);
+          }}
+        >
+          {option}
+        </div>
+      ))
+    ) : (
+      <div className="pn-filter-option">No fuel types available</div>
+    )}
+  </div>
+)}
+
             </div>
 
             <div
@@ -1495,7 +1512,7 @@ const applyCompatibilityFilter = async () => {
                 }}
               >
                 <span>{rightFilters.eta || "ETA"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
               {openFilter === "eta" && (
                 <div
@@ -1525,7 +1542,86 @@ const applyCompatibilityFilter = async () => {
         <div className="pn-content">
           {/* ================= LOADING ================= */}
           {loading && (
-            <div className="pn-loading">Loading products...</div>
+            <div className="pn-content">
+              <div className="pn-left">
+                <h3 className="pn-section-title">myTVS Recommended Products</h3>
+                <div className="pn-grid">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="skeleton-pn-card skeleton-card">
+                      <div className="skeleton-pn-card-row">
+                        <div className="skeleton skeleton-pn-image"></div>
+                        <div className="skeleton-pn-body">
+                          <div className="skeleton-pn-tags">
+                            <div className="skeleton skeleton-pn-tag"></div>
+                            <div className="skeleton skeleton-pn-tag"></div>
+                            <div className="skeleton skeleton-pn-tag"></div>
+                          </div>
+                          <div className="skeleton skeleton-pn-part-code"></div>
+                          <div className="skeleton skeleton-pn-name"></div>
+                          <div className="skeleton-pn-price-row">
+                            <div className="skeleton skeleton-pn-price"></div>
+                            <div className="skeleton skeleton-pn-mrp"></div>
+                          </div>
+                          <div className="skeleton-pn-actions">
+                            <div className="skeleton skeleton-pn-button"></div>
+                            <div className="skeleton skeleton-pn-compatible"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <h3 className="pn-section-title" style={{ marginTop: '32px' }}>Other Brand Products</h3>
+                <div className="pn-grid">
+                  {Array.from({ length: 4 }).map((_, index) => (
+                    <div key={index} className="skeleton-pn-card skeleton-card">
+                      <div className="skeleton-pn-card-row">
+                        <div className="skeleton skeleton-pn-image"></div>
+                        <div className="skeleton-pn-body">
+                          <div className="skeleton-pn-tags">
+                            <div className="skeleton skeleton-pn-tag"></div>
+                            <div className="skeleton skeleton-pn-tag"></div>
+                            <div className="skeleton skeleton-pn-tag"></div>
+                          </div>
+                          <div className="skeleton skeleton-pn-part-code"></div>
+                          <div className="skeleton skeleton-pn-name"></div>
+                          <div className="skeleton-pn-price-row">
+                            <div className="skeleton skeleton-pn-price"></div>
+                            <div className="skeleton skeleton-pn-mrp"></div>
+                          </div>
+                          <div className="skeleton-pn-actions">
+                            <div className="skeleton skeleton-pn-button"></div>
+                            <div className="skeleton skeleton-pn-compatible"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <h3 className="pn-section-title" style={{ marginTop: '32px' }}>Aligned Products</h3>
+                <div className="pn-aligned">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="skeleton-aligned-card skeleton-card">
+                      <div className="skeleton skeleton-aligned-image"></div>
+                      <div className="skeleton-aligned-content">
+                        <div className="skeleton-aligned-tags">
+                          <div className="skeleton skeleton-aligned-tag"></div>
+                          <div className="skeleton skeleton-aligned-tag"></div>
+                        </div>
+                        <div className="skeleton skeleton-aligned-part"></div>
+                        <div className="skeleton skeleton-aligned-name"></div>
+                        <div className="skeleton-aligned-price-row">
+                          <div className="skeleton skeleton-aligned-price"></div>
+                          <div className="skeleton skeleton-aligned-mrp"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* ================= ERROR ================= */}
@@ -1609,32 +1705,36 @@ const applyCompatibilityFilter = async () => {
               <div className="pn-right">
                 {/* Aligned Products */}
                 <Product1
-                  title="Aligned Products"
-                  products={alignedProducts.map((item, index) => ({
-                    id: item.id,
-                    partNumber: item.partNo,
-                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
-                    name: item.description,
-                    image: item.imageUrl,
-                    brand: item.brand,
-                    price: item.price,
-                    mrp: item.mrp,
-                    stockStatus: "in stock",
-                    deliveryTime: "1-2 Days",
-                  }))}
-                  layout="vertical"
-                  onAddToCart={(product) => {
-                    addToCart({
-                      partNumber: product.cartId, // Use unique cartId
-                      itemDescription: product.name,
-                      listPrice: product.price,
-                      imageUrl: product.image,
-                      brand: product.brand,
-                      mrp: product.mrp,
-                      actualPartNumber: product.partNumber, // Keep original for reference
-                    });
-                  }}
-                />
+  title={`Aligned Products (${alignedProducts.length})`}
+  products={alignedProducts.map((item, index) => ({
+    id: item.id,
+    partNumber: item.partNo,
+    cartId: `${item.partNo}_${item.brand}_${index}`,
+    name: item.description,
+    image: item.imageUrl,
+    brand: item.brand,
+    price: item.price,
+    mrp: item.mrp,
+    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
+    deliveryTime: item.eta,
+    compatibleVehicles: vehicleCounts[item.partNo] || 0,
+  }))}
+  layout="horizontal"
+  onAddToCart={(product) => {
+    addToCart({
+      partNumber: product.cartId,
+      itemDescription: product.name,
+      listPrice: product.price,
+      imageUrl: product.image,
+      brand: product.brand,
+      mrp: product.mrp,
+      actualPartNumber: product.partNumber,
+    });
+  }}
+  onCompatibilityClick={handleCompatibilityClick}
+  isLoadingCounts={alignedLoading}
+/>
+
               </div>
             </>
           )}

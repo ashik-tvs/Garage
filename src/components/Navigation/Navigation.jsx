@@ -1,289 +1,295 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../styles/Navigation/Navigation.css";
-import apiService from "../../services/apiservice";
+import { getAssets, getAsset } from "../../utils/assets";
 
 /**
- * Reusable Navigation Component
- * Displays breadcrumb navigation with Home icon and dynamic path
- * Automatically builds breadcrumbs based on current route and location state
- * 
- * @param {Array} breadcrumbs - Optional array of breadcrumb items (for manual override)
- * If not provided, breadcrumbs are auto-generated based on route and state
- * Example: [
- *   { label: "TOYOTA", onClick: () => navigate("/make") },
- *   { label: "CAMRY", onClick: () => navigate("/model") },
- *   { label: "WIPER SYSTEM", onClick: () => navigate("/category") },
- *   { label: "WIPER TANK" }
- * ]
+ * Intelligent Navigation Component
+ * Automatically generates breadcrumbs based on route patterns and state
+ * Supports both auto-generation and manual override
+ * Highly configurable and maintainable
  */
+
+// Route configuration for intelligent breadcrumb generation
+const ROUTE_CONFIG = {
+  // Service Type Routes
+  "/search-by-service-type": {
+    pattern: "serviceType",
+    breadcrumbs: (state) => [
+      state?.serviceType && { label: state.serviceType, path: "/search-by-service-type" }
+    ].filter(Boolean)
+  },
+  
+  "/service-type-model": {
+    pattern: "serviceType > make",
+    breadcrumbs: (state) => [
+      state?.serviceType && { label: state.serviceType, path: "/search-by-service-type", state: { serviceType: state.serviceType } },
+      state?.make && { label: state.make, path: "/service-type-model" }
+    ].filter(Boolean)
+  },
+  
+  "/service-type-category": {
+    pattern: "serviceType > make > model",
+    breadcrumbs: (state) => [
+      state?.serviceType && { label: state.serviceType, path: "/search-by-service-type", state: { serviceType: state.serviceType } },
+      state?.make && { label: state.make, path: "/service-type-model", state: { serviceType: state.serviceType, make: state.make } },
+      state?.model && { label: state.model, path: "/service-type-category" }
+    ].filter(Boolean)
+  },
+  
+  "/service-type-sub-category": {
+    pattern: "serviceType > make > model > category",
+    breadcrumbs: (state) => [
+      state?.serviceType && { label: state.serviceType, path: "/search-by-service-type", state: { serviceType: state.serviceType } },
+      state?.make && { label: state.make, path: "/service-type-model", state: { serviceType: state.serviceType, make: state.make } },
+      state?.model && { label: state.model, path: "/service-type-category", state: { serviceType: state.serviceType, make: state.make, model: state.model } },
+      state?.category && { label: state.category, path: "/service-type-sub-category" }
+    ].filter(Boolean)
+  },
+  
+  "/service-type-products": {
+    pattern: "serviceType > make > model > category > subCategory",
+    breadcrumbs: (state) => [
+      state?.serviceType && { label: state.serviceType, path: "/search-by-service-type", state: { serviceType: state.serviceType } },
+      state?.make && { label: state.make, path: "/service-type-model", state: { serviceType: state.serviceType, make: state.make } },
+      state?.model && { label: state.model, path: "/service-type-category", state: { serviceType: state.serviceType, make: state.make, model: state.model } },
+      state?.category && { label: state.category, path: "/service-type-sub-category", state: { serviceType: state.serviceType, make: state.make, model: state.model, category: state.category } },
+      state?.subCategory && { label: state.subCategory, path: "/service-type-products" }
+    ].filter(Boolean)
+  },
+
+  // Vehicle Number Routes
+  "/vehicle-number-products": {
+    pattern: "dynamic",
+    breadcrumbs: (state) => {
+      const crumbs = [];
+      
+      // Feature-based flows
+      if (state?.featureLabel) {
+        // Fast Movers/High Value flow
+        if ((state.featureLabel === "Fast Movers" || state.featureLabel === "High Value") && !state.make && !state.model && !state.brand) {
+          state.aggregateName && crumbs.push({ 
+            label: state.aggregateName, 
+            path: "/Category", 
+            state: { featureLabel: state.featureLabel, variant: state.variant } 
+          });
+        }
+        // CNG flow
+        else if (state.featureLabel === "CNG" && state.make) {
+          state.make && crumbs.push({ 
+            label: state.make, 
+            path: "/MakeNew", 
+            state: { featureLabel: state.featureLabel, variant: state.variant } 
+          });
+          state.model && crumbs.push({ 
+            label: state.model, 
+            path: "/Model", 
+            state: { make: state.make, featureLabel: state.featureLabel, variant: state.variant } 
+          });
+          state.aggregateName && crumbs.push({ 
+            label: state.aggregateName, 
+            path: "/CategoryNew", 
+            state: { make: state.make, model: state.model, featureLabel: state.featureLabel, variant: state.variant } 
+          });
+        }
+        // Discontinued/Electric flow
+        else if ((state.featureLabel === "Discontinued Model" || state.featureLabel === "Electric") && state.model && !state.make) {
+          state.model && crumbs.push({ 
+            label: state.model, 
+            path: "/Model", 
+            state: { featureLabel: state.featureLabel, variant: state.variant } 
+          });
+          state.aggregateName && crumbs.push({ 
+            label: state.aggregateName, 
+            path: "/CategoryNew", 
+            state: { model: state.model, featureLabel: state.featureLabel, variant: state.variant, make: null } 
+          });
+        }
+        // Only with us flow
+        else if (state.featureLabel === "Only with us" && state.brand) {
+          state.brand && crumbs.push({ 
+            label: state.brand, 
+            path: "/brand", 
+            state: { featureLabel: state.featureLabel, variant: state.variant } 
+          });
+          state.aggregateName && crumbs.push({ 
+            label: state.aggregateName, 
+            path: "/CategoryNew", 
+            state: { brand: state.brand, featureLabel: state.featureLabel, variant: state.variant, isOnlyWithUs: true } 
+          });
+        }
+      }
+      // Direct category flow (from Home)
+      else if (state?.aggregateName && !state.make && !state.model && !state.brand) {
+        crumbs.push({ 
+          label: state.aggregateName, 
+          path: "/home", 
+          state: { variant: state.variant } 
+        });
+      }
+      // Make flow
+      else if (state?.make && state?.model) {
+        state.make && crumbs.push({ 
+          label: state.make, 
+          path: state.fromHome ? "/home" : "/MakeNew", 
+          state: { variant: state.variant } 
+        });
+        state.model && crumbs.push({ 
+          label: state.model, 
+          path: "/Model", 
+          state: { make: state.make, variant: state.variant, fromHome: state.fromHome } 
+        });
+        state.aggregateName && crumbs.push({ 
+          label: state.aggregateName, 
+          path: "/CategoryNew", 
+          state: { make: state.make, model: state.model, variant: state.variant, fromHome: state.fromHome } 
+        });
+      }
+
+      // Add SubCategory if exists
+      if (state?.subAggregateName || state?.subCategory) {
+        crumbs.push({
+          label: state.subAggregateName || state.subCategory?.name || state.subCategory,
+          path: "/sub_category",
+          state: {
+            make: state.make || null,
+            model: state.model || null,
+            brand: state.brand || null,
+            category: state.aggregateName || state.category,
+            aggregate: state.aggregateName || state.category,
+            aggregateName: state.aggregateName || state.category,
+            variant: state.variant,
+            featureLabel: state.featureLabel,
+            isOnlyWithUs: state.brand && state.featureLabel === "Only with us",
+            fromHome: state.fromHome,
+          },
+        });
+      }
+
+      return crumbs;
+    }
+  },
+
+  // Standard Routes
+  "/sub_category": {
+    pattern: "dynamic",
+    breadcrumbs: (state) => {
+      const crumbs = [];
+      
+      // Feature-based flows
+      if (state?.featureLabel) {
+        if ((state.featureLabel === "Fast Movers" || state.featureLabel === "High Value") && !state.make && !state.model && !state.brand) {
+          state.aggregateName && crumbs.push({ 
+            label: state.aggregateName, 
+            path: "/Category", 
+            state: { featureLabel: state.featureLabel, variant: state.variant } 
+          });
+        } else if (state.featureLabel === "CNG" && state.make) {
+          state.make && crumbs.push({ label: state.make, path: "/MakeNew", state: { featureLabel: state.featureLabel, variant: state.variant } });
+          state.model && crumbs.push({ label: state.model, path: "/Model", state: { make: state.make, featureLabel: state.featureLabel, variant: state.variant } });
+          state.aggregateName && crumbs.push({ label: state.aggregateName, path: "/CategoryNew", state: { make: state.make, model: state.model, featureLabel: state.featureLabel, variant: state.variant } });
+        } else if ((state.featureLabel === "Discontinued Model" || state.featureLabel === "Electric") && state.model && !state.make) {
+          state.model && crumbs.push({ label: state.model, path: "/Model", state: { featureLabel: state.featureLabel, variant: state.variant } });
+          state.aggregateName && crumbs.push({ label: state.aggregateName, path: "/CategoryNew", state: { model: state.model, featureLabel: state.featureLabel, variant: state.variant, make: null } });
+        } else if (state.featureLabel === "Only with us" && state.brand) {
+          state.brand && crumbs.push({ label: state.brand, path: "/brand", state: { featureLabel: state.featureLabel, variant: state.variant } });
+          state.aggregateName && crumbs.push({ label: state.aggregateName, path: "/CategoryNew", state: { brand: state.brand, featureLabel: state.featureLabel, variant: state.variant, isOnlyWithUs: true } });
+        }
+      }
+      // Direct category or Make flows
+      else if (state?.aggregateName && !state.make && !state.model && !state.brand) {
+        crumbs.push({ label: state.aggregateName, path: "/home", state: { variant: state.variant } });
+      } else if (state?.make && state?.model) {
+        state.make && crumbs.push({ label: state.make, path: state.fromHome ? "/home" : "/MakeNew", state: { variant: state.variant } });
+        state.model && crumbs.push({ label: state.model, path: "/Model", state: { make: state.make, variant: state.variant, fromHome: state.fromHome } });
+        state.aggregateName && crumbs.push({ label: state.aggregateName, path: "/CategoryNew", state: { make: state.make, model: state.model, variant: state.variant, fromHome: state.fromHome } });
+      }
+
+      return crumbs;
+    }
+  },
+
+  "/CategoryNew": {
+    pattern: "dynamic",
+    breadcrumbs: (state) => {
+      const crumbs = [];
+      
+      if (state?.featureLabel) {
+        if (state.featureLabel === "CNG" && state.make) {
+          state.make && crumbs.push({ label: state.make, path: "/MakeNew", state: { featureLabel: state.featureLabel, variant: state.variant } });
+          state.model && crumbs.push({ label: state.model, path: "/Model", state: { make: state.make, featureLabel: state.featureLabel, variant: state.variant } });
+        } else if ((state.featureLabel === "Discontinued Model" || state.featureLabel === "Electric") && state.model) {
+          crumbs.push({ label: state.model, path: "/Model", state: { featureLabel: state.featureLabel, variant: state.variant } });
+        } else if (state.featureLabel === "Only with us" && state.brand) {
+          crumbs.push({ label: state.brand, path: "/brand", state: { featureLabel: state.featureLabel, variant: state.variant } });
+        }
+      } else if (state?.make && state?.model) {
+        state.make && crumbs.push({ label: state.make, path: state.fromHome ? "/home" : "/MakeNew", state: { variant: state.variant } });
+        state.model && crumbs.push({ label: state.model, path: "/Model", state: { make: state.make, variant: state.variant, fromHome: state.fromHome } });
+      }
+
+      return crumbs;
+    }
+  },
+
+  "/Model": {
+    pattern: "make",
+    breadcrumbs: (state) => [
+      state?.make && { 
+        label: state.make, 
+        path: state.fromHome ? "/home" : "/MakeNew", 
+        state: { featureLabel: state.featureLabel, variant: state.variant } 
+      }
+    ].filter(Boolean)
+  },
+
+  // Static routes
+  "/cart": {
+    pattern: "static",
+    breadcrumbs: () => [{ label: "Cart" }]
+  },
+
+  "/brand": {
+    pattern: "static", 
+    breadcrumbs: () => [{ label: "Brand" }]
+  },
+
+  "/my-orders": {
+    pattern: "static",
+    breadcrumbs: () => [{ label: "My Orders" }]
+  }
+};
+
 const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [uiAssets, setUiAssets] = useState({});
+  const [assets, setAssets] = useState({});
+  
+  // Load assets
+  useEffect(() => {
+    getAssets().then(setAssets);
+  }, []);
 
-  // Extract state from location
-  const {
-    make,
-    model,
-    brand,
-    category,
-    aggregateName,
-    subAggregateName,
-    subCategory,
-    featureLabel,
-    variant,
-    isOnlyWithUs,
-  } = location.state || {};
-
-  // Auto-generate breadcrumbs based on route and state
-  const generateBreadcrumbs = () => {
-    const crumbs = [];
+  // Generate intelligent breadcrumbs
+  const generateIntelligentBreadcrumbs = () => {
     const currentPath = location.pathname;
-
-    // Determine navigation flow
-    const hasFeature = featureLabel;
-    const hasBrand = brand;
-    const hasMake = make;
-    const hasModel = model;
-    const hasCategory = aggregateName || category;
-    const hasSubCategory = subAggregateName || subCategory;
-
-    // VehicleNumberProduct page breadcrumbs
-    if (currentPath === "/vehicle-number-products") {
-      // Flow 1: Feature-based flows
-      if (hasFeature) {
-        // Sub-flow 1a: Fast Movers/High Value → Category → SubCategory → Products
-        if ((featureLabel === "Fast Movers" || featureLabel === "High Value") && !hasMake && !hasModel && !hasBrand) {
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/Category", { state: { featureLabel, variant } }),
-            });
-          }
-        }
-        // Sub-flow 1b: CNG → Make → Model → Category → SubCategory → Products
-        else if (featureLabel === "CNG" && hasMake) {
-          crumbs.push({
-            label: make,
-            onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }),
-          });
-          if (hasModel) {
-            crumbs.push({
-              label: model,
-              onClick: () => navigate("/Model", { state: { make, featureLabel, variant } }),
-            });
-          }
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { make, model, featureLabel, variant } }),
-            });
-          }
-        }
-        // Sub-flow 1c: Discontinued Model/Electric → Model → Category → SubCategory → Products
-        else if ((featureLabel === "Discontinued Model" || featureLabel === "Electric") && hasModel && !hasMake) {
-          crumbs.push({
-            label: model,
-            onClick: () => navigate("/Model", { state: { featureLabel, variant } }),
-          });
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { model, featureLabel, variant, make: null } }),
-            });
-          }
-        }
-        // Sub-flow 1d: Only with us → Brand → Category → SubCategory → Products
-        else if (featureLabel === "Only with us" && hasBrand) {
-          crumbs.push({
-            label: brand,
-            onClick: () => navigate("/brand", { state: { featureLabel, variant } }),
-          });
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { brand, featureLabel, variant, isOnlyWithUs: true } }),
-            });
-          }
-        }
-      }
-      // Flow 2: Direct Category flow (from Home) → Home (Categories) → SubCategory → Products
-      else if (hasCategory && !hasMake && !hasModel && !hasBrand) {
-        // When clicking category breadcrumb, go back to home where categories are displayed
-        crumbs.push({
-          label: aggregateName || category,
-          onClick: () => navigate("/home", { state: { variant } }),
-        });
-      }
-      // Flow 3: Make flow → Make → Model → Category → SubCategory → Products
-      else if (hasMake && hasModel) {
-        crumbs.push({
-          label: make,
-          onClick: () => navigate("/MakeNew", { state: { variant } }),
-        });
-        crumbs.push({
-          label: model,
-          onClick: () => navigate("/Model", { state: { make, variant } }),
-        });
-        if (hasCategory) {
-          crumbs.push({
-            label: aggregateName || category,
-            onClick: () => navigate("/CategoryNew", { state: { make, model, variant } }),
-          });
-        }
-      }
-
-      // Always add SubCategory breadcrumb if it exists
-      if (hasSubCategory) {
-        crumbs.push({
-          label: subAggregateName || subCategory?.name || subCategory,
-          onClick: () => navigate("/sub_category", {
-            state: {
-              make: hasMake ? make : null,
-              model: hasModel ? model : null,
-              brand: hasBrand ? brand : null,
-              category: aggregateName || category,
-              aggregate: aggregateName || category,
-              aggregateName: aggregateName || category,
-              variant,
-              featureLabel: hasFeature ? featureLabel : undefined,
-              isOnlyWithUs: hasBrand && featureLabel === "Only with us",
-            },
-          }),
-        });
-      }
-    }
-    // SubCategory page breadcrumbs
-    else if (currentPath === "/sub_category") {
-      // Feature-based flows
-      if (hasFeature) {
-        if ((featureLabel === "Fast Movers" || featureLabel === "High Value") && !hasMake && !hasModel && !hasBrand) {
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/Category", { state: { featureLabel, variant } }),
-            });
-          }
-        } else if (featureLabel === "CNG" && hasMake) {
-          crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }) });
-          if (hasModel) {
-            crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, featureLabel, variant } }) });
-          }
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { make, model, featureLabel, variant } }),
-            });
-          }
-        } else if ((featureLabel === "Discontinued Model" || featureLabel === "Electric") && hasModel && !hasMake) {
-          crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { featureLabel, variant } }) });
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { model, featureLabel, variant, make: null } }),
-            });
-          }
-        } else if (featureLabel === "Only with us" && hasBrand) {
-          crumbs.push({ label: brand, onClick: () => navigate("/brand", { state: { featureLabel, variant } }) });
-          if (hasCategory) {
-            crumbs.push({
-              label: aggregateName || category,
-              onClick: () => navigate("/CategoryNew", { state: { brand, featureLabel, variant, isOnlyWithUs: true } }),
-            });
-          }
-        }
-      }
-      // Direct category (from Home) or Make flows
-      else if (hasCategory && !hasMake && !hasModel && !hasBrand) {
-        // When from Home → Category → SubCategory, clicking category goes back to Home
-        crumbs.push({
-          label: aggregateName || category,
-          onClick: () => navigate("/home", { state: { variant } }),
-        });
-      } else if (hasMake && hasModel) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { variant } }) });
-        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant } }) });
-        if (hasCategory) {
-          crumbs.push({
-            label: aggregateName || category,
-            onClick: () => navigate("/CategoryNew", { state: { make, model, variant } }),
-          });
-        }
-      }
-    }
-    // CategoryNew page breadcrumbs
-    else if (currentPath === "/CategoryNew") {
-      if (hasFeature) {
-        if (featureLabel === "CNG" && hasMake) {
-          crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }) });
-          if (hasModel) {
-            crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, featureLabel, variant } }) });
-          }
-        } else if ((featureLabel === "Discontinued Model" || featureLabel === "Electric") && hasModel) {
-          crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { featureLabel, variant } }) });
-        } else if (featureLabel === "Only with us" && hasBrand) {
-          crumbs.push({ label: brand, onClick: () => navigate("/brand", { state: { featureLabel, variant } }) });
-        }
-      } else if (hasMake && hasModel) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { variant } }) });
-        crumbs.push({ label: model, onClick: () => navigate("/Model", { state: { make, variant } }) });
-      }
-    }
-    // Model page breadcrumbs
-    else if (currentPath === "/Model") {
-      if (hasMake) {
-        crumbs.push({ label: make, onClick: () => navigate("/MakeNew", { state: { featureLabel, variant } }) });
-      }
+    const routeConfig = ROUTE_CONFIG[currentPath];
+    
+    if (!routeConfig) {
+      console.warn(`⚠️ No route configuration found for: ${currentPath}`);
+      return [];
     }
 
-    return crumbs;
+    try {
+      return routeConfig.breadcrumbs(location.state || {});
+    } catch (error) {
+      console.error(`❌ Error generating breadcrumbs for ${currentPath}:`, error);
+      return [];
+    }
   };
 
   // Use manual breadcrumbs if provided, otherwise auto-generate
-  const breadcrumbs = manualBreadcrumbs !== null ? manualBreadcrumbs : generateBreadcrumbs();
-
-  // Fetch UI assets with caching
-  useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        // Check cache first
-        const cacheKey = "navigation_ui_assets";
-        const cachedData = localStorage.getItem(cacheKey);
-        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
-        const cacheExpiry = 24 * 60 * 60 * 1000; // 24 hours
-
-        if (cachedData && cacheTimestamp) {
-          const isCacheValid = Date.now() - parseInt(cacheTimestamp) < cacheExpiry;
-          
-          if (isCacheValid) {
-            console.log("📦 Loading navigation assets from cache");
-            setUiAssets(JSON.parse(cachedData));
-            return;
-          }
-        }
-
-        // Fetch from API
-        console.log("🌐 Fetching navigation assets from API");
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data);
-        
-        // Cache the assets
-        localStorage.setItem(cacheKey, JSON.stringify(assets.data));
-        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-        console.log("💾 Navigation assets cached successfully");
-      } catch (err) {
-        console.error("❌ Failed to load UI assets", err);
-      }
-    };
-    fetchUiAssets();
-  }, []);
-
-  // Helper to get full URL
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return null;
-    return apiService.getAssetUrl(uiAssets[tagName]);
-  };
+  const breadcrumbs = manualBreadcrumbs !== null ? manualBreadcrumbs : generateIntelligentBreadcrumbs();
 
   // Format label with first letter capitalized, rest lowercase
   const formatLabel = (label) => {
@@ -295,32 +301,37 @@ const Navigation = ({ breadcrumbs: manualBreadcrumbs = null }) => {
       .join(" ");
   };
 
+  // Handle breadcrumb click
+  const handleBreadcrumbClick = (crumb) => {
+    if (crumb.onClick) {
+      crumb.onClick();
+    } else if (crumb.path) {
+      navigate(crumb.path, { state: crumb.state || {} });
+    }
+  };
+
   return (
     <div className="nav-breadcrumbs">
       {/* Home Icon */}
-      {getAssetUrl("HOME") && (
-        <img
-          src={getAssetUrl("HOME")}
-          alt="Home"
-          className="nav-home-icon"
-          onClick={() => navigate("/home")}
-          title="Home"
-        />
-      )}
+      <img
+        src={getAsset('HOME', assets)}
+        alt="Home"
+        className="nav-home-icon"
+        onClick={() => navigate("/home")}
+        title="Home"
+      />
 
       {/* Breadcrumb Trail */}
       {breadcrumbs.map((crumb, index) => (
         <React.Fragment key={index}>
-          {getAssetUrl("RIGHT ARROW") && (
-            <img
-              src={getAssetUrl("RIGHT ARROW")}
-              alt=""
-              className="nav-arrow-icon"
-            />
-          )}
+          <img
+            src={getAsset('RIGHT ARROW', assets)}
+            alt=""
+            className="nav-arrow-icon"
+          />
           <span
-            className={`nav-breadcrumb-item ${crumb.onClick ? "clickable" : ""}`}
-            onClick={crumb.onClick}
+            className={`nav-breadcrumb-item ${(crumb.onClick || crumb.path) ? "clickable" : ""}`}
+            onClick={() => handleBreadcrumbClick(crumb)}
             title={crumb.label}
           >
             {formatLabel(crumb.label)}
