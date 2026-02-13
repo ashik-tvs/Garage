@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/CategoryNew.css";
+import "../../../styles/skeleton/skeleton.css";
 import apiService from "../../../services/apiservice";
+import { masterListAPI } from "../../../services/api";
 import OciImage from "../../oci_image/ociImages";
 import Navigation from "../../Navigation/Navigation";
 import NoImage from "../../../assets/No Image.png";
@@ -103,7 +105,7 @@ const CategoryNew = () => {
         console.log(`🔍 Batch ${batchCount + 1} request body:`, JSON.stringify(requestBody, null, 2));
 
         try {
-          const response = await apiService.post("/filter", requestBody);
+          const response = await masterListAPI(requestBody);
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
             success: response?.success,
@@ -332,10 +334,10 @@ const CategoryNew = () => {
                   className="category-new-item skeleton-cat-item"
                 >
                   <div className="category-new-image-wrapper">
-                    <div className="skeleton skeleton-cat-image"></div>
+                    <div className="skeleton skeleton-img category"></div>
                   </div>
                   <div className="category-new-label">
-                    <div className="skeleton skeleton-sub-text"></div>
+                    <div className="skeleton skeleton-text medium"></div>
                   </div>
                 </div>
               ))}
@@ -376,7 +378,7 @@ const CategoryNew = () => {
                       <OciImage
                         partNumber={category.aggregateName}
                         folder="categories"
-                        fallbackImage={category.image}
+                        fallbackImage={NoImage}
                         className="category-new-image"
                         alt={category.name}
                       />

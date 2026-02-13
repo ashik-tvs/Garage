@@ -1,6 +1,6 @@
 /* Container */
 .myorder-container {
-  padding: 20px 40px;
+  padding: 10px 20px;
   background: #FFFFFF;
     font-family: Inter, sans-serif !important;}
 
@@ -11,6 +11,7 @@
   align-items: center;
   margin-bottom: 30px;
   gap: 20px;
+  padding: 0;
 }
 
 .myorder-left-section {

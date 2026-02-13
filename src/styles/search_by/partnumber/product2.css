@@ -1,6 +1,6 @@
-/* Product1 Component Styles */
+/* Product2 Component Styles */
 
-.product1-section {
+.product2-section {
   margin-bottom: 10px;
 }
 
@@ -9,7 +9,7 @@
 }
 
 /* Header with Title and See More */
-.product1-header {
+.product2-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -19,7 +19,7 @@
 }
 
 /* Section Title */
-.product1-section-title {
+.product2-section-title {
   font-family: "Poppins", sans-serif;
   font-size: 18px;
   font-weight: 600;
@@ -28,7 +28,7 @@
 }
 
 /* See More Link */
-.product1-see-more {
+.product2-see-more {
   font-family: "Poppins", sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -37,30 +37,30 @@
   transition: color 0.3s ease;
 }
 
-.product1-see-more:hover {
+.product2-see-more:hover {
   color: #e55d00;
   text-decoration: underline;
 }
 
 /* Container - Horizontal (3 per row) or Vertical (1 per row) */
-.product1-container {
+.product2-container {
   display: grid;
   gap: 10px;
   width: 100%;
 
 }
 
-.product1-container.horizontal {
-  grid-template-columns: repeat(3, 1fr);
+.product2-container.horizontal {
+  grid-template-columns: repeat(4, 1fr);
 }
 
-.product1-container.vertical {
+.product2-container.vertical {
   grid-template-columns: 1fr;
   width: 100%;
 }
 
 /* Product Card */
-.product1-card {
+.product2-card {
   background: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -72,12 +72,12 @@
   position: relative;
 }
 
-.product1-card:hover {
+.product2-card:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Main Content - Side by Side */
-.product1-content {
+.product2-content {
   display: flex;
   gap: 15px;
   justify-content: space-between;
@@ -86,7 +86,7 @@
 }
 
 /* Vertical Layout - Content takes left side */
-.product1-container.vertical .product1-content {
+.product2-container.vertical .product2-content {
   flex: 1;
   flex-direction: column;
   margin-bottom: 0;
@@ -94,7 +94,7 @@
 }
 
 /* Left Column - Info */
-.product1-info {
+.product2-info {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -102,14 +102,14 @@
 }
 
 /* Top Tags Row */
-.product1-tags {
+.product2-tags {
   display: flex;
   gap: 8px;
   flex-wrap: nowrap;
   overflow-x: auto;
 }
 
-.product1-tag {
+.product2-tag {
   font-family: "Poppins", sans-serif;
   font-size: 10px;
   font-weight: 500;
@@ -124,8 +124,8 @@
   position: relative;
 }
 
-/* Tooltip styling for product1-tag */
-.product1-tag[title]:hover::after {
+/* Tooltip styling for product2-tag */
+.product2-tag[title]:hover::after {
   content: attr(title);
   position: absolute;
   bottom: 100%;
@@ -146,8 +146,8 @@
   text-transform: none;
 }
 
-/* Tooltip arrow for product1-tag */
-.product1-tag[title]:hover::before {
+/* Tooltip arrow for product2-tag */
+.product2-tag[title]:hover::before {
   content: '';
   position: absolute;
   bottom: 100%;
@@ -158,10 +158,10 @@
   border-top-color: #333333;
   z-index: 1000;
   pointer-events: none;
-  animation: product1TagTooltipFadeIn 0.2s ease-in-out;
+  animation: product2TagTooltipFadeIn 0.2s ease-in-out;
 }
 
-@keyframes product1TagTooltipFadeIn {
+@keyframes product2TagTooltipFadeIn {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(-4px);
@@ -194,7 +194,7 @@
 }
 
 /* Product Code */
-.product1-code {
+.product2-code {
   font-family: "Poppins", sans-serif;
   font-size: 12px;
   font-weight: 500;
@@ -202,7 +202,7 @@
 }
 
 /* Product Name */
-.product1-name {
+.product2-name {
   font-family: "Poppins", sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -216,8 +216,8 @@
   position: relative;
 }
 
-/* Tooltip styling for product1-name */
-.product1-name[title]:hover::after {
+/* Tooltip styling for product2-name */
+.product2-name[title]:hover::after {
   content: attr(title);
   position: absolute;
   bottom: 100%;
@@ -237,8 +237,8 @@
   box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* Tooltip arrow for product1-name */
-.product1-name[title]:hover::before {
+/* Tooltip arrow for product2-name */
+.product2-name[title]:hover::before {
   content: '';
   position: absolute;
   bottom: 100%;
@@ -249,10 +249,10 @@
   border-top-color: #333333;
   z-index: 1000;
   pointer-events: none;
-  animation: product1NameTooltipFadeIn 0.2s ease-in-out;
+  animation: product2NameTooltipFadeIn 0.2s ease-in-out;
 }
 
-@keyframes product1NameTooltipFadeIn {
+@keyframes product2NameTooltipFadeIn {
   from {
     opacity: 0;
     transform: translateX(-50%) translateY(-4px);
@@ -264,7 +264,7 @@
 }
 
 /* Image Wrapper */
-.product1-image-wrapper {
+.product2-image-wrapper {
   width: 70px;
   height: 70px;
   display: flex;
@@ -277,18 +277,18 @@
 }
 
 /* Vertical Layout - Hide image in content area */
-.product1-container.vertical .product1-content .product1-image-wrapper {
+.product2-container.vertical .product2-content .product2-image-wrapper {
   display: none;
 }
 
-.product1-image {
+.product2-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
 /* Price Section */
-.product1-price-section {
+.product2-price-section {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -296,14 +296,14 @@
   margin-bottom: 5px;
 }
 
-.product1-price {
+.product2-price {
   font-family: "Poppins", sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: #333;
 }
 
-.product1-mrp {
+.product2-mrp {
   font-family: "Poppins", sans-serif;
   font-size: 12px;
   font-weight: 400;
@@ -312,7 +312,7 @@
 }
 
 /* Add Button */
-.product1-add-btn {
+.product2-add-btn {
   width: 100%;
   padding: 4px 12px;
   background: #FF4D01;
@@ -328,7 +328,7 @@
 }
 
 /* Add Button inside price section for horizontal layout */
-.product1-price-section .product1-add-btn {
+.product2-price-section .product2-add-btn {
   width: auto;
   min-width: 80px;
   padding: 4px 12px;
@@ -337,51 +337,51 @@
 }
 
 /* Vertical Layout - Right column for image only */
-.product1-vertical-right {
+.product2-vertical-right {
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
 }
 
-.product1-vertical-right .product1-image-wrapper {
+.product2-vertical-right .product2-image-wrapper {
   display: flex;
 }
 
 /* Vertical Layout - Price and Button Row */
-.product1-price-button-row {
+.product2-price-button-row {
   display: flex;
   align-items: center;
   gap: 15px;
   margin-top: 5px;
 }
 
-.product1-container.vertical .product1-price-section {
+.product2-container.vertical .product2-price-section {
   margin-top: 0;
 }
 
-.product1-container.vertical .product1-add-btn {
+.product2-container.vertical .product2-add-btn {
   width: auto;
   min-width: 80px;
   padding: 8px 20px;
   margin-top: 0;
 }
 
-.product1-add-btn:hover {
+.product2-add-btn:hover {
   background: #e55e00;
 }
 
-.product1-add-btn:active {
+.product2-add-btn:active {
   transform: scale(0.98);
 }
 
 /* Added state for button */
-.product1-add-btn.added {
+.product2-add-btn.added {
   background: #c85300;
   cursor: default;
 }
 
-.product1-add-btn.added:hover {
+.product2-add-btn.added:hover {
   background: #c85300;
 }
 
@@ -395,7 +395,7 @@
 }
 
 /* Compatible Vehicles */
-.product1-compatible {
+.product2-compatible {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -409,23 +409,23 @@
   transition: color 0.3s ease;
 }
 
-.product1-compatible:hover {
+.product2-compatible:hover {
   color: #ff6a00;
 }
 
 /* Loading state for compatibility */
-.product1-compatible span:first-child {
+.product2-compatible span:first-child {
   color: inherit;
 }
 
-.product1-arrow {
+.product2-arrow {
   font-size: 18px;
   font-weight: 600;
   color: #999;
 }
 
 /* No Results Message */
-.product1-no-results {
+.product2-no-results {
   padding: 10px 10px;
   text-align: center;
   color: #999;
@@ -434,7 +434,7 @@
   grid-column: 1 / -1;
 }
 
-.product1-no-results p {
+.product2-no-results p {
   margin: 0;
 }
 
@@ -683,73 +683,79 @@
 /* ========== END ALIGNED PRODUCT STYLES ========== */
 
 /* Responsive Design */
+
+@media (max-width: 1400px) {
+  .product2-container.horizontal {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
 @media (max-width: 1200px) {
-  .product1-container.horizontal {
+  .product2-container.horizontal {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 768px) {
-  .product1-section,
+  .product2-section,
   .aligned-section {
     margin-bottom: 30px;
   }
 
-  .product1-section-title {
+  .product2-section-title {
     font-size: 16px;
   }
 
-  .product1-container.horizontal {
+  .product2-container.horizontal {
     grid-template-columns: 1fr;
   }
 
-  .product1-container {
+  .product2-container {
     gap: 15px;
   }
 
-  .product1-card {
+  .product2-card {
     padding: 12px;
   }
 
-  .product1-image-wrapper {
+  .product2-image-wrapper {
     height: 100px;
   }
 }
 
 @media (max-width: 480px) {
-  .product1-section-title {
+  .product2-section-title {
     font-size: 14px;
   }
 
-  .product1-tag {
+  .product2-tag {
     font-size: 9px;
     padding: 3px 6px;
   }
 
-  .product1-name {
+  .product2-name {
     font-size: 12px;
     min-height: 32px;
   }
 
-  .product1-price {
+  .product2-price {
     font-size: 14px;
   }
 
-  .product1-mrp {
+  .product2-mrp {
     font-size: 12px;
   }
 
-  .product1-add-btn {
+  .product2-add-btn {
     padding: 8px;
     font-size: 13px;
   }
 }
 /* ================= ROOT ================= */
 
-.product1-section { width: 100%; margin-bottom: 16px; }
+.product2-section { width: 100%; margin-bottom: 16px; }
 .aligned-section { margin-bottom: 30px; }
 
-.product1-header {
+.product2-header {
   display:flex;
   justify-content:space-between;
   align-items:center;
@@ -758,24 +764,22 @@
 
 /* ================= GRID ================= */
 
-.product1-container{
+.product2-container{
   display:grid;
   gap:14px;
   width:100%;
   align-items:stretch;
 }
 
-.product1-container.horizontal{
-  grid-template-columns:repeat(3,1fr);
-}
 
-.product1-container.vertical{
+
+.product2-container.vertical{
   grid-template-columns:1fr;
 }
 
 /* ================= CARD ================= */
 
-.product1-card{
+.product2-card{
   background:#fff;
   border:1px solid #e0e0e0;
   border-radius:8px;
@@ -790,7 +794,7 @@
   position:relative;
 }
 
-.product1-container.vertical .product1-card,
+.product2-container.vertical .product2-card,
 .aligned-card{
   height:170px;
   min-height:170px;
@@ -799,14 +803,14 @@
 
 /* ================= CONTENT ================= */
 
-.product1-content{
+.product2-content{
   display:flex;
   justify-content:space-between;
   gap:10px;
   overflow:hidden;
 }
 
-.product1-info{
+.product2-info{
   display:flex;
   flex-direction:column;
   gap:6px;
@@ -816,7 +820,7 @@
 
 /* ================= IMAGE ================= */
 
-.product1-image-wrapper,
+.product2-image-wrapper,
 .aligned-image-wrapper{
   width:72px;
   height:72px;
@@ -828,7 +832,7 @@
   border-radius:6px;
 }
 
-.product1-image,
+.product2-image,
 .aligned-image{
   max-width:100%;
   max-height:100%;
@@ -837,14 +841,14 @@
 
 /* ================= TEXT ================= */
 
-.product1-name,
+.product2-name,
 .aligned-name{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
-.product1-code,
+.product2-code,
 .aligned-code{
   font-size:12px;
   color:#666;
@@ -852,20 +856,20 @@
 
 /* ================= PRICE ================= */
 
-.product1-price-section,
+.product2-price-section,
 .aligned-bottom-section{
   display:flex;
   align-items:center;
   justify-content:space-between;
 }
 
-.product1-price,
+.product2-price,
 .aligned-price{
   font-size:15px;
   font-weight:600;
 }
 
-.product1-mrp,
+.product2-mrp,
 .aligned-mrp{
   font-size:12px;
   color:#a90000;
@@ -874,7 +878,7 @@
 
 /* ================= BUTTON ================= */
 
-.product1-add-btn,
+.product2-add-btn,
 .aligned-add-btn{
   background:#FF4D01;
   color:#fff;
@@ -886,21 +890,21 @@
   transition:.2s;
 }
 
-.product1-add-btn.added,
+.product2-add-btn.added,
 .aligned-add-btn.added{
   background:#c85300;
 }
 
 /* ================= TAGS ================= */
 
-.product1-tags,
+.product2-tags,
 .aligned-tags{
   display:flex;
   gap:6px;
   overflow:hidden;
 }
 
-.product1-tag,
+.product2-tag,
 .aligned-tag{
   font-size:10px;
   padding:3px 7px;
@@ -910,7 +914,7 @@
 
 /* ================= COMPATIBILITY ================= */
 
-.product1-compatible{
+.product2-compatible{
   display:flex;
   justify-content:space-between;
   font-size:11px;
@@ -923,17 +927,17 @@
 /* ================= RESPONSIVE ================= */
 
 @media(max-width:1200px){
-  .product1-container.horizontal{
+  .product2-container.horizontal{
     grid-template-columns:repeat(2,1fr);
   }
 }
 
 @media(max-width:768px){
-  .product1-container.horizontal{
+  .product2-container.horizontal{
     grid-template-columns:1fr;
   }
 
-  .product1-card{
+  .product2-card{
     height:210px;
   }
 

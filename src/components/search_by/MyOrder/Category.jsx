@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/Category.css";
-import apiService from "../../../services/apiservice";
+import { fastMoversAPI, highValueAPI } from "../../../services/api";
 import CategorySkeleton from "../../skeletonLoading/CategorySkeleton";
-import Image from "../../oci_image/ociImages";
+import OciImage from "../../oci_image/ociImages";
+import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
 
 const Category = () => {
@@ -15,45 +16,50 @@ const Category = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [uiAssets, setUiAssets] = useState({});
 
   /* ===============================
-     FETCH UI ASSETS
-     =============================== */
-  useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data);
-      } catch (error) {
-        console.error("❌ Error fetching UI assets:", error);
-      }
-    };
-    fetchUiAssets();
-  }, []);
-
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
-    return apiService.getAssetUrl(uiAssets[tagName]);
-  };
-
-  /* ===============================
-     FETCH FASTMOVER CATEGORIES
+     FETCH CATEGORIES (Fast Movers or High Value)
      =============================== */
   const fetchCategories = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiService.get("/fastmovers");
+      // Determine which API to call based on variant or featureLabel
+      const isFastMovers = variant === "fm" || featureLabel === "Fast Movers";
+      const isHighValue = variant === "hv" || featureLabel === "High Value";
 
-      if (!response?.success || !Array.isArray(response.data)) {
+      let response;
+      
+      if (isFastMovers) {
+        console.log("Fetching Fast Movers categories...");
+        // Call centralized Fast Movers API (GET method, no request body)
+        response = await fastMoversAPI();
+      } else if (isHighValue) {
+        console.log("Fetching High Value categories...");
+        // Call centralized High Value API (GET method, no request body)
+        response = await highValueAPI();
+      } else {
+        throw new Error("Invalid feature type. Expected Fast Movers or High Value.");
+      }
+
+      console.log("API Response:", response);
+
+      // Handle response structure
+      let data = [];
+      if (response && response.success && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (response && Array.isArray(response.data)) {
+        data = response.data;
+      } else if (Array.isArray(response)) {
+        data = response;
+      } else {
         throw new Error("Invalid API response");
       }
 
       // ✅ Deduplicate aggregate values
       const uniqueAggregates = [
-        ...new Set(response.data.map((item) => item.aggregate)),
+        ...new Set(data.map((item) => item.aggregate).filter(Boolean)),
       ];
 
       const formatted = uniqueAggregates.map((name, index) => ({
@@ -145,9 +151,10 @@ const Category = () => {
         <div className="category-card">
           {/* Image */}
           <div className="category-image-wrapper">
-            <Image
+            <OciImage
               partNumber={category.name}
               folder="categories"
+              fallbackImage={NoImage}
               className="category-image"
               alt={category.name}
             />

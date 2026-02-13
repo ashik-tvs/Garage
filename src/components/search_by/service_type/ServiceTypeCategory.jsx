@@ -1,26 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import '../../../styles/search_by/MyOrder/Category.css';
-import LeftArrow from '../../../assets/Product/Left_Arrow.png';
+import apiService from "../../../services/apiservice";
+import { masterListAPI } from "../../../services/api";
+import OciImage from "../../oci_image/ociImages";
+import Navigation from "../../Navigation/Navigation";
+import NoImage from "../../../assets/No Image.png";
+import "../../../styles/search_by/MyOrder/Category.css";
+import "../../../styles/skeleton/skeleton.css";
+import "../../../styles/skeleton/skeleton.css";
+import LeftArrow from "../../../assets/Product/Left_Arrow.png";
 
-// Category images
-import BrakeSystem from "../../../assets/Categories/BRAKE SYSTEM.png";
-import Accessories from "../../../assets/Categories/ACCESSORIES.png";
-import Battery from "../../../assets/Categories/BATTERY.png";
-import Bearing from "../../../assets/Categories/BEARING.png";
-import Belts from "../../../assets/Categories/BELTS AND TENSIONER.png";
-import BodyParts from "../../../assets/Categories/BODY PARTS.png";
-import Cables from "../../../assets/Categories/CABLES AND WIRES.png";
-import ChildParts from "../../../assets/Categories/CHILD PARTS.png";
-import Clutch from "../../../assets/Categories/CLUTCH SYSTEMS.png";
-import Comfort from "../../../assets/Categories/GLASS.png";
-import Electricals from "../../../assets/Categories/ELECTRICALS AND ELECTRONICS.png";
-import Engine from "../../../assets/Categories/ENGINE.png";
-import Filters from "../../../assets/Categories/FILTERS.png";
-import Fluids from "../../../assets/Categories/FLUIDS COOLANT AND GREASE.png";
-import Horns from "../../../assets/Categories/HORNS.png";
-import Lubes from "../../../assets/Categories/LUBES.png";
-import Lights from "../../../assets/Categories/LIGHTING.png";
+const BASE_PAYLOAD = {
+  partNumber: null,
+  sortOrder: "ASC",
+  customerCode: "0046",
+  aggregate: null,
+  brand: null,
+  fuelType: null,
+  limit: 100,
+  make: null,
+  masterType: "aggregate", // 👈 CATEGORY
+  model: null,
+  offset: 0,
+  primary: false,
+  subAggregate: null,
+  variant: null,
+  year: null,
+};
 
 const Category = () => {
   const navigate = useNavigate();
@@ -28,74 +34,101 @@ const Category = () => {
 
   const { serviceType, make, model } = state || {};
 
-const categories = [
-  { id: 1, name: 'Brake System', image: BrakeSystem },
-  { id: 2, name: 'Accessories', image: Accessories },
-  { id: 3, name: 'Battery', image: Battery },
-  { id: 4, name: 'Bearing', image: Bearing },
-  { id: 5, name: 'Belts and Tensioner', image: Belts },
-  { id: 6, name: 'Body Parts', image: BodyParts },
-  { id: 7, name: 'Cables and Wires', image: Cables },
-  { id: 8, name: 'Child Parts', image: ChildParts },
-  { id: 9, name: 'Clutch Systems', image: Clutch },
-  { id: 10, name: 'Comfort/Glass', image: Comfort },
-  { id: 11, name: 'Electricals and Electronics', image: Electricals },
-  { id: 12, name: 'Engine', image: Engine },
-  { id: 13, name: 'Filters', image: Filters },
-  { id: 14, name: 'Fluids, Coolant and Grease', image: Fluids },
-  { id: 15, name: 'Horns', image: Horns },
-  { id: 16, name: 'Lubes', image: Lubes },
-  { id: 17, name: 'Lighting', image: Lights },
-];
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  /* ===================== FETCH CATEGORIES ===================== */
+  useEffect(() => {
+    if (!make || !model) return;
 
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+
+        const response = await masterListAPI({
+          ...BASE_PAYLOAD,
+          make,
+          model,
+        });
+
+        if (response?.success && Array.isArray(response.data)) {
+          const formattedCategories = response.data.map((item, index) => ({
+            id: index + 1,
+            name: item.masterName,
+          }));
+
+          setCategories(formattedCategories);
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("❌ Category API Error:", error);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [make, model]);
+
+  /* ===================== NAVIGATION ===================== */
   const handleBack = () => navigate(-1);
-const handleCategoryClick = (category) => {
-  navigate("/service-type-sub-category", {
-    state: {
-      serviceType,
-      make,
-      model,
-      category: category.name,
-    },
-  });
-};
 
+  const handleCategoryClick = (category) => {
+    navigate("/service-type-sub-category", {
+      state: {
+        serviceType,
+        make,
+        model,
+        category: category.name,
+      },
+    });
+  };
+
+  /* ===================== JSX (UNCHANGED STRUCTURE) ===================== */
   return (
     <div className="category-container">
-      <div className="category-header">
-        <button className="back-button" onClick={handleBack}>
-          <img src={LeftArrow} alt="Back" />
-        </button>
-        <div className="breadcrumb-nav">
-          <span className="breadcrumb-link" onClick={() => navigate('/home')}>
-            Home
-          </span>
-          <span className="breadcrumb-separator">&gt;</span>
-        </div>
-      </div>
+<Navigation />
 
       <div className="category-content">
-        {categories.map((category) => (
-          <div
-            key={category.id}
-            className="category-item"
-            onClick={() => handleCategoryClick(category)}
-          >
-            <div className="category-card">
-              <div className="category-image-wrapper">
-                <img
-                  src={category.image}
-                  alt={category.name}
-                  className="category-image"
-                />
+        {loading ? (
+          <div className="skeleton-grid">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="skeleton-cat-item skeleton-card">
+                <div className="skeleton-cat-image">
+                  <div className="skeleton"></div>
+                </div>
+                <div className="skeleton-cat-label">
+                  <div className="skeleton"></div>
+                </div>
               </div>
-              <div className="category-label">
-                <span>{category.name}</span>
+            ))}
+          </div>
+        ) : (
+          categories.map((category) => (
+            <div
+              key={category.id}
+              className="category-item"
+              onClick={() => handleCategoryClick(category)}
+            >
+              <div className="category-card">
+                <div className="category-image-wrapper">
+                  <OciImage
+                    partNumber={category.name}
+                    folder="aggregate"
+                    fallbackImage={NoImage}
+                    className="category-image"
+                    alt={category.name}
+                  />
+                </div>
+                <div className="category-label">
+                  <span>{category.name}</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

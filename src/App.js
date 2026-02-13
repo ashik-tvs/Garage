@@ -26,69 +26,87 @@ import { CartProvider } from "./context/CartContext.js";
 import Login from "./components/Login/Login.jsx";
 import ForgotPassword from "./components/Login/Forgotpassword.jsx";
 import VerifyOtp from "./components/Login/VerifyOtp.jsx";
-import ResetPassword from "./components/Login/ResetPassword.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import { initAssets } from "./utils/assets.js";
+import apiConfigManager from "./services/apiConfig.js";
 
 function App() {
+  // Initialize assets and API config on app load
+  React.useEffect(() => {
+    initAssets();
+    
+    // Load API configuration from localStorage if available
+    if (!apiConfigManager.isInitialized()) {
+      apiConfigManager.loadFromStorage();
+    }
+
+    // Expose API config manager for debugging (development only)
+    if (process.env.NODE_ENV === 'development') {
+      window.apiConfigManager = apiConfigManager;
+    }
+  }, []);
+
   return (
-    <CartProvider>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Routes>
-          {/* Login page without Layout */}
-          <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-otp" element={<VerifyOtp />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+    <ErrorBoundary>
+      <CartProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            {/* Login page without Layout */}
+            <Route path="/" element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOtp />} />
 
-          <Route element={<Layout />}>
-            <Route path="/home" element={<Home />} />
+            <Route element={<Layout />}>
+              <Route path="/home" element={<Home />} />
 
-            <Route
-              path="/search-by-vehicle-number"
-              element={<VehicleNumberEntry />}
-            />
-            <Route
-              path="/vehicle-number-products"
-              element={<VehicleNumberProduct />}
-            />
-            <Route
-              path="/search-by-service-type"
-              element={<ServiceTypeSearch />}
-            />
-            <Route
-              path="/service-type-products"
-              element={<ServiceTypeProduct />}
-            />
-            <Route
-              path="/service-type-category"
-              element={<SeviceTypeCategory />}
-            />
-            <Route
-              path="/service-type-sub-category"
-              element={<SeviceTypeSubCategory />}
-            />
-            <Route path="/service-type-model" element={<SeviceTypeModel />} />
-            <Route path="/search-by-part-number" element={<PartNumber />} />
-            <Route path="/search-by-image" element={<Image />} />
-            <Route path="/my-orders" element={<MyOrder />} />
-            <Route path="/brand" element={<Brand />} />
-            <Route path="/MakeNew" element={<MakeNew />} />
-            <Route path="/Model" element={<Model />} />
-            <Route path="/Category" element={<Category />} />
-            <Route path="/CategoryNew" element={<CategoryNew />} />
-            <Route path="/sub_category" element={<Sub_Category />} />
-            <Route path="/product1-example" element={<Product1Example />} />
-            {/* <Route path="/make1" element={<Make1 />} /> */}
-            <Route path="/cart" element={<Cart />} />
-          </Route>
+              <Route
+                path="/search-by-vehicle-number"
+                element={<VehicleNumberEntry />}
+              />
+              <Route
+                path="/vehicle-number-products"
+                element={<VehicleNumberProduct />}
+              />
+              <Route
+                path="/search-by-service-type"
+                element={<ServiceTypeSearch />}
+              />
+              <Route
+                path="/service-type-products"
+                element={<ServiceTypeProduct />}
+              />
+              <Route
+                path="/service-type-category"
+                element={<SeviceTypeCategory />}
+              />
+              <Route
+                path="/service-type-sub-category"
+                element={<SeviceTypeSubCategory />}
+              />
+              <Route path="/service-type-model" element={<SeviceTypeModel />} />
+              <Route path="/search-by-part-number" element={<PartNumber />} />
+              <Route path="/search-by-image" element={<Image />} />
+              <Route path="/my-orders" element={<MyOrder />} />
+              <Route path="/brand" element={<Brand />} />
+              <Route path="/MakeNew" element={<MakeNew />} />
+              <Route path="/Model" element={<Model />} />
+              <Route path="/Category" element={<Category />} />
+              <Route path="/CategoryNew" element={<CategoryNew />} />
+              <Route path="/sub_category" element={<Sub_Category />} />
+              <Route path="/product1-example" element={<Product1Example />} />
+              {/* <Route path="/make1" element={<Make1 />} /> */}
+              <Route path="/cart" element={<Cart />} />
+            </Route>
 
-          {/* Pages without header */}
-          {/* <Route path="/login" element={<Login />} /> */}
-        </Routes>
-      </BrowserRouter>
-    </CartProvider>
+            {/* Pages without header */}
+            {/* <Route path="/login" element={<Login />} /> */}
+          </Routes>
+        </BrowserRouter>
+      </CartProvider>
+    </ErrorBoundary>
   );
 }
 

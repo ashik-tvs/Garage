@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../../../styles/search_by/MyOrder/MakeNew.css";
-import apiService from "../../../services/apiservice";
+import "../../../styles/skeleton/skeleton.css";
+import { vehicleListAPI, cngAPI, electricAPI } from "../../../services/api";
 import OciImage from "../../oci_image/ociImages";
-import noImage from "../../../assets/No Image.png";
+import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
 import Maruti from "../../../assets/Make/MARUTI SUZUKI.png";
 import Tata from "../../../assets/Make/TATA.png";
@@ -24,7 +25,6 @@ const MakeNew = () => {
   const [makes, setMakes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [uiAssets, setUiAssets] = useState({});
 
   // Icon mapping for make images
   const makeIconMap = {
@@ -43,27 +43,7 @@ const MakeNew = () => {
 
   const getMakeIcon = (makeName) => {
     const upperName = makeName.toUpperCase();
-    return makeIconMap[upperName] || noImage;
-  };
-
-  /* ===============================
-     FETCH UI ASSETS
-     =============================== */
-  useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data);
-      } catch (error) {
-        console.error("❌ Error fetching UI assets:", error);
-      }
-    };
-    fetchUiAssets();
-  }, []);
-
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
-    return apiService.getAssetUrl(uiAssets[tagName]);
+    return makeIconMap[upperName] || NoImage;
   };
 
   useEffect(() => {
@@ -99,13 +79,17 @@ const MakeNew = () => {
       if (variant === 'cng') {
         // Fetch from CNG API
         console.log('Fetching makes from CNG API...');
-        response = await apiService.get('/cng');
+        
+        // Call centralized CNG API (GET method, no request body)
+        response = await cngAPI();
         
         console.log('CNG API Response:', response);
 
         // Handle response structure
         let cngData = [];
-        if (response.success && Array.isArray(response.data)) {
+        if (response && response.success && Array.isArray(response.data)) {
+          cngData = response.data;
+        } else if (response && Array.isArray(response.data)) {
           cngData = response.data;
         } else if (Array.isArray(response)) {
           cngData = response;
@@ -124,13 +108,17 @@ const MakeNew = () => {
       } else if (variant === 'e') {
         // Fetch from Electric API
         console.log('Fetching makes from Electric API...');
-        response = await apiService.get('/electric');
+        
+        // Call centralized Electric API (GET method, no request body)
+        response = await electricAPI();
         
         console.log('Electric API Response:', response);
 
         // Handle response structure
         let electricData = [];
-        if (response.success && Array.isArray(response.data)) {
+        if (response && response.success && Array.isArray(response.data)) {
+          electricData = response.data;
+        } else if (response && Array.isArray(response.data)) {
           electricData = response.data;
         } else if (Array.isArray(response)) {
           electricData = response;
@@ -149,7 +137,7 @@ const MakeNew = () => {
       } else {
         // Default: Fetch from vehicle-list API
         console.log('Fetching makes from vehicle-list API...');
-        response = await apiService.post('/vehicle-list', {
+        response = await vehicleListAPI({
           limit: 5000,
           offset: 0,
           sortOrder: "ASC",
@@ -238,8 +226,19 @@ const MakeNew = () => {
 
       <div className="make-grid-wrapper">
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <p>Loading makes...</p>
+          <div className="make-row">
+            <div className="make-row-inner">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="make-card skeleton-make-item">
+                  <div className="make-img-wrapper">
+                    <div className="skeleton skeleton-img brand"></div>
+                  </div>
+                  <div className="make-text">
+                    <div className="skeleton skeleton-text medium"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : error ? (
           <div style={{ textAlign: "center", padding: "40px", color: "red" }}>
@@ -276,7 +275,7 @@ const MakeNew = () => {
                     <OciImage
                       partNumber={make.name}
                       folder="make"
-                      fallbackImage={make.image}
+                      fallbackImage={NoImage}
                       className="make-img"
                       alt={make.name}
                     />

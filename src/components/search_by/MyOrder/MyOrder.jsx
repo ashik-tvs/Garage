@@ -4,6 +4,7 @@ import apiService from "../../../services/apiservice";
 import Navigation from "../../Navigation/Navigation";
 import SearchIcon from "../../../assets/search/search.png";
 import "../../../styles/search_by/MyOrder/MyOrder.css";
+import "../../../styles/skeleton/skeleton.css";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -173,7 +174,27 @@ const MyOrder = () => {
       {/* Table */}
       <div className="myorder-table-container">
         {loading ? (
-          <div>Loading orders...</div>
+          <div>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={index} className="skeleton-order-row skeleton-card">
+                <div className="skeleton-order-cell first">
+                  <div className="skeleton skeleton-order-number"></div>
+                </div>
+                <div className="skeleton-order-cell center">
+                  <div className="skeleton skeleton-order-date"></div>
+                </div>
+                <div className="skeleton-order-cell center">
+                  <div className="skeleton skeleton-order-quantity"></div>
+                </div>
+                <div className="skeleton-order-cell center">
+                  <div className="skeleton skeleton-order-status"></div>
+                </div>
+                <div className="skeleton-order-cell center">
+                  <div className="skeleton skeleton-order-location"></div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
           <table className="myorder-table">
             <thead>

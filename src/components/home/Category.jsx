@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import CategorySkeleton from "../skeletonLoading/CategorySkeleton";
-import apiService from "../../services/apiservice";
-// import NoImage from "../../assets/No Image.png";
-import "../../styles/home/Category.css";
+import { masterListAPI } from "../../services/api";
 import OciImage from "../oci_image/ociImages";
+import NoImage from "../../assets/No Image.png";
+import "../../styles/home/Category.css";
+import "../../styles/skeleton/skeleton.css";
 
 const Category = () => {
   const navigate = useNavigate();
@@ -30,8 +30,12 @@ const Category = () => {
 
       if (isCacheValid) {
         console.log("Loading categories from cache...");
-        setCategories(JSON.parse(cachedCategories));
+        const cachedData = JSON.parse(cachedCategories);
+        setCategories(cachedData);
         setLoading(false);
+        
+        // Preload visible images in background
+        // smartPreload(cachedData, 9, preloadCategoryImages);
         return;
       }
     }
@@ -62,55 +66,45 @@ const Category = () => {
         );
 
         try {
-          const response = await apiService.post(
-            "/filter",
-            {
-              partNumber: null,
-              sortOrder: "ASC",
-              customerCode: "0046",
-              aggregate: null,
-              brand: null,
-              fuelType: null,
-              limit: BATCH_SIZE,
-              make: null,
-              masterType: "aggregate", // Get all aggregates
-              model: null,
-              offset: offset,
-              primary: false,
-              subAggregate: null,
-              variant: null,
-              year: null,
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-              timeout: 120000,
-            },
-          );
-console.log("RAW API RESPONSE:", response.data);
-console.log("RAW FULL RESPONSE:", response);
+          const response = await masterListAPI({
+            partNumber: null,
+            sortOrder: "ASC",
+            customerCode: "0046",
+            aggregate: null,
+            brand: null,
+            fuelType: null,
+            limit: BATCH_SIZE,
+            make: null,
+            masterType: "aggregate", // Get all aggregates
+            model: null,
+            offset: offset,
+            primary: false,
+            subAggregate: null,
+            variant: null,
+            year: null,
+          });
+console.log("RAW API RESPONSE:", response);
 
           console.log(`📥 Batch ${batchCount + 1} response:`, {
-            success: response.data?.success,
-            message: response.data?.message,
-            count: response.data?.count,
-            dataLength: response.data?.data?.length,
+            success: response?.success,
+            message: response?.message,
+            count: response?.count,
+            dataLength: response?.data?.length,
           });
 
           // Extract master data
           let masterData = [];
 
-          if (Array.isArray(response.data)) {
-            masterData = response.data; // direct array response
-          } else if (Array.isArray(response.data?.data)) {
+          if (Array.isArray(response)) {
+            masterData = response; // direct array response
+          } else if (Array.isArray(response?.data)) {
+            masterData = response.data;
+          } else if (Array.isArray(response?.result)) {
+            masterData = response.result;
+          } else if (Array.isArray(response?.data?.data)) {
             masterData = response.data.data;
-          } else if (Array.isArray(response.data?.result)) {
-            masterData = response.data.result;
-          } else if (Array.isArray(response.data?.data?.data)) {
-            masterData = response.data.data.data;
           } else {
-            console.error("❌ Unknown API structure:", response.data);
+            console.error("❌ Unknown API structure:", response);
           }
 
           // If no data returned, we've reached the end
@@ -218,6 +212,8 @@ console.log("RAW FULL RESPONSE:", response);
       console.log("💾 Categories cached successfully");
 
       setCategories(formattedCategories);
+    
+      
     } catch (err) {
       console.error("❌ Error fetching categories:", err);
       console.error("Error details:", {
@@ -301,7 +297,7 @@ console.log("RAW FULL RESPONSE:", response);
         </div>
       ) : (
         <div className="grid-container">
-          {visibleCategories.map((cat) => (
+          {visibleCategories.map((cat, index) => (
             <div
               key={cat.id}
               className=" cat-card"
@@ -311,7 +307,7 @@ console.log("RAW FULL RESPONSE:", response);
                 <OciImage
                   partNumber={cat.aggregateName}
                   folder="categories"
-                  fallbackImage={cat.icon}
+                  fallbackImage={NoImage}
                   className="cat-img"
                   style={{ objectFit: "contain" }}
                 />

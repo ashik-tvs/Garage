@@ -2,13 +2,16 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../../../context/CartContext";
 import "../../../styles/search_by/vehicle_number_entry/VehicleNumberProduct.css";
+import "../../../styles/skeleton/skeleton.css";
 import apiService, {
   fetchMasterList,
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
+import { partsListAPI, vehicleListAPI, stockListAPI } from "../../../services/api";
+import { getAssets, getAsset } from "../../../utils/assets";
 import NoImage from "../../../assets/No Image.png";
 import Navigation from "../../Navigation/Navigation";
-import Product1 from "../partnumber/Product1";
+import Product2 from "../partnumber/Product2";
 
 /* ---------------- COMPATIBILITY MODAL ---------------- */
 const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
@@ -163,11 +166,25 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
                 )}
               </>
             ) : loading && vehicles.length === 0 ? (
-              <div
-                className="vnp-no-results"
-                style={{ padding: "20px", textAlign: "center" }}
-              >
-                Loading vehicles...
+              <div className="skeleton-list" style={{ padding: "20px" }}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className="skeleton-card" style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '12px',
+                    border: '1px solid #eee',
+                    borderRadius: '4px',
+                    background: '#fff',
+                    marginBottom: '8px'
+                  }}>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                    <div className="skeleton skeleton-text small"></div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div
@@ -184,31 +201,21 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
   );
 };
 
-/* ---------------- COMPONENT ---------------- */
 const Product = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [assets, setAssets] = useState({});
   const [openFilter, setOpenFilter] = useState(null);
-  const [uiAssets, setUiAssets] = useState({});
-
-  // Fetch UI assets
+  
+  // Load assets
   useEffect(() => {
-    const fetchUiAssets = async () => {
-      try {
-        const assets = await apiService.get("/ui-assets");
-        setUiAssets(assets.data); // backend returns {success: true, data: {...}}
-      } catch (err) {
-        console.error("❌ Failed to load UI assets", err);
-      }
-    };
-    fetchUiAssets();
+    getAssets().then(setAssets);
   }, []);
 
-  // Helper to get full URL
-  const getAssetUrl = (tagName) => {
-    if (!uiAssets[tagName]) return "";
-    return apiService.getAssetUrl(uiAssets[tagName]);
-  };
+  const [vehicleFilterOptions, setVehicleFilterOptions] = useState({
+  years: [],
+  fuelTypes: [],
+});
 
   const { cartItems, addToCart, removeFromCart } = useCart();
   const [showPopup, setShowPopup] = useState(false);
@@ -680,7 +687,7 @@ const Product = () => {
         ...searchFilters,
       });
 
-      const response = await apiService.post("/parts-list", {
+      const response = await partsListAPI({
         brandPriority: ["VALEO"],
         limit: 100,
         offset: 0,
@@ -742,7 +749,7 @@ const Product = () => {
         model,
       });
 
-      const response = await apiService.post("/parts-list", {
+      const response = await partsListAPI({
         brandPriority: ["VALEO"],
         limit: 100,
         offset: 0,
@@ -872,34 +879,47 @@ const Product = () => {
   };
 
   // Fetch vehicle compatibility for a specific part number
-  const fetchVehicleCompatibility = async (partNumber) => {
-    try {
-      console.log("🔍 Fetching vehicle compatibility for:", partNumber);
+const fetchVehicleCompatibility = async (partNumber) => {
+  try {
+    const response = await vehicleListAPI({
+      partNumber,
+      customerCode: "0046",
+    });
 
-      const response = await apiService.post("/vehicle-list", {
-        partNumber: partNumber,
-        customerCode: "0046",
-      });
+    const vehicleData = Array.isArray(response?.data) ? response.data : [];
 
-      console.log("✅ Vehicle compatibility response:", response);
+    const formattedVehicles = vehicleData.map((v) => ({
+      make: v.makeName || "",
+      model: v.modelName || "",
+      variant: v.variantName || "",
+      fuelType: v.fuelType || "",
+      year: v.year || "",
+    }));
 
-      const vehicleData = Array.isArray(response?.data) ? response.data : [];
-      const formattedVehicles = vehicleData.map((v) => ({
-        make: v.makeName || "",
-        model: v.modelName || "",
-        variant: v.variantName || "",
-        fuelType: v.fuelType || "",
-        year: v.year || "",
-      }));
+    // 🔹 Extract unique years & fuel types
+    const years = [
+      ...new Set(formattedVehicles.map((v) => v.year).filter(Boolean)),
+    ].sort((a, b) => b - a);
 
-      setVehicleCompatibilityList(formattedVehicles);
-      return formattedVehicles.length;
-    } catch (error) {
-      console.error("❌ Error fetching vehicle compatibility:", error);
-      setVehicleCompatibilityList([]);
-      return 0;
-    }
-  };
+    const fuelTypes = [
+      ...new Set(formattedVehicles.map((v) => v.fuelType).filter(Boolean)),
+    ];
+
+    setVehicleFilterOptions({
+      years,
+      fuelTypes,
+    });
+
+    setVehicleCompatibilityList(formattedVehicles);
+    return formattedVehicles.length;
+  } catch (error) {
+    console.error("❌ Error fetching vehicle compatibility:", error);
+    setVehicleCompatibilityList([]);
+    setVehicleFilterOptions({ years: [], fuelTypes: [] });
+    return 0;
+  }
+};
+
 
   // Handle compatibility click
   const handleCompatibilityClick = async (product) => {
@@ -942,7 +962,7 @@ const Product = () => {
 
       console.log("📤 Request body:", requestBody);
 
-      const response = await apiService.post("/parts-list", requestBody);
+      const response = await partsListAPI(requestBody);
       console.log("✅ Response:", response);
 
       const partsData = response?.data || [];
@@ -1019,7 +1039,7 @@ const Product = () => {
   const fetchStockForProducts = async (productsList) => {
     const stockPromises = productsList.map(async (product) => {
       try {
-        const response = await apiService.post("/stock-list", {
+        const response = await stockListAPI({
           customerCode: "0046",
           partNumber: product.partNumber,
           inventoryName: null,
@@ -1089,43 +1109,7 @@ const Product = () => {
       ),
   );
 
-  // Aligned Products: Static data similar to PartNumber.jsx
-  const alignedProducts = [
-    {
-      id: 3,
-      partNumber: "A6732S233132",
-      brand: "Valeo",
-      name: "Brake Disc Pad",
-      description: "Brake Disc Pad",
-      price: 4205,
-      mrp: 4080,
-      image: NoImage,
-      eta: "1-2 Days",
-    },
-    {
-      id: 4,
-      partNumber: "SA233663824",
-      brand: "Mobil",
-      name: "Brake Fluid",
-      description: "Brake Fluid",
-      price: 315,
-      mrp: 468,
-      image: NoImage,
-      eta: "1-2 Days",
-    },
-    {
-      id: 5,
-      partNumber: "YD323S5632",
-      brand: "Valeo",
-      name: "Brake Fitting Kit",
-      description: "Brake Fitting Kit",
-      price: 5650,
-      mrp: 6000,
-      image: NoImage,
-      eta: "1-2 Days",
-    },
-  ];
-
+ 
   useEffect(() => {
     const close = () => setOpenFilter(null);
     window.addEventListener("click", close);
@@ -1269,10 +1253,10 @@ const Product = () => {
 
   return (
     <div className="vnp-container">
-      <Navigation />
       {/* ---------- TOP SECTION ---------- */}
       <div className="vnp-top-row">
         {/* Navigation component auto-generates breadcrumbs based on route and state */}
+      <Navigation />
 
         <div className="vnp-search-controls">
           <div className="vnp-search-main">
@@ -1388,28 +1372,33 @@ const Product = () => {
                 }}
               >
                 <span>{filters.year || "Year"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
               {openFilter === "year" && (
-                <div
-                  className="vnp-filter-dropdown"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {["2024", "2023", "2022", "2021", "2020"].map((option) => (
-                    <div
-                      key={option}
-                      className="vnp-filter-option"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFilters((prev) => ({ ...prev, year: option }));
-                        setOpenFilter(null);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+  <div
+    className="vnp-filter-dropdown"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {vehicleFilterOptions.years.length ? (
+      vehicleFilterOptions.years.map((option) => (
+        <div
+          key={option}
+          className="vnp-filter-option"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFilters((prev) => ({ ...prev, year: option }));
+            setOpenFilter(null);
+          }}
+        >
+          {option}
+        </div>
+      ))
+    ) : (
+      <div className="vnp-filter-option">No years available</div>
+    )}
+  </div>
+)}
+
             </div>
 
             <div
@@ -1424,28 +1413,33 @@ const Product = () => {
                 }}
               >
                 <span>{filters.fuelType || "Fuel type"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
-              {openFilter === "fuelType" && (
-                <div
-                  className="vnp-filter-dropdown"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {["Petrol", "Diesel", "CNG", "Electric"].map((option) => (
-                    <div
-                      key={option}
-                      className="vnp-filter-option"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFilters((prev) => ({ ...prev, fuelType: option }));
-                        setOpenFilter(null);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
+{openFilter === "fuelType" && (
+  <div
+    className="vnp-filter-dropdown"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {vehicleFilterOptions.fuelTypes.length ? (
+      vehicleFilterOptions.fuelTypes.map((option) => (
+        <div
+          key={option}
+          className="vnp-filter-option"
+          onClick={(e) => {
+            e.stopPropagation();
+            setFilters((prev) => ({ ...prev, fuelType: option }));
+            setOpenFilter(null);
+          }}
+        >
+          {option}
+        </div>
+      ))
+    ) : (
+      <div className="vnp-filter-option">No fuel types available</div>
+    )}
+  </div>
+)}
+
             </div>
 
             <div
@@ -1460,7 +1454,7 @@ const Product = () => {
                 }}
               >
                 <span>{filters.eta || "ETA"}</span>
-                <img src={getAssetUrl("EXPAND DOWN")} alt="" width="24" />
+                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
               </div>
               {openFilter === "eta" && (
                 <div
@@ -1489,7 +1483,57 @@ const Product = () => {
 
       {/* ---------- CONTENT ---------- */}
       {loading ? (
-        <div className="vnp-loading">Loading products...</div>
+        <div className="vnp-content-wrapper">
+          <div className="vnp-left-section">
+            <div className="vnp-section">
+              <h3 className="vnp-section-title">myTVS Recommended Products</h3>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="skeleton-vnp-card skeleton-card">
+                  <div className="skeleton-vnp-details">
+                    <div className="skeleton-vnp-badges">
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                    </div>
+                    <div className="skeleton skeleton-vnp-code"></div>
+                    <div className="skeleton skeleton-vnp-name"></div>
+                    <div className="skeleton-vnp-price-row">
+                      <div className="skeleton skeleton-vnp-price"></div>
+                      <div className="skeleton skeleton-vnp-mrp"></div>
+                    </div>
+                  </div>
+                  <div className="skeleton-vnp-image-wrapper">
+                    <div className="skeleton skeleton-vnp-image"></div>
+                    <div className="skeleton skeleton-vnp-button"></div>
+                  </div>
+                </div>
+              ))}
+              
+              <h3 className="vnp-section-title" style={{ marginTop: '32px' }}>Other Products</h3>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="skeleton-vnp-card skeleton-card">
+                  <div className="skeleton-vnp-details">
+                    <div className="skeleton-vnp-badges">
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                      <div className="skeleton skeleton-vnp-badge"></div>
+                    </div>
+                    <div className="skeleton skeleton-vnp-code"></div>
+                    <div className="skeleton skeleton-vnp-name"></div>
+                    <div className="skeleton-vnp-price-row">
+                      <div className="skeleton skeleton-vnp-price"></div>
+                      <div className="skeleton skeleton-vnp-mrp"></div>
+                    </div>
+                  </div>
+                  <div className="skeleton-vnp-image-wrapper">
+                    <div className="skeleton skeleton-vnp-image"></div>
+                    <div className="skeleton skeleton-vnp-button"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : error ? (
         <div className="vnp-error">
           <p>{error}</p>
@@ -1501,7 +1545,7 @@ const Product = () => {
         <div className="vnp-content-wrapper">
           <div className="vnp-left-section">
             {/* myTVS Recommended Products */}
-            <Product1
+            <Product2
               title="myTVS Recommended Products"
               products={recommendedProducts.map((product, index) => ({
                 id: product.partNumber,
@@ -1535,7 +1579,7 @@ const Product = () => {
             />
 
             {/* Other Products */}
-            <Product1
+            <Product2
               title="Other Products"
               products={otherProducts.map((product, index) => ({
                 id: product.partNumber,
@@ -1569,38 +1613,7 @@ const Product = () => {
             />
           </div>
 
-          <div className="vnp-right-section">
-            {/* Aligned Products */}
-            <Product1
-              title="Aligned Products"
-              products={alignedProducts.map((product, index) => ({
-                id: product.partNumber,
-                partNumber: product.partNumber,
-                cartId: `${product.partNumber}_${product.brand}_${index}`, // Unique cart identifier
-                name: product.name,
-                image: product.image || NoImage,
-                brand: product.brand,
-                price: product.price,
-                mrp: product.mrp,
-                stockStatus: stockData[product.partNumber]?.inStock
-                  ? "in stock"
-                  : "out of stock",
-                deliveryTime: product.eta,
-              }))}
-              layout="vertical"
-              onAddToCart={(product) => {
-                addToCart({
-                  partNumber: product.cartId, // Use unique cartId
-                  itemDescription: product.name,
-                  listPrice: product.price,
-                  imageUrl: product.image,
-                  brand: product.brand,
-                  mrp: product.mrp,
-                  actualPartNumber: product.partNumber, // Keep original for reference
-                });
-              }}
-            />
-          </div>
+
         </div>
       )}
 
