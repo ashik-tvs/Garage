@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../styles/Login/Login.css";
-import { loginAPI, forgotPasswordAPI, verifyOTPAPI, resetPasswordAPI } from "../../services/api";
+import { loginAPI, forgotPasswordAPI, verifyOTPAPI } from "../../services/api";
 import apiConfigManager from "../../services/apiConfig";
 import apiService from "../../services/apiservice";
 import { getAssets, getAsset } from "../../utils/assets";
