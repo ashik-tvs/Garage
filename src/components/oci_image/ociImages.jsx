@@ -23,16 +23,12 @@ const Image = ({
   const loadedRef = useRef(false);
   const mountedRef = useRef(true); // Track if component is mounted
 
-  // Cleanup function to revoke blob URLs
+  // Cleanup function - DON'T revoke blob URLs to allow reuse across navigation
   const cleanup = useCallback(() => {
-    if (currentUrlRef.current && 
-        currentUrlRef.current !== NoImage && 
-        currentUrlRef.current !== fallbackImage &&
-        currentUrlRef.current.startsWith('blob:')) {
-      revokeOciImageUrl(currentUrlRef.current);
-      currentUrlRef.current = null;
-    }
-  }, [fallbackImage]);
+    // Don't revoke blob URLs - they're cached and reused
+    // The cache manager will handle cleanup when needed
+    currentUrlRef.current = null;
+  }, []);
 
   // Load image function - only load once
   const loadImage = useCallback(async () => {

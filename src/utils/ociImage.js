@@ -1,9 +1,17 @@
 import NoImage from "../assets/No Image.png";
-import apiConfigManager from "../services/apiConfig";
 
 /* ============================
    CONFIG
 ============================ */
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000';
+const OCI_PROXY_URL = `${BACKEND_URL}/oci/image`;
+
+// Debug: Log configuration on module load
+console.log('🔧 OCI Image API Configuration:', {
+  backendUrl: BACKEND_URL,
+  proxyUrl: OCI_PROXY_URL,
+});
+
 const FOLDER_MAP = {
   make: "Partsmart/PartsmartImages/PV/Make/",
   model: "Partsmart/PartsmartImages/PV/Model/",
@@ -128,27 +136,20 @@ const loadImageWithTimeout = async (fullPath, timeoutMs = 8000) => {
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
   try {
-    // Get image API configuration from apiConfigManager
-    const imageApi = apiConfigManager.getApi("image");
+    const requestUrl = `${OCI_PROXY_URL}?name=${encodeURIComponent(fullPath)}`;
+    console.log('📡 OCI Image API Request (via proxy):', requestUrl);
     
-    if (!imageApi) {
-      console.error("❌ Image API configuration not found");
-      throw new Error("Image API not configured");
-    }
-    
-    const apiUrl = imageApi.api_url;
-    const authHeaders = apiConfigManager.getAuthHeaders("image");
-    
-    // Call external storage API with authentication
-    const response = await fetch(`${apiUrl}?name=${encodeURIComponent(fullPath)}`, {
+    // Call backend proxy (no auth needed - backend handles it)
+    const response = await fetch(requestUrl, {
       signal: controller.signal,
       headers: {
         'Accept': 'image/*',
-        ...authHeaders,
       }
     });
     
     clearTimeout(timeoutId);
+    
+    console.log('📥 OCI Image API Response:', response.status, response.statusText);
     
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -160,6 +161,8 @@ const loadImageWithTimeout = async (fullPath, timeoutMs = 8000) => {
     if (!blob || blob.size === 0) {
       throw new Error('Empty blob received');
     }
+    
+    console.log('✅ OCI Image loaded successfully:', fullPath, `(${blob.size} bytes)`);
     
     return URL.createObjectURL(blob);
   } catch (err) {
@@ -198,13 +201,13 @@ export const getOciImage = async (folder, fileName) => {
     // Check cache first to prevent repeated loading
     if (imageCache.has(cacheKey)) {
       const cached = imageCache.get(cacheKey);
+      
+      // Return cached URL if not expired (blob URLs are never revoked, so they're always valid)
       if (cached.url && !isCacheExpired(cached.timestamp)) {
+        console.log(`✅ Using cached image: ${cacheKey}`);
         return cached.url;
       } else {
-        // Remove expired cache entry
-        if (cached.url && cached.url.startsWith('blob:')) {
-          URL.revokeObjectURL(cached.url);
-        }
+        // Cache expired, remove it (but don't revoke blob URL - it might be in use elsewhere)
         imageCache.delete(cacheKey);
       }
     }
@@ -251,6 +254,8 @@ export const getOciImage = async (folder, fileName) => {
             
             // Remove from failed cache if it was there
             failedCache.delete(cacheKey);
+            
+            console.log(`✅ Loaded and cached new image: ${cacheKey}`);
             
             return result.value.url;
           }

@@ -1,86 +1,90 @@
-import { useState, useEffect, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { partRelationsAPI, partsListAPI, vehicleListAPI, stockListAPI } from "../../../services/api";
-import { getAssets, getAsset } from "../../../utils/assets";
-import Search from "../../home/Search";
-import { useCart } from "../../../context/CartContext";
+import { useState, useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import {
-  fetchPartsListByPartNumber,
-  fetchPartsListByItemName,
+  partRelationsAPI,
+  partsListAPI,
+  vehicleListAPI,
+  stockListAPI,
+  partsmartTextSearchAPI,
+} from "../../../services/api";
+import {
   fetchVehicleListByPartNumber,
 } from "../../../services/apiservice";
+import { getAssets } from "../../../utils/assets";
+import Search from "../../home/Search";
+import VehicleContextModal from "../../home/VehicleContextModal";
+import { useCart } from "../../../context/CartContext";
 import NoImage from "../../../assets/No Image.png";
-import Product1 from "./Product1";
+import Product2 from "./Product2";
 import "../../../styles/search_by/partnumber/PartNumber.css";
 import "../../../styles/skeleton/skeleton.css";
 
-const alignedProducts = [
-  {
-    id: 3,
-    partNo: "A6732S233132",
-    brand: "Valeo",
-    description: "Brake Disc Pad",
-    price: 4205,
-    mrp: 4080,
-    imageUrl: NoImage,
-  },
-  {
-    id: 4,
-    partNo: "SA233663824",
-    brand: "Mobil",
-    description: "Brake Fluid",
-    price: 315,
-    mrp: 468,
-    imageUrl: NoImage,
-  },
-  {
-    id: 5,
-    partNo: "YD323S5632",
-
-    brand: "Valeo",
-    description: "Brake Fitting Kit",
-    price: 5650,
-    mrp: 6000,
-    imageUrl: NoImage,
-  },
-];
-
-/* ---------------- FILTER ---------------- */
-
-const Filter = ({
-  label,
-  options = [],
-  value = "",
-  onChange,
-  disabled = false,
-}) => {
-  return (
-    <div className="pn-filter">
-      <select
-        className="pn-filter-select"
-        value={value}
-        onChange={(e) => onChange?.(e.target.value)}
-        disabled={disabled}
-      >
-        <option value="">{label}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-};
-
-const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
+/* ---------------- COMPATIBILITY MODAL ---------------- */
+const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect, vehicles: initialVehicles = [] }) => {
+  const [vehicles, setVehicles] = useState(initialVehicles);
+  const [filteredVehicles, setFilteredVehicles] = useState(initialVehicles);
   const [searchTerm, setSearchTerm] = useState("");
-  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [totalCount, setTotalCount] = useState(0);
-  const observerTarget = useRef(null);
+  const ITEMS_PER_PAGE = 50;
+
+  // Fetch vehicles with pagination (fallback if no initial vehicles provided)
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      // If we already have vehicles from props, don't fetch
+      if (initialVehicles && initialVehicles.length > 0) {
+        setVehicles(initialVehicles);
+        setFilteredVehicles(initialVehicles);
+        setLoading(false);
+        return;
+      }
+
+      if (!partNumber) return;
+      setLoading(true);
+      try {
+        const response = await fetchVehicleListByPartNumber(partNumber, ITEMS_PER_PAGE, (page - 1) * ITEMS_PER_PAGE);
+        const newVehicles = response.data || [];
+        
+        if (page === 1) {
+          setVehicles(newVehicles);
+          setFilteredVehicles(newVehicles);
+        } else {
+          setVehicles(prev => [...prev, ...newVehicles]);
+          setFilteredVehicles(prev => [...prev, ...newVehicles]);
+        }
+        
+        setHasMore(newVehicles.length === ITEMS_PER_PAGE);
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicles();
+  }, [partNumber, page, initialVehicles]);
+
+  // Handle search filtering
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredVehicles(vehicles);
+      return;
+    }
+    
+    const filtered = vehicles.filter((v) =>
+      Object.values(v).join(" ").toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredVehicles(filtered);
+  }, [searchTerm, vehicles]);
+
+  // Handle scroll for infinite loading
+  const handleScroll = (e) => {
+    const bottom = e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight;
+    if (bottom && hasMore && !loading) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   // Handle vehicle row click
   const handleVehicleClick = (vehicle) => {
@@ -88,81 +92,15 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
     if (onVehicleSelect) {
       onVehicleSelect(vehicle);
     }
-    onClose(); // Close modal after selection
+    onClose();
   };
-
-  // Fetch vehicles with pagination
-  const fetchVehicles = async (reset = false) => {
-    if (loading || (!hasMore && !reset)) return;
-
-    setLoading(true);
-    const currentOffset = reset ? 0 : offset;
-
-    try {
-      const response = await fetchVehicleListByPartNumber(partNumber, 50, currentOffset);
-      const newVehicles = response?.data || [];
-      const count = response?.count || 0;
-
-      setTotalCount(count);
-
-      if (reset) {
-        setVehicles(newVehicles);
-        setOffset(50);
-      } else {
-        setVehicles(prev => [...prev, ...newVehicles]);
-        setOffset(prev => prev + 50);
-      }
-
-      // Check if there are more vehicles to load
-      setHasMore(currentOffset + newVehicles.length < count);
-    } catch (err) {
-      console.error("❌ Error fetching vehicles:", err);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Initial load
-  useEffect(() => {
-    fetchVehicles(true);
-  }, [partNumber]);
-
-  // Infinite scroll observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      entries => {
-        if (entries[0].isIntersecting && hasMore && !loading) {
-          fetchVehicles();
-        }
-      },
-      { threshold: 1.0 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasMore, loading, offset]);
-
-  // Filter vehicles based on search term
-  const filteredVehicles = vehicles.filter((v) =>
-    Object.values(v).join(" ").toLowerCase().includes(searchTerm.toLowerCase()),
-  );
 
   return (
     <div className="pn-modal-overlay">
       <div className="pn-modal">
-        {/* Header */}
         <div className="pn-modal-header">
           <div className="pn-modal-title">
-            Compatible Vehicles ({totalCount})
+            Compatible Vehicles ({vehicles.length})
           </div>
           <input
             type="text"
@@ -176,7 +114,6 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
           </button>
         </div>
 
-        {/* Table Header */}
         <div className="pn-table-container">
           <div className="pn-modal-table-header">
             <span>Make</span>
@@ -187,65 +124,30 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
           </div>
         </div>
 
-        {/* Table Body */}
-        <div>
-          <div className="pn-modal-table-body">
-            {filteredVehicles.length > 0 ? (
-              <>
-                {filteredVehicles.map((v, i) => (
-                  <div 
-                    key={i} 
-                    className="pn-modal-row"
-                    onClick={() => handleVehicleClick(v)}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <span>{v.make}</span>
-                    <span>{v.model}</span>
-                    <span>{v.variant}</span>
-                    <span>{v.fuelType}</span>
-                    <span>{v.year}</span>
-                  </div>
-                ))}
-                {/* Infinite scroll trigger */}
-                {hasMore && !searchTerm && (
-                  <div 
-                    ref={observerTarget} 
-                    style={{ height: '20px', padding: '10px', textAlign: 'center' }}
-                  >
-                    {loading && <span>Loading more...</span>}
-                  </div>
-                )}
-              </>
-            ) : loading && vehicles.length === 0 ? (
-              <div className="skeleton-list" style={{ padding: "20px" }}>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className="skeleton-card" style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    padding: '12px',
-                    border: '1px solid #eee',
-                    borderRadius: '4px',
-                    background: '#fff',
-                    marginBottom: '8px'
-                  }}>
-                    <div className="skeleton skeleton-text small"></div>
-                    <div className="skeleton skeleton-text small"></div>
-                    <div className="skeleton skeleton-text small"></div>
-                    <div className="skeleton skeleton-text small"></div>
-                    <div className="skeleton skeleton-text small"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div
-                className="pn-no-results"
-                style={{ padding: "20px", textAlign: "center" }}
+        <div className="pn-modal-table-body" onScroll={handleScroll}>
+          {filteredVehicles.length > 0 ? (
+            filteredVehicles.map((v, i) => (
+              <div 
+                key={i} 
+                className="pn-modal-row"
+                onClick={() => handleVehicleClick(v)}
+                style={{ cursor: 'pointer' }}
               >
-                No vehicles found
+                <span>{v.vehicleMake || v.make}</span>
+                <span>{v.vehicleModel || v.model}</span>
+                <span>{v.vehicleVariant || v.variant}</span>
+                <span>{v.vehicleFuelType || v.fuelType}</span>
+                <span>{v.vehicleFromYear || v.year}</span>
               </div>
-            )}
-          </div>
+            ))
+          ) : (
+            <div className="pn-no-results" style={{ padding: "20px", textAlign: "center" }}>
+              {loading ? "Loading..." : "No vehicles found"}
+            </div>
+          )}
+          {loading && hasMore && (
+            <div style={{ padding: "10px", textAlign: "center" }}>Loading more...</div>
+          )}
         </div>
       </div>
     </div>
@@ -253,126 +155,56 @@ const CompatibilityModal = ({ onClose, partNumber, onVehicleSelect }) => {
 };
 
 /* ---------------- MAIN COMPONENT ---------------- */
-
 const PartNumber = () => {
   const { state } = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [assets, setAssets] = useState({});
   const rawSearchKey = state?.partNumber || "";
-const [alignedProducts, setAlignedProducts] = useState([]);
-const [alignedLoading, setAlignedLoading] = useState(false);
+  
+  // Extract vehicle context from navigation state OR URL parameters
+  const urlMake = searchParams.get('make');
+  const urlModel = searchParams.get('model');
+  const urlVariant = searchParams.get('variant');
+  const urlFuelType = searchParams.get('fuelType');
+  const urlYear = searchParams.get('year');
+  const urlQuery = searchParams.get('q');
+  
+  const initialVehicle = state?.vehicle || {
+    make: urlMake || "",
+    model: urlModel || "",
+    variant: urlVariant || "",
+    fuelType: urlFuelType || "",
+    year: urlYear || ""
+  };
+  const originalSearchQuery = state?.searchQuery || urlQuery || rawSearchKey;
   
   // Load assets
   useEffect(() => {
     getAssets().then(setAssets);
   }, []);
 
-  // Detection functions
-  const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
-  const isServiceType = (value) => /^[A-Z\s]+$/i.test(value);
-  const isAggregateOrSubAggregate = (value) => /^[A-Z\s]+$/i.test(value); // Same pattern as service type
-
-  // Keep original case for item name, uppercase for part number and aggregate
-  const searchKey = isPartNumber(rawSearchKey.replace(/\s+/g, ""))
-    ? rawSearchKey.toUpperCase()
-    : rawSearchKey;
-
-  const { cartItems, addToCart, removeFromCart } = useCart();
+  // Use originalSearchQuery which includes URL parameter 'q' for page loads
+  const searchKey = originalSearchQuery || rawSearchKey;
+  const { addToCart } = useCart();
+  
   const [showCompatibility, setShowCompatibility] = useState(false);
-  const [selectedPartNumber, setSelectedPartNumber] = useState(""); // Track selected product for modal
+  const [selectedPartNumber, setSelectedPartNumber] = useState("");
+  const [selectedPartVehicles, setSelectedPartVehicles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [otherBrandProducts, setOtherBrandProducts] = useState([]);
-  const [originalRecommendedProducts, setOriginalRecommendedProducts] = useState([]);
-  const [originalOtherBrandProducts, setOriginalOtherBrandProducts] = useState([]);
-  const [vehicleList, setVehicleList] = useState([]);
-  const [vehicleCompatibilityList, setVehicleCompatibilityList] = useState([]);
-  const [vehicleCount, setVehicleCount] = useState(0);
-  const [totalPartsCount, setTotalPartsCount] = useState(0); // Total count from API
-  const [vehicleCounts, setVehicleCounts] = useState({}); // Store count per partNumber
-  const [loadingCounts, setLoadingCounts] = useState(true); // Loading state for vehicle counts
+  const [alignedProducts, setAlignedProducts] = useState([]);
+  const [totalPartsCount, setTotalPartsCount] = useState(0);
   const [openFilter, setOpenFilter] = useState(null);
-  const [stockData, setStockData] = useState({}); // Store stock info by partNumber
+  const [batchLoadingProgress, setBatchLoadingProgress] = useState(null);
 
-  // Handler for opening compatibility modal
-  const handleCompatibilityClick = (product) => {
-    setSelectedPartNumber(product.partNumber);
-    setShowCompatibility(true);
-  };
-
-  useEffect(() => {
-  if (!searchKey || !isPartNumber(searchKey)) return;
-
-  const fetchAlignedProducts = async () => {
-    setAlignedLoading(true);
-
-    try {
-      // 1️⃣ Get related part numbers
-      const relationRes = await partRelationsAPI({
-        customerCode: "0046",
-        partNumber: searchKey,
-        type: "crossReference",
-      });
-
-      const relatedPartNumbers = relationRes?.data?.data || [];
-
-
-      if (relatedPartNumbers.length === 0) {
-        setAlignedProducts([]);
-        setAlignedLoading(false);
-        return;
-      }
-
-      // 2️⃣ Fetch product details for aligned parts
-      const partsRes = await partsListAPI({
-        brandPriority: ["VALEO"],
-        limit: 100,
-        offset: 0,
-        sortOrder: "ASC",
-        fieldOrder: null,
-        customerCode: "0046",
-        partNumber: relatedPartNumbers,
-        model: null,
-        brand: null,
-        subAggregate: null,
-        aggregate: null,
-        make: null,
-        variant: null,
-        fuelType: null,
-        vehicle: null,
-        year: null,
-      });
-
-      const alignedParts = (partsRes?.data || []).map((part, index) => ({
-        id: index + 1,
-        partNo: part.partNumber,
-        brand: part.brandName,
-        description: part.itemDescription,
-        price: Number(part.listPrice) || 0,
-        mrp: Number(part.mrp) || 0,
-        imageUrl: NoImage,
-        eta: "1-2 Days",
-        stock: "In stock",
-      }));
-
-      setAlignedProducts(alignedParts);
-    } catch (err) {
-      console.error("❌ Failed to fetch aligned products", err);
-      setAlignedProducts([]);
-    } finally {
-      setAlignedLoading(false);
-    }
-  };
-
-  fetchAlignedProducts();
-}, [searchKey]);
-
-  const [selectedMake, setSelectedMake] = useState("");
-  const [selectedModel, setSelectedModel] = useState("");
-  const [selectedVariant, setSelectedVariant] = useState("");
-  const [selectedFuel, setSelectedFuel] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [filteredCompatibility, setFilteredCompatibility] = useState([]);
+  // Vehicle filter states - Initialize with vehicle from navigation state
+  const [selectedMake, setSelectedMake] = useState(initialVehicle.make || "");
+  const [selectedModel, setSelectedModel] = useState(initialVehicle.model || "");
+  const [selectedVariant, setSelectedVariant] = useState(initialVehicle.variant || "");
+  const [selectedFuel, setSelectedFuel] = useState(initialVehicle.fuelType || "");
+  const [selectedYear, setSelectedYear] = useState(initialVehicle.year ? initialVehicle.year.toString() : "");
 
   // Right filters state
   const [rightFilters, setRightFilters] = useState({
@@ -380,6 +212,220 @@ const [alignedLoading, setAlignedLoading] = useState(false);
     fuelType: "",
     eta: "",
   });
+  
+  // Vehicle context modal state
+  const [vehicleModal, setVehicleModal] = useState({
+    isOpen: false,
+    searchQuery: "",
+    missingFields: [],
+    extractedFields: {},
+  });
+
+  // Function to update URL with vehicle context and search query
+  const updateURLParams = (vehicleData = {}, query = null) => {
+    const params = new URLSearchParams();
+    
+    const make = vehicleData.make || selectedMake;
+    const model = vehicleData.model || selectedModel;
+    const variant = vehicleData.variant || selectedVariant;
+    const fuelType = vehicleData.fuelType || selectedFuel;
+    const year = vehicleData.year || selectedYear;
+    const searchQuery = query || originalSearchQuery || searchKey;
+    
+    if (searchQuery) params.set('q', searchQuery);
+    if (make) params.set('make', make);
+    if (model) params.set('model', model);
+    if (variant) params.set('variant', variant);
+    if (fuelType) params.set('fuelType', fuelType);
+    if (year) params.set('year', year);
+    
+    setSearchParams(params, { replace: true });
+  };
+
+  // Extract vehicle options from products
+  const [vehicleOptions, setVehicleOptions] = useState({
+    makes: [],
+    models: [],
+    variants: [],
+    fuelTypes: [],
+    years: [],
+  });
+
+  // Handler for opening compatibility modal
+  const handleCompatibilityClick = (product) => {
+    setSelectedPartNumber(product.partNumber);
+    setSelectedPartVehicles(product.vehicles || []);
+    setShowCompatibility(true);
+  };
+  
+  // Handler for vehicle modal completion
+  const handleVehicleModalComplete = async (results, vehicleContextFromModal) => {
+    console.log("✅ Vehicle modal search complete:", results);
+    console.log("🚗 Vehicle context from modal:", vehicleContextFromModal);
+    
+    // Close the modal
+    setVehicleModal(prev => ({ ...prev, isOpen: false }));
+    
+    // Update URL with complete vehicle context - this will trigger a re-fetch via useEffect
+    updateURLParams(vehicleContextFromModal, vehicleModal.searchQuery);
+    
+    // Update filter states with complete vehicle context
+    if (vehicleContextFromModal.make) setSelectedMake(vehicleContextFromModal.make);
+    if (vehicleContextFromModal.model) setSelectedModel(vehicleContextFromModal.model);
+    if (vehicleContextFromModal.variant) setSelectedVariant(vehicleContextFromModal.variant);
+    if (vehicleContextFromModal.fuelType) setSelectedFuel(vehicleContextFromModal.fuelType);
+    if (vehicleContextFromModal.year) setSelectedYear(vehicleContextFromModal.year.toString());
+    
+    // Fetch dropdown options from lookup API to populate the dropdowns
+    try {
+      const apiService = (await import("../../../services/apiservice")).default;
+      
+      // Fetch makes
+      const makesResponse = await apiService.post('/partsmart/search', {
+        search_type: "lookup",
+        lookup_type: "vehicle",
+        limit: 50
+      });
+      
+      const makes = makesResponse?.data?.data?.makes || [];
+      
+      // Fetch models if make is available
+      let models = [];
+      if (vehicleContextFromModal.make) {
+        const modelsResponse = await apiService.post('/partsmart/search', {
+          search_type: "lookup",
+          lookup_type: "vehicle",
+          vehicle: { make: vehicleContextFromModal.make },
+          limit: 50
+        });
+        models = modelsResponse?.data?.data?.models || [];
+      }
+      
+      // Fetch variants, fuel types, and years if model is available
+      let variants = [];
+      let fuelTypes = [];
+      let years = [];
+      if (vehicleContextFromModal.make && vehicleContextFromModal.model) {
+        const detailsResponse = await apiService.post('/partsmart/search', {
+          search_type: "lookup",
+          lookup_type: "vehicle",
+          vehicle: { 
+            make: vehicleContextFromModal.make, 
+            model: vehicleContextFromModal.model 
+          },
+          limit: 50
+        });
+        const apiData = detailsResponse?.data?.data || detailsResponse?.data;
+        variants = apiData?.variants || [];
+        fuelTypes = apiData?.fuel_types || [];
+        years = apiData?.years?.map(y => y.toString()) || [];
+      }
+      
+      // Update vehicle options state
+      setVehicleOptions({
+        makes,
+        models,
+        variants,
+        fuelTypes,
+        years
+      });
+    } catch (error) {
+      console.error("❌ Error fetching dropdown options:", error);
+    }
+    
+    // The results are already available from the modal, so we can process them directly
+    // Transform the results to match the expected format
+    if (results?.data?.tvs) {
+      setLoading(true);
+      
+      try {
+        let allProducts = [];
+        const productVehicleMap = {};
+        
+        Object.entries(results.data.tvs).forEach(([partKey, parts]) => {
+          if (Array.isArray(parts)) {
+            const vehiclesForPart = [];
+            const uniqueVehicles = new Set();
+            
+            parts.forEach((part) => {
+              const vehicleKey = `${part.vehicleMake}_${part.vehicleModel}_${part.vehicleVariant}_${part.vehicleFuelType}_${part.vehicleFromYear}`;
+              if (!uniqueVehicles.has(vehicleKey)) {
+                uniqueVehicles.add(vehicleKey);
+                vehiclesForPart.push({
+                  vehicleMake: part.vehicleMake,
+                  vehicleModel: part.vehicleModel,
+                  vehicleVariant: part.vehicleVariant,
+                  vehicleFuelType: part.vehicleFuelType,
+                  vehicleFromYear: part.vehicleFromYear,
+                  vehicleToYear: part.vehicleToYear,
+                });
+              }
+            });
+
+            parts.forEach((part) => {
+              const partNum = part.partNumber || part.part_number;
+              
+              if (!productVehicleMap[partNum]) {
+                productVehicleMap[partNum] = vehiclesForPart;
+              }
+              
+              allProducts.push({
+                id: part.id || partNum,
+                partNumber: partNum,
+                brandName: part.brandName || part.brand,
+                name: part.name || part.title || part.description,
+                itemDescription: part.description || part.partDescription,
+                listPrice: part.listPrice || part.list_price,
+                mrp: part.mrp,
+                imageUrl: part.image_url || NoImage,
+                vehicleMake: part.vehicleMake || part.vehicle_make,
+                vehicleModel: part.vehicleModel || part.vehicle_model,
+                vehicleVariant: part.vehicleVariant || part.vehicle_variant,
+                vehicleFuelType: part.vehicleFuelType || part.vehicle_fuel_type || part.fuelType,
+                vehicleFromYear: part.vehicleFromYear || part.vehicle_from_year || part.year,
+                vehicleToYear: part.vehicleToYear || part.vehicle_to_year,
+                aggregate: part.aggregate || part.category,
+                subAggregate: part.subAggregate || part.subcategory,
+                compatibleVehicles: uniqueVehicles.size,
+                vehicles: vehiclesForPart,
+              });
+            });
+          }
+        });
+
+        const totalCount = allProducts.length;
+        setTotalPartsCount(totalCount);
+
+        // Fetch stock status for all products
+        allProducts = await fetchStockStatus(allProducts);
+
+        // Separate myTVS and other brands
+        const myTvsProducts = allProducts.filter(p => 
+          p.brandName?.toUpperCase() === "MYTVS"
+        );
+        const otherProducts = allProducts.filter(p => 
+          p.brandName?.toUpperCase() !== "MYTVS"
+        );
+
+        setRecommendedProducts(myTvsProducts);
+        setOtherBrandProducts(otherProducts);
+        setError(null);
+      } catch (error) {
+        console.error("❌ Error processing vehicle modal results:", error);
+        setError("Failed to process search results.");
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setError("No products found for this search.");
+      setRecommendedProducts([]);
+      setOtherBrandProducts([]);
+      setAlignedProducts([]);
+      setLoading(false);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -390,860 +436,434 @@ const [alignedLoading, setAlignedLoading] = useState(false);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [openFilter]);
 
-  // Fetch vehicle compatibility count for each product (in batches)
-  const fetchVehicleCountsForProducts = async (productsList) => {
-    setLoadingCounts(true);
-    console.log("🔍 Fetching vehicle counts for", productsList.length, "products");
-    
-    const BATCH_SIZE = 5; // Fetch 5 at a time
-    const batches = [];
-    
-    // Split into batches
-    for (let i = 0; i < productsList.length; i += BATCH_SIZE) {
-      batches.push(productsList.slice(i, i + BATCH_SIZE));
-    }
-    
-    // Fetch batches progressively
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      console.log(`🔄 Fetching batch ${i + 1}/${batches.length}`);
-      
-      const countPromises = batch.map(async (product) => {
-        try {
-          const response = await fetchVehicleListByPartNumber(product.partNo, 1, 0);
-          return {
-            partNumber: product.partNo,
-            count: response?.count || 0,
-          };
-        } catch (err) {
-          console.error(`❌ Error fetching vehicle count for ${product.partNo}:`, err);
-          return {
-            partNumber: product.partNo,
-            count: 0,
-          };
-        }
-      });
-      
-      try {
-        const countResults = await Promise.all(countPromises);
+  // Fetch dropdown options from lookup API when URL parameters are present
+  useEffect(() => {
+    const fetchInitialDropdownOptions = async () => {
+      // If we have URL parameters, fetch dropdown options from lookup API
+      if (urlMake || urlModel || urlVariant) {
+        console.log("🔍 Fetching dropdown options from lookup API for URL params");
         
-        // Update state incrementally after each batch
-        setVehicleCounts(prev => {
-          const updated = { ...prev };
-          countResults.forEach((result) => {
-            updated[result.partNumber] = result.count;
+        try {
+          // Import apiService for lookup API
+          const apiService = (await import("../../../services/apiservice")).default;
+          
+          // Fetch makes
+          const makesResponse = await apiService.post('/partsmart/search', {
+            search_type: "lookup",
+            lookup_type: "vehicle",
+            limit: 50
           });
-          return updated;
+          
+          if (makesResponse?.data?.data?.makes) {
+            setVehicleOptions(prev => ({
+              ...prev,
+              makes: makesResponse.data.data.makes
+            }));
+          }
+          
+          // If we have a make, fetch models
+          if (urlMake) {
+            const modelsResponse = await apiService.post('/partsmart/search', {
+              search_type: "lookup",
+              lookup_type: "vehicle",
+              vehicle: { make: urlMake },
+              limit: 50
+            });
+            
+            if (modelsResponse?.data?.data?.models) {
+              setVehicleOptions(prev => ({
+                ...prev,
+                models: modelsResponse.data.data.models
+              }));
+            }
+          }
+          
+          // If we have make and model, fetch variants, fuel types, and years
+          if (urlMake && urlModel) {
+            const detailsResponse = await apiService.post('/partsmart/search', {
+              search_type: "lookup",
+              lookup_type: "vehicle",
+              vehicle: { make: urlMake, model: urlModel },
+              limit: 50
+            });
+            
+            const apiData = detailsResponse?.data?.data || detailsResponse?.data;
+            if (apiData) {
+              setVehicleOptions(prev => ({
+                ...prev,
+                variants: apiData.variants || [],
+                fuelTypes: apiData.fuel_types || [],
+                years: apiData.years?.map(y => y.toString()) || []
+              }));
+            }
+          }
+          
+          console.log("✅ Initial dropdown options loaded from lookup API");
+        } catch (error) {
+          console.error("❌ Error fetching initial dropdown options:", error);
+        }
+      }
+    };
+    
+    fetchInitialDropdownOptions();
+  }, [urlMake, urlModel, urlVariant]);
+
+  // Fetch ALL makes from lookup API on component mount (independent of products)
+  useEffect(() => {
+    const fetchMakes = async () => {
+      try {
+        console.log("🔍 Fetching ALL makes from lookup API");
+        
+        const apiService = (await import("../../../services/apiservice")).default;
+        const response = await apiService.post('/partsmart/search', {
+          search_type: "lookup",
+          lookup_type: "vehicle",
+          limit: 50
         });
         
-        console.log(`✅ Batch ${i + 1} completed:`, countResults);
-      } catch (err) {
-        console.error("❌ Error fetching batch:", err);
+        if (response?.data?.data?.makes) {
+          setVehicleOptions(prev => ({
+            ...prev,
+            makes: response.data.data.makes
+          }));
+          console.log("✅ Makes loaded from lookup API:", response.data.data.makes.length);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching makes from lookup API:", error);
       }
-    }
-    
-    setLoadingCounts(false);
-    console.log("🎉 All vehicle counts fetched");
-  };
+    };
 
-  // Fetch stock status for all products
-  const fetchStockForProducts = async (productsList) => {
-    const stockPromises = productsList.map(async (product) => {
+    fetchMakes();
+  }, []); // Run once on mount, independent of products
+
+  // Fetch models when make is selected
+  useEffect(() => {
+    const fetchModels = async () => {
+      if (!selectedMake) {
+        setVehicleOptions(prev => ({
+          ...prev,
+          models: [],
+          variants: [],
+          fuelTypes: [],
+          years: [],
+        }));
+        return;
+      }
+
       try {
-        const response = await stockListAPI({
+        console.log("🔍 Fetching models for make:", selectedMake);
+        
+        const partNumbers = [...new Set([...recommendedProducts, ...otherBrandProducts].map(p => p.partNumber).filter(Boolean))];
+
+        if (partNumbers.length === 0) {
+          console.log("⚠️ No part numbers available for models fetch");
+          return;
+        }
+
+        const response = await vehicleListAPI({
+          partNumber: partNumbers.length > 0 ? partNumbers : null,
           customerCode: "0046",
-          partNumber: product.partNo,
-          inventoryName: null,
-          entity: null,
-          software: null,
-          limit: 2,
+          limit: 1000,
           offset: 0,
           sortOrder: "ASC",
-          fieldOrder: "lotAgeDate",
+          brand: null,
+          aggregate: null,
+          subAggregate: null,
+          make: selectedMake,
+          model: null,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
         });
 
-        // Check if stock data exists and has quantity
-        const stockItems = Array.isArray(response?.data) ? response.data : [];
-        const totalQty = stockItems.reduce(
-          (sum, item) => sum + (item.qty || 0),
-          0,
-        );
+        if (response?.data && response.data.length > 0) {
+          const models = new Set();
+          response.data.forEach((vehicle) => {
+            if (vehicle.model) models.add(vehicle.model);
+          });
 
-        return {
-          partNumber: product.partNo,
-          inStock: totalQty > 0,
-          quantity: totalQty,
-        };
-      } catch (err) {
-        console.error(`Error fetching stock for ${product.partNo}:`, err);
-        return {
-          partNumber: product.partNo,
-          inStock: false,
-          quantity: 0,
-        };
+          setVehicleOptions(prev => ({
+            ...prev,
+            models: Array.from(models).sort(),
+            variants: [],
+            fuelTypes: [],
+            years: [],
+          }));
+          
+          console.log("✅ Models loaded:", models.size, Array.from(models));
+        } else {
+          console.log("⚠️ No vehicle data returned from API for models");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching models:", error);
       }
-    });
-
-    try {
-      const stockResults = await Promise.all(stockPromises);
-      const stockMap = {};
-      stockResults.forEach((result) => {
-        stockMap[result.partNumber] = result;
-      });
-      setStockData(stockMap);
-      console.log("✅ Stock data fetched:", stockMap);
-    } catch (err) {
-      console.error("❌ Error fetching stock data:", err);
-    }
-  };
-
-const applyCompatibilityFilter = async () => {
-  console.log("🔍 Applying compatibility filter...");
-  console.log("📋 Selected Filters:", {
-    make: selectedMake,
-    model: selectedModel,
-    variant: selectedVariant,
-    fuelType: selectedFuel,
-    year: selectedYear,
-  });
-
-  // Validate that at least one filter is selected
-  if (!selectedMake && !selectedModel && !selectedVariant && !selectedFuel && !selectedYear) {
-    console.log("❌ No filters selected");
-    return;
-  }
-
-  setLoading(true);
-  setError(null);
-
-  try {
-    // Fetch filtered products from parts-list API
-    console.log("➡️ Fetching filtered products...");
-    
-    const baseRequestBody = {
-      brandPriority: null,
-      limit: 5000,
-      offset: 0,
-      sortOrder: "ASC",
-      fieldOrder: null,
-      customerCode: "0046",
-      partNumber: null,
-      model: selectedModel || null,
-      subAggregate: null,
-      aggregate: null,
-      make: selectedMake || null,
-      variant: selectedVariant || null,
-      fuelType: selectedFuel || null,
-      vehicle: null,
-      year: selectedYear || null,
     };
 
-    // Fetch myTVS products specifically
-    const myTvsRequestBody = {
-      ...baseRequestBody,
-      brand: "mytvs",
-    };
+    fetchModels();
+  }, [selectedMake, recommendedProducts, otherBrandProducts]);
 
-    console.log("📤 myTVS Request Body:", myTvsRequestBody);
-
-    // Fetch other brand products
-    const otherBrandsRequestBody = {
-      ...baseRequestBody,
-      brand: null,
-    };
-
-    console.log("📤 Other Brands Request Body:", otherBrandsRequestBody);
-
-    // Make both API calls in parallel
-    const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-      partsListAPI(myTvsRequestBody),
-      partsListAPI(otherBrandsRequestBody),
-    ]);
-    
-    console.log("✅ myTVS Response:", myTvsResponse);
-    console.log("✅ Other Brands Response:", otherBrandsResponse);
-
-    const myTvsData = myTvsResponse?.data || [];
-    const otherBrandsData = (otherBrandsResponse?.data || []).filter(
-      (item) => item.brandName?.toUpperCase() !== "MYTVS"
-    );
-    
-    const totalCount = (myTvsResponse?.count || 0) + (otherBrandsResponse?.count || 0);
-    
-    console.log("📦 myTVS Parts Count:", myTvsData.length);
-    console.log("📦 Other Brands Parts Count:", otherBrandsData.length);
-    console.log("📊 Total Count:", totalCount);
-
-    // Transform myTVS data
-    const transformedMyTvsParts = myTvsData.map((part, index) => ({
-      id: index + 1,
-      brand: part.brandName || "Unknown",
-      partNo: part.partNumber,
-      description: part.itemDescription,
-      price: parseFloat(part.listPrice) || 0,
-      mrp: parseFloat(part.mrp) || 0,
-      eta: "1-2 Days",
-      stock: "In stock",
-      vehicles: 12,
-      imageUrl: NoImage,
-      lineCode: part.lineCode,
-      hsnCode: part.hsnCode,
-      aggregate: part.aggregate,
-      subAggregate: part.subAggregate,
-      taxPercent: part.taxpercent,
-    }));
-
-    // Transform other brands data
-    const transformedOtherParts = otherBrandsData.map((part, index) => ({
-      id: index + 1 + transformedMyTvsParts.length,
-      brand: part.brandName || "Unknown",
-      partNo: part.partNumber,
-      description: part.itemDescription,
-      price: parseFloat(part.listPrice) || 0,
-      mrp: parseFloat(part.mrp) || 0,
-      eta: "1-2 Days",
-      stock: "In stock",
-      vehicles: 12,
-      imageUrl: NoImage,
-      lineCode: part.lineCode,
-      hsnCode: part.hsnCode,
-      aggregate: part.aggregate,
-      subAggregate: part.subAggregate,
-      taxPercent: part.taxpercent,
-    }));
-
-    console.log("🔄 Transformed myTVS Parts:", transformedMyTvsParts.length);
-    console.log("🔄 Transformed Other Parts:", transformedOtherParts.length);
-
-    console.log("✅ Filtered myTVS Products:", transformedMyTvsParts.length);
-    console.log("✅ Filtered Other Brand Products:", transformedOtherParts.length);
-
-    // Update the products displayed on the page
-    setRecommendedProducts(transformedMyTvsParts);
-    setOtherBrandProducts(transformedOtherParts);
-    
-    // Hide loading immediately after products are set
-    setLoading(false);
-
-    // Fetch stock data and vehicle counts in background (non-blocking)
-    const allTransformedParts = [...transformedMyTvsParts, ...transformedOtherParts];
-    fetchStockForProducts(allTransformedParts);
-    fetchVehicleCountsForProducts(allTransformedParts);
-
-    // Also filter the vehicle compatibility list for the modal
-    let filteredVehicles = [...vehicleCompatibilityList];
-
-    if (selectedMake) {
-      filteredVehicles = filteredVehicles.filter(v => v.make === selectedMake);
-    }
-
-    if (selectedModel) {
-      filteredVehicles = filteredVehicles.filter(v => v.model === selectedModel);
-    }
-
-    if (selectedVariant) {
-      filteredVehicles = filteredVehicles.filter(v => v.variant === selectedVariant);
-    }
-
-    if (selectedFuel) {
-      filteredVehicles = filteredVehicles.filter(v => v.fuelType === selectedFuel);
-    }
-
-    if (selectedYear) {
-      filteredVehicles = filteredVehicles.filter(v => String(v.year) === String(selectedYear));
-    }
-
-    setFilteredCompatibility(filteredVehicles);
-    setVehicleCount(totalCount);
-
-    console.log("🎉 Filter applied successfully!");
-
-  } catch (err) {
-    console.error("❌ Error fetching filtered products:", err);
-    setError("Failed to load filtered products. Please try again.");
-    setRecommendedProducts([]);
-    setOtherBrandProducts([]);
-    setLoading(false);
-  }
-};
-
-  // Handle vehicle selection from compatibility modal
-  const handleVehicleSelection = async (vehicle) => {
-    console.log("🚗 Vehicle selected from modal:", vehicle);
-    
-    // Auto-fill filter dropdowns
-    setSelectedMake(vehicle.make || "");
-    setSelectedModel(vehicle.model || "");
-    setSelectedVariant(vehicle.variant || "");
-    setSelectedFuel(vehicle.fuelType || "");
-    setSelectedYear(vehicle.year || "");
-    
-    // Fetch products based on selected vehicle
-    setLoading(true);
-    setError(null);
-
-    try {
-      console.log("➡️ Fetching products for selected vehicle...");
-      
-      const baseRequestBody = {
-        brandPriority: null,
-        limit: 5000,
-        offset: 0,
-        sortOrder: "ASC",
-        fieldOrder: null,
-        customerCode: "0046",
-        partNumber: null,
-        model: vehicle.model || null,
-        subAggregate: null,
-        aggregate: null,
-        make: vehicle.make || null,
-        variant: vehicle.variant || null,
-        fuelType: vehicle.fuelType || null,
-        vehicle: null,
-        year: vehicle.year || null,
-      };
-
-      // Fetch myTVS products specifically
-      const myTvsRequestBody = {
-        ...baseRequestBody,
-        brand: "mytvs",
-      };
-
-      // Fetch other brand products
-      const otherBrandsRequestBody = {
-        ...baseRequestBody,
-        brand: null,
-      };
-
-      console.log("📤 myTVS Vehicle Filter Request Body:", myTvsRequestBody);
-      console.log("📤 Other Brands Vehicle Filter Request Body:", otherBrandsRequestBody);
-
-      // Make both API calls in parallel
-      const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-        partsListAPI(myTvsRequestBody),
-        partsListAPI(otherBrandsRequestBody),
-      ]);
-      
-      console.log("✅ myTVS Vehicle Filtered Response:", myTvsResponse);
-      console.log("✅ Other Brands Vehicle Filtered Response:", otherBrandsResponse);
-
-      const myTvsData = myTvsResponse?.data || [];
-      const otherBrandsData = (otherBrandsResponse?.data || []).filter(
-        (item) => item.brandName?.toUpperCase() !== "MYTVS"
-      );
-      
-      const totalCount = (myTvsResponse?.count || 0) + (otherBrandsResponse?.count || 0);
-      console.log("📦 myTVS Filtered Parts Count:", myTvsData.length);
-      console.log("📦 Other Brands Filtered Parts Count:", otherBrandsData.length);
-      console.log("📊 Total Count from API:", totalCount);
-      
-      // Store the total count
-      setTotalPartsCount(totalCount);
-
-      // Transform myTVS data
-      const transformedMyTvsParts = myTvsData.map((part, index) => ({
-        id: index + 1,
-        brand: part.brandName || "Unknown",
-        partNo: part.partNumber,
-        description: part.itemDescription,
-        price: parseFloat(part.listPrice) || 0,
-        mrp: parseFloat(part.mrp) || 0,
-        eta: "1-2 Days",
-        stock: "In stock",
-        vehicles: 12,
-        imageUrl: NoImage,
-        lineCode: part.lineCode,
-        hsnCode: part.hsnCode,
-        aggregate: part.aggregate,
-        subAggregate: part.subAggregate,
-        taxPercent: part.taxpercent,
-      }));
-
-      // Transform other brands data
-      const transformedOtherParts = otherBrandsData.map((part, index) => ({
-        id: index + 1 + transformedMyTvsParts.length,
-        brand: part.brandName || "Unknown",
-        partNo: part.partNumber,
-        description: part.itemDescription,
-        price: parseFloat(part.listPrice) || 0,
-        mrp: parseFloat(part.mrp) || 0,
-        eta: "1-2 Days",
-        stock: "In stock",
-        vehicles: 12,
-        imageUrl: NoImage,
-        lineCode: part.lineCode,
-        hsnCode: part.hsnCode,
-        aggregate: part.aggregate,
-        subAggregate: part.subAggregate,
-        taxPercent: part.taxpercent,
-      }));
-
-      console.log("✅ Filtered myTVS Products:", transformedMyTvsParts.length);
-      console.log("✅ Filtered Other Brand Products:", transformedOtherParts.length);
-
-      // Update products displayed
-      setRecommendedProducts(transformedMyTvsParts);
-      setOtherBrandProducts(transformedOtherParts);
-      setOriginalRecommendedProducts(transformedMyTvsParts);
-      setOriginalOtherBrandProducts(transformedOtherParts);
-      
-      setLoading(false);
-
-      // Fetch stock data and vehicle counts in background
-      const allTransformedParts = [...transformedMyTvsParts, ...transformedOtherParts];
-      fetchStockForProducts(allTransformedParts);
-      fetchVehicleCountsForProducts(allTransformedParts);
-
-      console.log("🎉 Vehicle filter applied successfully!");
-
-    } catch (err) {
-      console.error("❌ Error fetching products for vehicle:", err);
-      setError("Failed to load products. Please try again.");
-      setRecommendedProducts([]);
-      setOtherBrandProducts([]);
-      setLoading(false);
-    }
-  };
-
-  const unique = (arr, key) => [
-    ...new Set(arr.map((item) => item[key]).filter(Boolean)),
-  ];
-
-  const makes = unique(vehicleList, "make");
-
-  const models = unique(
-    vehicleList.filter((v) => !selectedMake || v.make === selectedMake),
-    "model",
-  );
-
-  const variants = unique(
-    vehicleList.filter(
-      (v) =>
-        (!selectedMake || v.make === selectedMake) &&
-        (!selectedModel || v.model === selectedModel),
-    ),
-    "variant",
-  );
-
-  const fuelTypes = unique(
-    vehicleList.filter(
-      (v) =>
-        (!selectedMake || v.make === selectedMake) &&
-        (!selectedModel || v.model === selectedModel) &&
-        (!selectedVariant || v.variant === selectedVariant),
-    ),
-    "fuelType",
-  );
-
-  const years = unique(
-    vehicleList.filter(
-      (v) =>
-        (!selectedMake || v.make === selectedMake) &&
-        (!selectedModel || v.model === selectedModel) &&
-        (!selectedVariant || v.variant === selectedVariant) &&
-        (!selectedFuel || v.fuelType === selectedFuel),
-    ),
-    "year",
-  );
-
-  // Fetch parts data from API
+  // Fetch variants when model is selected
   useEffect(() => {
-    const fetchPartsData = async () => {
-      if (!searchKey) {
-        setRecommendedProducts([]);
-        setOtherBrandProducts([]);
+    const fetchVariants = async () => {
+      if (!selectedMake || !selectedModel) {
+        setVehicleOptions(prev => ({
+          ...prev,
+          variants: [],
+          fuelTypes: [],
+          years: [],
+        }));
         return;
       }
 
-      setLoading(true);
-      setError(null);
-
       try {
-        // Detect search type
-        const isPartNumber = (value) => /^(?=.*\d)[A-Z0-9-]+$/i.test(value); // ✅ Added hyphen support
-        const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ""));
-        const isAggregateSearch = !isPartNumberSearch && isAggregateOrSubAggregate(searchKey);
+        console.log("🔍 Fetching variants for model:", selectedModel);
+        
+        const partNumbers = [...new Set([...recommendedProducts, ...otherBrandProducts].map(p => p.partNumber).filter(Boolean))];
 
-        console.log("🔍 Search Key:", searchKey);
-        console.log("🔍 Is Part Number Search:", isPartNumberSearch);
-        console.log("🔍 Is Aggregate/SubAggregate Search:", isAggregateSearch);
-
-        let response;
-        if (isPartNumberSearch) {
-          // Search by part number
-          console.log("➡️ Calling fetchPartsListByPartNumber with:", searchKey);
-          response = await fetchPartsListByPartNumber(searchKey);
-        } else if (isAggregateSearch) {
-          // Search by aggregate or subAggregate with batch loading
-          console.log("➡️ Searching by Aggregate/SubAggregate with batch loading:", searchKey);
-          const normalizedKey = searchKey.toUpperCase();
-          
-          const BATCH_SIZE = 100000; // Fetch 1000 items per batch
-          const MAX_BATCHES = 100; // Support up to 300k products
-          let allMyTvsProducts = [];
-          let allOtherProducts = [];
-          let totalMyTvsCount = 0;
-          let totalOtherCount = 0;
-          
-          // Try searching as aggregate first
-          console.log("📤 Trying Aggregate search with batch loading...");
-          
-          for (let batchIndex = 0; batchIndex < MAX_BATCHES; batchIndex++) {
-            const offset = batchIndex * BATCH_SIZE;
-            
-            console.log(`📦 Fetching batch ${batchIndex + 1} (offset: ${offset})`);
-            
-            // Fetch myTVS batch
-            const myTvsRequestBody = {
-              brandPriority: null,
-              limit: BATCH_SIZE,
-              offset: offset,
-              sortOrder: "ASC",
-              fieldOrder: null,
-              customerCode: "0046",
-              partNumber: null,
-              model: null,
-              brand: "mytvs",
-              subAggregate: null,
-              aggregate: normalizedKey,
-              make: null,
-              variant: null,
-              fuelType: null,
-              vehicle: null,
-              year: null,
-            };
-            
-            // Fetch other brands batch
-            const otherBrandsRequestBody = {
-              ...myTvsRequestBody,
-              brand: null,
-            };
-            
-            try {
-              const [myTvsResponse, otherBrandsResponse] = await Promise.all([
-                partsListAPI(myTvsRequestBody),
-                partsListAPI(otherBrandsRequestBody),
-              ]);
-              
-              const myTvsBatchData = myTvsResponse?.data || [];
-              const otherBrandsBatchData = (otherBrandsResponse?.data || []).filter(
-                (item) => item.brandName?.toUpperCase() !== "MYTVS"
-              );
-              
-              // Store counts from first batch
-              if (batchIndex === 0) {
-                totalMyTvsCount = myTvsResponse?.count || 0;
-                totalOtherCount = otherBrandsResponse?.count || 0;
-                console.log(`📊 Total myTVS Products: ${totalMyTvsCount}`);
-                console.log(`📊 Total Other Brands Products: ${totalOtherCount}`);
-              }
-              
-              allMyTvsProducts = [...allMyTvsProducts, ...myTvsBatchData];
-              allOtherProducts = [...allOtherProducts, ...otherBrandsBatchData];
-              
-              console.log(`✅ Batch ${batchIndex + 1}: Fetched myTVS=${myTvsBatchData.length}, Others=${otherBrandsBatchData.length}`);
-              console.log(`📈 Running Total: myTVS=${allMyTvsProducts.length}/${totalMyTvsCount}, Others=${allOtherProducts.length}/${totalOtherCount}`);
-              
-              // Stop if both batches are empty (no more data from API)
-              if (myTvsBatchData.length === 0 && otherBrandsBatchData.length === 0) {
-                console.log("✅ All batches completed - no more data from API");
-                break;
-              }
-              
-              // Stop if we've fetched all products (running total >= API count)
-              if (allMyTvsProducts.length >= totalMyTvsCount && allOtherProducts.length >= totalOtherCount) {
-                console.log(`✅ All products fetched: myTVS ${allMyTvsProducts.length}/${totalMyTvsCount}, Others ${allOtherProducts.length}/${totalOtherCount}`);
-                break;
-              }
-              
-              // Update UI progressively every 3 batches
-              if ((batchIndex + 1) % 3 === 0 || batchIndex === 0) {
-                const currentMyTvs = allMyTvsProducts.map((part, index) => ({
-                  id: index + 1,
-                  brand: part.brandName || "Unknown",
-                  partNo: part.partNumber,
-                  description: part.itemDescription,
-                  price: parseFloat(part.listPrice) || 0,
-                  mrp: parseFloat(part.mrp) || 0,
-                  eta: "1-2 Days",
-                  stock: "In stock",
-                  vehicles: 12,
-                  imageUrl: NoImage,
-                  lineCode: part.lineCode,
-                  hsnCode: part.hsnCode,
-                  aggregate: part.aggregate,
-                  subAggregate: part.subAggregate,
-                  taxPercent: part.taxpercent,
-                }));
-                
-                const currentOthers = allOtherProducts.map((part, index) => ({
-                  id: index + 1 + currentMyTvs.length,
-                  brand: part.brandName || "Unknown",
-                  partNo: part.partNumber,
-                  description: part.itemDescription,
-                  price: parseFloat(part.listPrice) || 0,
-                  mrp: parseFloat(part.mrp) || 0,
-                  eta: "1-2 Days",
-                  stock: "In stock",
-                  vehicles: 12,
-                  imageUrl: NoImage,
-                  lineCode: part.lineCode,
-                  hsnCode: part.hsnCode,
-                  aggregate: part.aggregate,
-                  subAggregate: part.subAggregate,
-                  taxPercent: part.taxpercent,
-                }));
-                
-                setRecommendedProducts(currentMyTvs);
-                setOtherBrandProducts(currentOthers);
-                setTotalPartsCount(totalMyTvsCount + totalOtherCount);
-                console.log(`🔄 Progressive update: Displaying ${currentMyTvs.length} myTVS + ${currentOthers.length} others`);
-              }
-              
-            } catch (batchError) {
-              console.error(`❌ Error fetching batch ${batchIndex + 1}:`, batchError);
-              // Continue with next batch
-            }
-          }
-          
-          // If no results from aggregate, try subAggregate
-          if (allMyTvsProducts.length === 0 && allOtherProducts.length === 0) {
-            console.log("⚠️ No results for Aggregate, trying SubAggregate...");
-            // Reset and try with subAggregate (same batch logic)
-            // For simplicity, using same structure
-            const subAggRequestBody = {
-              brandPriority: null,
-              limit: 5000,
-              offset: 0,
-              sortOrder: "ASC",
-              fieldOrder: null,
-              customerCode: "0046",
-              partNumber: null,
-              model: null,
-              brand: null,
-              subAggregate: normalizedKey,
-              aggregate: null,
-              make: null,
-              variant: null,
-              fuelType: null,
-              vehicle: null,
-              year: null,
-            };
-            response = await partsListAPI(subAggRequestBody);
-          } else {
-            // Batch loading completed - products already transformed and set
-            // Final update with all fetched products
-            const finalMyTvs = allMyTvsProducts.map((part, index) => ({
-              id: index + 1,
-              brand: part.brandName || "Unknown",
-              partNo: part.partNumber,
-              description: part.itemDescription,
-              price: parseFloat(part.listPrice) || 0,
-              mrp: parseFloat(part.mrp) || 0,
-              eta: "1-2 Days",
-              stock: "In stock",
-              vehicles: 12,
-              imageUrl: NoImage,
-              lineCode: part.lineCode,
-              hsnCode: part.hsnCode,
-              aggregate: part.aggregate,
-              subAggregate: part.subAggregate,
-              taxPercent: part.taxpercent,
-            }));
-            
-            const finalOthers = allOtherProducts.map((part, index) => ({
-              id: index + 1 + finalMyTvs.length,
-              brand: part.brandName || "Unknown",
-              partNo: part.partNumber,
-              description: part.itemDescription,
-              price: parseFloat(part.listPrice) || 0,
-              mrp: parseFloat(part.mrp) || 0,
-              eta: "1-2 Days",
-              stock: "In stock",
-              vehicles: 12,
-              imageUrl: NoImage,
-              lineCode: part.lineCode,
-              hsnCode: part.hsnCode,
-              aggregate: part.aggregate,
-              subAggregate: part.subAggregate,
-              taxPercent: part.taxpercent,
-            }));
-            
-            console.log(`✅ Final myTVS Products: ${finalMyTvs.length}`);
-            console.log(`✅ Final Other Products: ${finalOthers.length}`);
-            console.log(`✅ Total Fetched: ${finalMyTvs.length + finalOthers.length}`);
-            console.log(`✅ Expected Total: ${totalMyTvsCount + totalOtherCount}`);
-            
-            // Validate counts
-            if (finalMyTvs.length + finalOthers.length !== totalMyTvsCount + totalOtherCount) {
-              console.warn(`⚠️ Count mismatch! Fetched: ${finalMyTvs.length + finalOthers.length}, Expected: ${totalMyTvsCount + totalOtherCount}`);
-            } else {
-              console.log(`✅ Count validation passed: ${finalMyTvs.length + finalOthers.length} = ${totalMyTvsCount + totalOtherCount}`);
-            }
-            
-            setRecommendedProducts(finalMyTvs);
-            setOtherBrandProducts(finalOthers);
-            setOriginalRecommendedProducts(finalMyTvs);
-            setOriginalOtherBrandProducts(finalOthers);
-            setTotalPartsCount(totalMyTvsCount + totalOtherCount);
-            setLoading(false);
-            
-            // Fetch stock and vehicle counts
-            const allTransformed = [...finalMyTvs, ...finalOthers];
-            fetchStockForProducts(allTransformed);
-            fetchVehicleCountsForProducts(allTransformed);
-            
-            // Skip the standard transformation logic below
-            return;
-          }
-          
-          console.log("✅ Aggregate/SubAggregate search completed, total found:", response?.data?.length || 0, "items");
-        } else {
-          // Search by item name/description
-          console.log("➡️ Calling fetchPartsListByItemName with:", searchKey);
-          response = await fetchPartsListByItemName(searchKey);
+        if (partNumbers.length === 0) {
+          console.log("⚠️ No part numbers available for variants fetch");
+          return;
         }
 
-        console.log("✅ API Response:", response);
-        const partsData = response?.data || [];
-        const totalCount = response?.count || partsData.length;
-        console.log("📦 Parts Data Count:", partsData.length);
-        console.log("📊 Total Count from API:", totalCount);
-        
-        // Store the total count
-        setTotalPartsCount(totalCount);
+        const response = await vehicleListAPI({
+          partNumber: partNumbers.length > 0 ? partNumbers : null,
+          customerCode: "0046",
+          limit: 1000,
+          offset: 0,
+          sortOrder: "ASC",
+          brand: null,
+          aggregate: null,
+          subAggregate: null,
+          make: selectedMake,
+          model: selectedModel,
+          variant: null,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        });
 
-        // Transform API data to match component structure
-        const transformedParts = partsData.map((part, index) => ({
-          id: index + 1,
-          brand: part.brandName || "Unknown",
-          partNo: part.partNumber,
-          description: part.itemDescription,
-          price: parseFloat(part.listPrice) || 0,
-          mrp: parseFloat(part.mrp) || 0,
-          eta: "1-2 Days",
-          stock: "In stock",
-          vehicles: 12, // Default value, update if API provides this
-          imageUrl: NoImage,
-          lineCode: part.lineCode,
-          hsnCode: part.hsnCode,
-          aggregate: part.aggregate,
-          subAggregate: part.subAggregate,
-          taxPercent: part.taxpercent,
-        }));
+        if (response?.data && response.data.length > 0) {
+          const variants = new Set();
+          response.data.forEach((vehicle) => {
+            if (vehicle.variant) variants.add(vehicle.variant);
+          });
 
-        console.log("🔄 Transformed Parts:", transformedParts);
-
-        // Separate myTVS and other brands
-        const myTvsProducts = transformedParts.filter(
-          (item) => item.brand.toUpperCase() === "MYTVS",
-        );
-        const otherProducts = transformedParts.filter(
-          (item) => item.brand.toUpperCase() !== "MYTVS",
-        );
-
-        console.log("✅ myTVS Products:", myTvsProducts.length);
-        console.log("✅ Other Brand Products:", otherProducts.length);
-        console.log("📋 Other Products Details:", otherProducts);
-
-        setRecommendedProducts(myTvsProducts);
-        setOtherBrandProducts(otherProducts);
-        // Store original products for reset functionality
-        setOriginalRecommendedProducts(myTvsProducts);
-        setOriginalOtherBrandProducts(otherProducts);
-        
-        // Hide loading immediately after products are set
-        setLoading(false);
-
-        // Fetch stock data and vehicle counts in background (non-blocking)
-        fetchStockForProducts(transformedParts);
-        fetchVehicleCountsForProducts(transformedParts);
-
-      } catch (err) {
-        console.error("Error fetching parts data:", err);
-        setError("Failed to load parts. Please try again.");
-        setRecommendedProducts([]);
-        setOtherBrandProducts([]);
-        setLoading(false);
-      }
-    };
-
-    fetchPartsData();
-  }, [searchKey]);
-
-  // Fetch vehicle compatibility data
-  useEffect(() => {
-    const fetchVehicleData = async () => {
-      if (!searchKey) {
-        setVehicleCompatibilityList([]);
-        setVehicleCount(0);
-        return;
-      }
-
-      try {
-        const response = await fetchVehicleListByPartNumber(searchKey, 100);
-        const vehicles = response?.data || [];
-        setVehicleCompatibilityList(vehicles);
-        setVehicleCount(response?.count || vehicles.length);
-      } catch (err) {
-        console.error("Error fetching vehicle compatibility:", err);
-        setVehicleCompatibilityList([]);
-        setVehicleCount(0);
-      }
-    };
-
-    fetchVehicleData();
-  }, [searchKey]);
-
-  // Fetch all vehicles for filter dropdowns
-  useEffect(() => {
-    const fetchAllVehicles = async () => {
-      if (!searchKey) {
-        setVehicleList([]);
-        return;
-      }
-
-      try {
-        // Detect search type
-        const isPartNumberSearch = isPartNumber(searchKey.replace(/\s+/g, ""));
-        const isAggregateSearch = !isPartNumberSearch && isAggregateOrSubAggregate(searchKey);
-        
-        console.log("🚗 Fetching vehicles for filters...");
-        console.log("🔍 Search Type:", isAggregateSearch ? "Aggregate/SubAggregate" : "Part Number");
-
-        let requestBody;
-        
-        if (isAggregateSearch) {
-          // For aggregate/subAggregate search, use aggregate/subAggregate filter
-          const normalizedKey = searchKey.toUpperCase();
+          setVehicleOptions(prev => ({
+            ...prev,
+            variants: Array.from(variants).sort(),
+            fuelTypes: [],
+            years: [],
+          }));
           
-          requestBody = {
-            limit: 100000, // Get all vehicles
-            offset: 0,
-            sortOrder: "ASC",
-            customerCode: "0046",
-            brand: null,
-            partNumber: null,
-            aggregate: normalizedKey,
-            subAggregate: null,
-            make: null,
-            model: null,
-            variant: null,
-            fuelType: null,
-            vehicle: null,
-            year: null,
-          };
-          
-          console.log("📤 Vehicle list request (Aggregate):", requestBody);
+          console.log("✅ Variants loaded:", variants.size, Array.from(variants));
         } else {
-          // For part number search, use partNumber filter
-          requestBody = {
-            limit: 100000, // Get all vehicles
+          console.log("⚠️ No vehicle data returned from API for variants");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching variants:", error);
+      }
+    };
+
+    fetchVariants();
+  }, [selectedModel, selectedMake, recommendedProducts, otherBrandProducts]);
+
+  // Fetch fuel types when variant is selected
+  useEffect(() => {
+    const fetchFuelTypes = async () => {
+      if (!selectedMake || !selectedModel || !selectedVariant) {
+        setVehicleOptions(prev => ({
+          ...prev,
+          fuelTypes: [],
+          years: [],
+        }));
+        return;
+      }
+
+      try {
+        console.log("🔍 Fetching fuel types for variant:", selectedVariant);
+        
+        const partNumbers = [...new Set([...recommendedProducts, ...otherBrandProducts].map(p => p.partNumber).filter(Boolean))];
+
+        if (partNumbers.length === 0) {
+          console.log("⚠️ No part numbers available for fuel types fetch");
+          return;
+        }
+
+        const response = await vehicleListAPI({
+          partNumber: partNumbers.length > 0 ? partNumbers : null,
+          customerCode: "0046",
+          limit: 1000,
+          offset: 0,
+          sortOrder: "ASC",
+          brand: null,
+          aggregate: null,
+          subAggregate: null,
+          make: selectedMake,
+          model: selectedModel,
+          variant: selectedVariant,
+          fuelType: null,
+          vehicle: null,
+          year: null,
+        });
+
+        if (response?.data && response.data.length > 0) {
+          const fuelTypes = new Set();
+          response.data.forEach((vehicle) => {
+            if (vehicle.fuelType) fuelTypes.add(vehicle.fuelType);
+          });
+
+          setVehicleOptions(prev => ({
+            ...prev,
+            fuelTypes: Array.from(fuelTypes).sort(),
+            years: [],
+          }));
+          
+          console.log("✅ Fuel types loaded:", fuelTypes.size, Array.from(fuelTypes));
+        } else {
+          console.log("⚠️ No vehicle data returned from API for fuel types");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching fuel types:", error);
+      }
+    };
+
+    fetchFuelTypes();
+  }, [selectedVariant, selectedModel, selectedMake, recommendedProducts, otherBrandProducts]);
+
+  // Fetch years when fuel type is selected
+  useEffect(() => {
+    const fetchYears = async () => {
+      if (!selectedMake || !selectedModel || !selectedVariant || !selectedFuel) {
+        setVehicleOptions(prev => ({
+          ...prev,
+          years: [],
+        }));
+        return;
+      }
+
+      try {
+        console.log("🔍 Fetching years for fuel type:", selectedFuel);
+        
+        const partNumbers = [...new Set([...recommendedProducts, ...otherBrandProducts].map(p => p.partNumber).filter(Boolean))];
+
+        if (partNumbers.length === 0) {
+          console.log("⚠️ No part numbers available for years fetch");
+          return;
+        }
+
+        const response = await vehicleListAPI({
+          partNumber: partNumbers.length > 0 ? partNumbers : null,
+          customerCode: "0046",
+          limit: 1000,
+          offset: 0,
+          sortOrder: "ASC",
+          brand: null,
+          aggregate: null,
+          subAggregate: null,
+          make: selectedMake,
+          model: selectedModel,
+          variant: selectedVariant,
+          fuelType: selectedFuel,
+          vehicle: null,
+          year: null,
+        });
+
+        if (response?.data && response.data.length > 0) {
+          const years = new Set();
+          response.data.forEach((vehicle) => {
+            // Extract year from "2013 to 2013" format
+            const yearMatch = vehicle.year?.match(/^(\d{4})/);
+            if (yearMatch) {
+              years.add(yearMatch[1]);
+            }
+          });
+
+          setVehicleOptions(prev => ({
+            ...prev,
+            years: Array.from(years).sort((a, b) => b - a),
+          }));
+          
+          console.log("✅ Years loaded:", years.size, Array.from(years));
+        } else {
+          console.log("⚠️ No vehicle data returned from API for years");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching years:", error);
+      }
+    };
+
+    fetchYears();
+  }, [selectedFuel, selectedVariant, selectedModel, selectedMake, recommendedProducts, otherBrandProducts]);
+
+  // Fetch stock status for products
+  const fetchStockStatus = async (products) => {
+    try {
+      const partNumbers = products.map(p => p.partNumber).filter(Boolean);
+      if (partNumbers.length === 0) return products;
+
+      const stockResponse = await stockListAPI({ 
+        partNumbers,
+        customerCode: "0046"
+      });
+      const stockMap = {};
+      
+      if (stockResponse?.data) {
+        // Group by partNumber and calculate total quantity
+        stockResponse.data.forEach(item => {
+          const partNum = item.partNumber;
+          if (!stockMap[partNum]) {
+            stockMap[partNum] = { totalQty: 0, items: [] };
+          }
+          stockMap[partNum].totalQty += (item.qty || 0);
+          stockMap[partNum].items.push(item);
+        });
+      }
+
+      return products.map(product => {
+        const stockInfo = stockMap[product.partNumber];
+        let stockStatus = "Out of Stock";
+        
+        if (stockInfo && stockInfo.totalQty > 0) {
+          stockStatus = "In Stock";
+        }
+        
+        return {
+          ...product,
+          stockStatus,
+          stockQuantity: stockInfo?.totalQty || 0,
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching stock:", error);
+      return products;
+    }
+  };
+
+  // Fetch vehicle count for products
+  const fetchVehicleCount = async (products) => {
+    try {
+      const BATCH_SIZE = 50;
+      const batches = [];
+      
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        batches.push(products.slice(i, i + BATCH_SIZE));
+      }
+
+      const updatedProducts = [...products];
+      
+      for (const batch of batches) {
+        const partNumbers = batch.map(p => p.partNumber).filter(Boolean);
+        if (partNumbers.length === 0) continue;
+
+        try {
+          const vehicleResponse = await vehicleListAPI({ 
+            partNumber: partNumbers.length > 0 ? partNumbers : null,
+            customerCode: "0046",
+            limit: 10,
             offset: 0,
             sortOrder: "ASC",
-            customerCode: "0046",
             brand: null,
-            partNumber: [searchKey],
             aggregate: null,
             subAggregate: null,
             make: null,
@@ -1252,23 +872,538 @@ const applyCompatibilityFilter = async () => {
             fuelType: null,
             vehicle: null,
             year: null,
-          };
+          });
+          const vehicleCountMap = {};
           
-          console.log("📤 Vehicle list request (Part Number):", requestBody);
+          if (vehicleResponse?.data) {
+            vehicleResponse.data.forEach(item => {
+              vehicleCountMap[item.partNumber] = item.vehicleCount || 0;
+            });
+          }
+
+          batch.forEach(product => {
+            const index = updatedProducts.findIndex(p => p.partNumber === product.partNumber);
+            if (index !== -1) {
+              updatedProducts[index].compatibleVehicles = vehicleCountMap[product.partNumber] || 0;
+            }
+          });
+        } catch (error) {
+          console.error("Error fetching vehicle count for batch:", error);
+        }
+      }
+
+      return updatedProducts;
+    } catch (error) {
+      console.error("Error in fetchVehicleCount:", error);
+      return products;
+    }
+  };
+
+  // Fetch products using Unified Search API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      if (!searchKey) {
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+        setAlignedProducts([]);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      setBatchLoadingProgress(null);
+
+      try {
+        // Build complete search query with year if available and not already in query
+        let finalSearchQuery = searchKey;
+        
+        // Add year if available and not in query
+        if (initialVehicle.year && !finalSearchQuery.includes(initialVehicle.year.toString())) {
+          finalSearchQuery = `${finalSearchQuery} ${initialVehicle.year}`;
+          console.log("📝 Added year to search query:", finalSearchQuery);
+        }
+        
+        console.log("🔍 Fetching products using Unified Search API for:", finalSearchQuery);
+        console.log("🚗 Initial vehicle context:", initialVehicle);
+        
+        // Build vehicle context if available from navigation state
+        const vehicleContext = {};
+        if (initialVehicle.make) vehicleContext.make = initialVehicle.make;
+        if (initialVehicle.model) vehicleContext.model = initialVehicle.model;
+        
+        // Send variant as-is - let API validation handle it
+        // If API rejects it, we'll use the suggestions in the retry logic
+        if (initialVehicle.variant) {
+          vehicleContext.variant = initialVehicle.variant;
+        }
+        
+        if (initialVehicle.fuelType) vehicleContext.fuelType = initialVehicle.fuelType;
+        if (initialVehicle.year) vehicleContext.year = initialVehicle.year;
+        
+        // Use Unified Search API (max limit is 50)
+        const requestBody = {
+          query: finalSearchQuery,
+          sources: ["tvs"],
+          limitPerPart: 50
+        };
+        
+        // Add vehicle context if we have at least make and model
+        // API will validate and provide suggestions if variant format is wrong
+        if (vehicleContext.make && vehicleContext.model) {
+          requestBody.vehicle = vehicleContext;
+          console.log("📡 Searching with vehicle context:", vehicleContext);
+        } else {
+          console.log("⚠️ Incomplete vehicle context, letting API extract from query");
+          console.log("   Partial context:", vehicleContext);
+        }
+        
+        const response = await partsmartTextSearchAPI(requestBody);
+
+        console.log("✅ Unified Search response:", response);
+        
+        // Check for incomplete extraction - show modal to collect missing fields
+        if (response?.summary?.status === 'incomplete_extraction') {
+          console.log("⚠️ Incomplete extraction detected");
+          console.log("   Extracted fields:", response.summary.extracted_fields);
+          console.log("   Missing fields:", response.summary.missing_fields);
+          
+          setVehicleModal({
+            isOpen: true,
+            searchQuery: finalSearchQuery,
+            missingFields: response.summary.missing_fields || [],
+            extractedFields: response.summary.extracted_fields || {},
+          });
+          
+          setLoading(false);
+          return;
         }
 
-        const response = await vehicleListAPI(requestBody);
-        const vehicles = response?.data || [];
-        console.log("✅ Fetched vehicles for filters:", vehicles.length);
-        setVehicleList(vehicles);
+        // Check for validation errors and retry with NLP only (no vehicle object)
+        if (response?.summary?.status === 'error' && response?.error?.code === 'VALIDATION_ERROR') {
+          console.warn("⚠️ API validation error:", response.error.message);
+          console.log("🔄 Retrying search with NLP only (no vehicle object)");
+          
+          // Build a natural language query with all vehicle info
+          const vehicleContext = requestBody.vehicle || {};
+          const nlpQuery = `${finalSearchQuery} ${vehicleContext.make || ''} ${vehicleContext.model || ''} ${vehicleContext.variant || ''} ${vehicleContext.fuelType || ''} ${vehicleContext.year || ''}`.trim();
+          
+          console.log("📝 NLP Query:", nlpQuery);
+          
+          // Retry search with just the query - let NLP extract vehicle info
+          const retryResponse = await partsmartTextSearchAPI({
+            query: nlpQuery,
+            sources: ['tvs'],
+            limitPerPart: 10
+          });
+          
+          console.log("✅ Retry search result (NLP only):", retryResponse);
+          
+          if (retryResponse?.data?.tvs) {
+            console.log("✅ Retry successful with NLP only");
+            processSearchResponse(retryResponse, finalSearchQuery);
+            return;
+          }
+        }
+
+        if (!response?.data?.tvs) {
+          setError("No products found for this search.");
+          setRecommendedProducts([]);
+          setOtherBrandProducts([]);
+          setAlignedProducts([]);
+          setLoading(false);
+          return;
+        }
+
+        // Process successful response
+        processSearchResponse(response, finalSearchQuery);
       } catch (err) {
-        console.error("❌ Error fetching vehicles for filters:", err);
-        setVehicleList([]);
+        console.error("❌ Error fetching products:", err);
+        setError("Failed to load products. Please try again.");
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+        setAlignedProducts([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchAllVehicles();
+    // Helper function to process search response
+    const processSearchResponse = async (response, searchQuery = null) => {
+      // Transform Unified Search API response to product format
+      let allProducts = [];
+      const productVehicleMap = {}; // Store vehicles for each part number
+      
+      Object.entries(response.data.tvs).forEach(([partKey, parts]) => {
+        if (Array.isArray(parts)) {
+          // Collect all unique vehicles for this part
+          const vehiclesForPart = [];
+          const uniqueVehicles = new Set();
+          
+          parts.forEach((part) => {
+            const vehicleKey = `${part.vehicleMake}_${part.vehicleModel}_${part.vehicleVariant}_${part.vehicleFuelType}_${part.vehicleFromYear}`;
+            if (!uniqueVehicles.has(vehicleKey)) {
+              uniqueVehicles.add(vehicleKey);
+              vehiclesForPart.push({
+                vehicleMake: part.vehicleMake,
+                vehicleModel: part.vehicleModel,
+                vehicleVariant: part.vehicleVariant,
+                vehicleFuelType: part.vehicleFuelType,
+                vehicleFromYear: part.vehicleFromYear,
+                vehicleToYear: part.vehicleToYear,
+              });
+            }
+          });
+
+          parts.forEach((part) => {
+            const partNum = part.partNumber || part.part_number;
+            
+            // Store vehicles for this part number
+            if (!productVehicleMap[partNum]) {
+              productVehicleMap[partNum] = vehiclesForPart;
+            }
+            
+            allProducts.push({
+              id: part.id || partNum,
+              partNumber: partNum,
+              brandName: part.brandName || part.brand,
+              name: part.name || part.title || part.description,
+              itemDescription: part.description || part.partDescription,
+              listPrice: part.listPrice || part.list_price,
+              mrp: part.mrp,
+              imageUrl: part.image_url || NoImage,
+              vehicleMake: part.vehicleMake || part.vehicle_make,
+              vehicleModel: part.vehicleModel || part.vehicle_model,
+              vehicleVariant: part.vehicleVariant || part.vehicle_variant,
+              vehicleFuelType: part.vehicleFuelType || part.vehicle_fuel_type || part.fuelType,
+              vehicleFromYear: part.vehicleFromYear || part.vehicle_from_year || part.year,
+              vehicleToYear: part.vehicleToYear || part.vehicle_to_year,
+              aggregate: part.aggregate || part.category,
+              subAggregate: part.subAggregate || part.subcategory,
+              compatibleVehicles: uniqueVehicles.size,
+              vehicles: vehiclesForPart, // Store vehicles with the product
+            });
+          });
+        }
+      });
+
+      const totalCount = allProducts.length;
+      setTotalPartsCount(totalCount);
+
+      // Fetch stock status for all products
+      allProducts = await fetchStockStatus(allProducts);
+
+      // Separate myTVS and other brands
+      const myTvsProducts = allProducts.filter(p => 
+        p.brandName?.toUpperCase() === "MYTVS"
+      );
+      const otherProducts = allProducts.filter(p => 
+        p.brandName?.toUpperCase() !== "MYTVS"
+      );
+
+      setRecommendedProducts(myTvsProducts);
+      setOtherBrandProducts(otherProducts);
+
+      // Update URL with vehicle context after successful search
+      updateURLParams(initialVehicle, searchQuery || originalSearchQuery);
+
+      // FETCH ALIGNED PRODUCTS (COMMENTED OUT - NOT NEEDED)
+      // await fetchAlignedProducts(searchKey);
+    };
+
+    fetchProducts();
   }, [searchKey]);
+
+  // Fetch aligned products using partRelationsAPI
+  const fetchAlignedProducts = async (partNumber) => {
+    try {
+      console.log("🔍 Fetching aligned products for:", partNumber);
+      
+      const response = await partRelationsAPI({ 
+        partNumber,
+        customerCode: "0046",
+        type: "aligned" // or "related" - check what the API expects
+      });
+      
+      if (!response?.data || response.data.length === 0) {
+        console.log("No aligned products found");
+        setAlignedProducts([]);
+        return;
+      }
+
+      let alignedParts = response.data;
+      
+      // Fetch stock status for aligned products (no vehicle count needed)
+      alignedParts = await fetchStockStatus(alignedParts);
+      
+      // Add default compatible vehicles count if not present
+      alignedParts = alignedParts.map(part => ({
+        ...part,
+        compatibleVehicles: part.compatibleVehicles || 0
+      }));
+      
+      setAlignedProducts(alignedParts);
+      console.log("✅ Aligned products loaded:", alignedParts.length);
+      
+    } catch (error) {
+      console.error("❌ Error fetching aligned products:", error);
+      setAlignedProducts([]);
+    }
+  };
+
+  // Apply compatibility filter
+  const applyCompatibilityFilter = async () => {
+    if (!selectedMake && !selectedModel && !selectedVariant && !selectedFuel && !selectedYear) {
+      console.log("❌ No filters selected");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Applying filter:", {
+        make: selectedMake,
+        model: selectedModel,
+        variant: selectedVariant,
+        fuel: selectedFuel,
+        year: selectedYear,
+      });
+
+      // Build vehicle context for Unified Search API
+      const vehicleContext = {};
+      if (selectedMake) vehicleContext.make = selectedMake;
+      if (selectedModel) vehicleContext.model = selectedModel;
+      if (selectedVariant) vehicleContext.variant = selectedVariant;
+      if (selectedFuel) vehicleContext.fuelType = selectedFuel;
+      if (selectedYear) vehicleContext.year = parseInt(selectedYear);
+
+      // Use Unified Search API with vehicle context (max limit is 50)
+      const response = await partsmartTextSearchAPI({
+        search_type: "text",
+        query: searchKey,
+        vehicle: vehicleContext,
+        sources: ["tvs"],
+        limit: 50
+      });
+
+      if (!response?.data?.tvs) {
+        setError("No products found matching the selected filters.");
+        setRecommendedProducts([]);
+        setOtherBrandProducts([]);
+        setLoading(false);
+        return;
+      }
+
+      // Transform response
+      let filteredProducts = [];
+      Object.entries(response.data.tvs).forEach(([partKey, parts]) => {
+        if (Array.isArray(parts)) {
+          // Count unique vehicles for this part group
+          const uniqueVehicles = new Set();
+          parts.forEach((part) => {
+            const vehicleKey = `${part.vehicleMake}_${part.vehicleModel}_${part.vehicleVariant}_${part.vehicleFuelType}_${part.vehicleFromYear}`;
+            uniqueVehicles.add(vehicleKey);
+          });
+
+          parts.forEach((part) => {
+            filteredProducts.push({
+              id: part.id || part.partNumber,
+              partNumber: part.partNumber || part.part_number,
+              brandName: part.brandName || part.brand,
+              name: part.name || part.title || part.description,
+              itemDescription: part.description || part.partDescription,
+              listPrice: part.listPrice || part.list_price,
+              mrp: part.mrp,
+              imageUrl: part.image_url || NoImage,
+              vehicleMake: part.vehicleMake || part.vehicle_make,
+              vehicleModel: part.vehicleModel || part.vehicle_model,
+              vehicleVariant: part.vehicleVariant || part.vehicle_variant,
+              vehicleFuelType: part.vehicleFuelType || part.vehicle_fuel_type || part.fuelType,
+              vehicleFromYear: part.vehicleFromYear || part.vehicle_from_year || part.year,
+              vehicleToYear: part.vehicleToYear || part.vehicle_to_year,
+              aggregate: part.aggregate || part.category,
+              subAggregate: part.subAggregate || part.subcategory,
+              compatibleVehicles: uniqueVehicles.size,
+            });
+          });
+        }
+      });
+      
+      // Fetch stock status only
+      filteredProducts = await fetchStockStatus(filteredProducts);
+
+      // Separate myTVS and other brands
+      const myTvsProducts = filteredProducts.filter(p => 
+        p.brandName?.toUpperCase() === "MYTVS"
+      );
+      const otherProducts = filteredProducts.filter(p => 
+        p.brandName?.toUpperCase() !== "MYTVS"
+      );
+
+      setRecommendedProducts(myTvsProducts);
+      setOtherBrandProducts(otherProducts);
+      setTotalPartsCount(filteredProducts.length);
+
+    } catch (err) {
+      console.error("❌ Error applying filter:", err);
+      setError("Failed to apply filter. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle vehicle selection from compatibility modal
+  const handleVehicleSelection = async (vehicle) => {
+    console.log("🚗 Vehicle selected:", vehicle);
+    
+    const make = vehicle.vehicleMake || vehicle.make;
+    const model = vehicle.vehicleModel || vehicle.model;
+    const variant = vehicle.vehicleVariant || vehicle.variant;
+    const fuelType = vehicle.vehicleFuelType || vehicle.fuelType;
+    const year = vehicle.vehicleFromYear || vehicle.year;
+
+    setSelectedMake(make || "");
+    setSelectedModel(model || "");
+    setSelectedVariant(variant || "");
+    setSelectedFuel(fuelType || "");
+    setSelectedYear(year ? year.toString() : "");
+
+    // Apply filter with selected vehicle
+    setLoading(true);
+    try {
+      // Build vehicle context for Unified Search API
+      const vehicleContext = {};
+      if (make) vehicleContext.make = make;
+      if (model) vehicleContext.model = model;
+      if (variant) vehicleContext.variant = variant;
+      if (fuelType) vehicleContext.fuelType = fuelType;
+      if (year) vehicleContext.year = parseInt(year);
+
+      // Use Unified Search API with vehicle context (max limit is 50)
+      const response = await partsmartTextSearchAPI({
+        search_type: "text",
+        query: searchKey,
+        vehicle: vehicleContext,
+        sources: ["tvs"],
+        limit: 50
+      });
+
+      if (response?.data?.tvs) {
+        // Transform response
+        let filteredProducts = [];
+        Object.entries(response.data.tvs).forEach(([partKey, parts]) => {
+          if (Array.isArray(parts)) {
+            // Count unique vehicles for this part group
+            const uniqueVehicles = new Set();
+            parts.forEach((part) => {
+              const vehicleKey = `${part.vehicleMake}_${part.vehicleModel}_${part.vehicleVariant}_${part.vehicleFuelType}_${part.vehicleFromYear}`;
+              uniqueVehicles.add(vehicleKey);
+            });
+
+            parts.forEach((part) => {
+              filteredProducts.push({
+                id: part.id || part.partNumber,
+                partNumber: part.partNumber || part.part_number,
+                brandName: part.brandName || part.brand,
+                name: part.name || part.title || part.description,
+                itemDescription: part.description || part.partDescription,
+                listPrice: part.listPrice || part.list_price,
+                mrp: part.mrp,
+                imageUrl: part.image_url || NoImage,
+                vehicleMake: part.vehicleMake || part.vehicle_make,
+                vehicleModel: part.vehicleModel || part.vehicle_model,
+                vehicleVariant: part.vehicleVariant || part.vehicle_variant,
+                vehicleFuelType: part.vehicleFuelType || part.vehicle_fuel_type || part.fuelType,
+                vehicleFromYear: part.vehicleFromYear || part.vehicle_from_year || part.year,
+                vehicleToYear: part.vehicleToYear || part.vehicle_to_year,
+                aggregate: part.aggregate || part.category,
+                subAggregate: part.subAggregate || part.subcategory,
+                compatibleVehicles: uniqueVehicles.size,
+              });
+            });
+          }
+        });
+        
+        filteredProducts = await fetchStockStatus(filteredProducts);
+
+        const myTvsProducts = filteredProducts.filter(p => 
+          p.brandName?.toUpperCase() === "MYTVS"
+        );
+        const otherProducts = filteredProducts.filter(p => 
+          p.brandName?.toUpperCase() !== "MYTVS"
+        );
+
+        setRecommendedProducts(myTvsProducts);
+        setOtherBrandProducts(otherProducts);
+        setTotalPartsCount(filteredProducts.length);
+      }
+
+    } catch (err) {
+      console.error("❌ Error filtering by vehicle:", err);
+      setError("Failed to filter products.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setSelectedMake("");
+    setSelectedModel("");
+    setSelectedVariant("");
+    setSelectedFuel("");
+    setSelectedYear("");
+    setRightFilters({ year: "", fuelType: "", eta: "" });
+    
+    // Reload original results
+    window.location.reload();
+  };
+
+  // Apply right-side filters
+  const applyRightFilters = () => {
+    let filtered = [...recommendedProducts, ...otherBrandProducts];
+
+    if (rightFilters.year) {
+      filtered = filtered.filter(p => 
+        p.vehicleFromYear?.toString() === rightFilters.year
+      );
+    }
+
+    if (rightFilters.fuelType) {
+      filtered = filtered.filter(p => 
+        p.vehicleFuelType === rightFilters.fuelType
+      );
+    }
+
+    if (rightFilters.eta) {
+      // Apply ETA filter logic here
+    }
+
+    const myTvs = filtered.filter(p => p.brandName?.toUpperCase() === "MYTVS");
+    const others = filtered.filter(p => p.brandName?.toUpperCase() !== "MYTVS");
+
+    setRecommendedProducts(myTvs);
+    setOtherBrandProducts(others);
+  };
+
+  useEffect(() => {
+    if (rightFilters.year || rightFilters.fuelType || rightFilters.eta) {
+      applyRightFilters();
+    }
+  }, [rightFilters]);
+
+  // Build complete search key display with vehicle details
+  const getCompleteSearchKey = () => {
+    // Use the original search query if available, otherwise use searchKey
+    let displayKey = originalSearchQuery || searchKey;
+    
+    // Add year if available and not already in the query
+    if (initialVehicle.year && !displayKey.includes(initialVehicle.year.toString())) {
+      displayKey += " " + initialVehicle.year;
+    }
+    
+    return displayKey;
+  };
 
   return (
     <div className="pn-wrapper">
@@ -1276,10 +1411,15 @@ const applyCompatibilityFilter = async () => {
 
       <div className="pn-body">
         <div className="pn-search-key">
-          Search Key : <b>{searchKey}</b>
+          Search Key : <b>{getCompleteSearchKey()}</b>
           {totalPartsCount > 0 && (
             <span style={{ marginLeft: "10px" }}>
-              Compatible with <b >{totalPartsCount.toLocaleString()}</b> items
+              Compatible with <b>{totalPartsCount.toLocaleString()}</b> items
+            </span>
+          )}
+          {batchLoadingProgress && (
+            <span style={{ marginLeft: "10px", color: "#007bff" }}>
+              Loading: {batchLoadingProgress.current} / {batchLoadingProgress.total}
             </span>
           )}
         </div>
@@ -1290,40 +1430,86 @@ const applyCompatibilityFilter = async () => {
             <select 
               className="pn-control-dropdown"
               value={selectedMake}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const val = e.target.value;
                 setSelectedMake(val);
                 setSelectedModel("");
                 setSelectedVariant("");
                 setSelectedFuel("");
                 setSelectedYear("");
+                
+                // Fetch models from lookup API
+                if (val) {
+                  try {
+                    const apiService = (await import("../../../services/apiservice")).default;
+                    const response = await apiService.post('/partsmart/search', {
+                      search_type: "lookup",
+                      lookup_type: "vehicle",
+                      vehicle: { make: val },
+                      limit: 50
+                    });
+                    
+                    if (response?.data?.data?.models) {
+                      setVehicleOptions(prev => ({
+                        ...prev,
+                        models: response.data.data.models,
+                        variants: [],
+                        fuelTypes: [],
+                        years: []
+                      }));
+                    }
+                  } catch (error) {
+                    console.error("Error fetching models:", error);
+                  }
+                }
               }}
             >
               <option value="">Select Make</option>
-              {makes.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {vehicleOptions.makes.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
 
             <select 
               className="pn-control-dropdown"
               value={selectedModel}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const val = e.target.value;
                 setSelectedModel(val);
                 setSelectedVariant("");
                 setSelectedFuel("");
                 setSelectedYear("");
+                
+                // Fetch variants, fuel types, and years from lookup API
+                if (val && selectedMake) {
+                  try {
+                    const apiService = (await import("../../../services/apiservice")).default;
+                    const response = await apiService.post('/partsmart/search', {
+                      search_type: "lookup",
+                      lookup_type: "vehicle",
+                      vehicle: { make: selectedMake, model: val },
+                      limit: 50
+                    });
+                    
+                    const apiData = response?.data?.data || response?.data;
+                    if (apiData) {
+                      setVehicleOptions(prev => ({
+                        ...prev,
+                        variants: apiData.variants || [],
+                        fuelTypes: apiData.fuel_types || [],
+                        years: apiData.years?.map(y => y.toString()) || []
+                      }));
+                    }
+                  } catch (error) {
+                    console.error("Error fetching variants:", error);
+                  }
+                }
               }}
               disabled={!selectedMake}
             >
               <option value="">Select Model</option>
-              {models.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {vehicleOptions.models.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
 
@@ -1339,10 +1525,8 @@ const applyCompatibilityFilter = async () => {
               disabled={!selectedModel}
             >
               <option value="">Select Variant</option>
-              {variants.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {vehicleOptions.variants.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
 
@@ -1357,401 +1541,202 @@ const applyCompatibilityFilter = async () => {
               disabled={!selectedVariant}
             >
               <option value="">Select Fuel type</option>
-              {fuelTypes.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {vehicleOptions.fuelTypes.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
 
             <select 
               className="pn-control-dropdown"
               value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedYear(val);
+              }}
               disabled={!selectedFuel}
             >
               <option value="">Select Year</option>
-              {years.map((opt) => (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
+              {vehicleOptions.years.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
+
             <button
               className="pn-clear-btn"
-              onClick={() => {
-                console.log("🧹 Clearing filters...");
-                // Clear left filter selections
-                setSelectedMake("");
-                setSelectedModel("");
-                setSelectedVariant("");
-                setSelectedFuel("");
-                setSelectedYear("");
-                // Clear right filter selections
-                setRightFilters({
-                  year: "",
-                  fuelType: "",
-                  eta: "",
-                });
-                // Restore original products
-                setRecommendedProducts(originalRecommendedProducts);
-                setOtherBrandProducts(originalOtherBrandProducts);
-                console.log("✅ Filters cleared and products restored to original state");
-              }}
+              onClick={clearAllFilters}
             >
               X
             </button>
-            <button
-              className="pn-search-btn"
-              onClick={applyCompatibilityFilter}
-            >
+
+            <button className="pn-search-btn" onClick={applyCompatibilityFilter}>
               Search
             </button>
-
-
           </div>
 
           <div className="pn-right-filters">
-            <div
-              className="pn-filter-wrapper"
-              onClick={(e) => e.stopPropagation()}
+            <select
+              className="pn-control-dropdown"
+              value={rightFilters.year}
+              onChange={(e) => setRightFilters({ ...rightFilters, year: e.target.value })}
             >
-              <div
-                className="pn-filter-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenFilter(openFilter === "year" ? null : "year");
-                }}
-              >
-                <span>{rightFilters.year || "Year"}</span>
-                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
-              </div>
-{openFilter === "year" && (
-  <div
-    className="pn-filter-dropdown"
-    onClick={(e) => e.stopPropagation()}
-  >
-    {years.length ? (
-      years
-        .slice()
-        .sort((a, b) => b - a)
-        .map((option) => (
-          <div
-            key={option}
-            className="pn-filter-option"
-            onClick={(e) => {
-              e.stopPropagation();
-              setRightFilters((prev) => ({ ...prev, year: option }));
-              setOpenFilter(null);
-            }}
-          >
-            {option}
-          </div>
-        ))
-    ) : (
-      <div className="pn-filter-option">No years available</div>
-    )}
-  </div>
-)}
+              <option value="">Year</option>
+              {vehicleOptions.years.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
 
-            </div>
-
-            <div
-              className="pn-filter-wrapper"
-              onClick={(e) => e.stopPropagation()}
+            <select
+              className="pn-control-dropdown"
+              value={rightFilters.fuelType}
+              onChange={(e) => setRightFilters({ ...rightFilters, fuelType: e.target.value })}
             >
-              <div
-                className="pn-filter-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenFilter(openFilter === "fuelType" ? null : "fuelType");
-                }}
-              >
-                <span>{rightFilters.fuelType || "Fuel type"}</span>
-                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
-              </div>
-             {openFilter === "fuelType" && (
-  <div
-    className="pn-filter-dropdown"
-    onClick={(e) => e.stopPropagation()}
-  >
-    {fuelTypes.length ? (
-      fuelTypes.map((option) => (
-        <div
-          key={option}
-          className="pn-filter-option"
-          onClick={(e) => {
-            e.stopPropagation();
-            setRightFilters((prev) => ({
-              ...prev,
-              fuelType: option,
-            }));
-            setOpenFilter(null);
-          }}
-        >
-          {option}
-        </div>
-      ))
-    ) : (
-      <div className="pn-filter-option">No fuel types available</div>
-    )}
-  </div>
-)}
+              <option value="">Fuel Type</option>
+              {vehicleOptions.fuelTypes.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </select>
 
-            </div>
-
-            <div
-              className="pn-filter-wrapper"
-              onClick={(e) => e.stopPropagation()}
+            <select
+              className="pn-control-dropdown"
+              value={rightFilters.eta}
+              onChange={(e) => setRightFilters({ ...rightFilters, eta: e.target.value })}
             >
-              <div
-                className="pn-filter-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenFilter(openFilter === "eta" ? null : "eta");
-                }}
-              >
-                <span>{rightFilters.eta || "ETA"}</span>
-                <img src={getAsset('EXPAND DOWN', assets)} alt="" width="24" />
-              </div>
-              {openFilter === "eta" && (
-                <div
-                  className="pn-filter-dropdown"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {["Same Day", "1-2 Days", "3-5 Days"].map((option) => (
-                    <div
-                      key={option}
-                      className="pn-filter-option"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRightFilters((prev) => ({ ...prev, eta: option }));
-                        setOpenFilter(null);
-                      }}
-                    >
-                      {option}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+              <option value="">ETA</option>
+              <option value="1-2 Days">1-2 Days</option>
+              <option value="3-5 Days">3-5 Days</option>
+              <option value="1 Week">1 Week</option>
+            </select>
           </div>
         </div>
 
         {/* CONTENT */}
         <div className="pn-content">
-          {/* ================= LOADING ================= */}
-          {loading && (
-            <div className="pn-content">
-              <div className="pn-left">
-                <h3 className="pn-section-title">myTVS Recommended Products</h3>
-                <div className="pn-grid">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="skeleton-pn-card skeleton-card">
-                      <div className="skeleton-pn-card-row">
-                        <div className="skeleton skeleton-pn-image"></div>
-                        <div className="skeleton-pn-body">
-                          <div className="skeleton-pn-tags">
-                            <div className="skeleton skeleton-pn-tag"></div>
-                            <div className="skeleton skeleton-pn-tag"></div>
-                            <div className="skeleton skeleton-pn-tag"></div>
-                          </div>
-                          <div className="skeleton skeleton-pn-part-code"></div>
-                          <div className="skeleton skeleton-pn-name"></div>
-                          <div className="skeleton-pn-price-row">
-                            <div className="skeleton skeleton-pn-price"></div>
-                            <div className="skeleton skeleton-pn-mrp"></div>
-                          </div>
-                          <div className="skeleton-pn-actions">
-                            <div className="skeleton skeleton-pn-button"></div>
-                            <div className="skeleton skeleton-pn-compatible"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <h3 className="pn-section-title" style={{ marginTop: '32px' }}>Other Brand Products</h3>
-                <div className="pn-grid">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="skeleton-pn-card skeleton-card">
-                      <div className="skeleton-pn-card-row">
-                        <div className="skeleton skeleton-pn-image"></div>
-                        <div className="skeleton-pn-body">
-                          <div className="skeleton-pn-tags">
-                            <div className="skeleton skeleton-pn-tag"></div>
-                            <div className="skeleton skeleton-pn-tag"></div>
-                            <div className="skeleton skeleton-pn-tag"></div>
-                          </div>
-                          <div className="skeleton skeleton-pn-part-code"></div>
-                          <div className="skeleton skeleton-pn-name"></div>
-                          <div className="skeleton-pn-price-row">
-                            <div className="skeleton skeleton-pn-price"></div>
-                            <div className="skeleton skeleton-pn-mrp"></div>
-                          </div>
-                          <div className="skeleton-pn-actions">
-                            <div className="skeleton skeleton-pn-button"></div>
-                            <div className="skeleton skeleton-pn-compatible"></div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <h3 className="pn-section-title" style={{ marginTop: '32px' }}>Aligned Products</h3>
-                <div className="pn-aligned">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="skeleton-aligned-card skeleton-card">
-                      <div className="skeleton skeleton-aligned-image"></div>
-                      <div className="skeleton-aligned-content">
-                        <div className="skeleton-aligned-tags">
-                          <div className="skeleton skeleton-aligned-tag"></div>
-                          <div className="skeleton skeleton-aligned-tag"></div>
-                        </div>
-                        <div className="skeleton skeleton-aligned-part"></div>
-                        <div className="skeleton skeleton-aligned-name"></div>
-                        <div className="skeleton-aligned-price-row">
-                          <div className="skeleton skeleton-aligned-price"></div>
-                          <div className="skeleton skeleton-aligned-mrp"></div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+          {loading && !batchLoadingProgress && (
+            <div className="pn-loading">Loading products...</div>
           )}
 
-          {/* ================= ERROR ================= */}
           {!loading && error && (
             <div className="pn-error">
               <p>{error}</p>
             </div>
           )}
 
-          {/* ================= DATA ================= */}
           {!loading && !error && (
-            <>
-              {/* LEFT SECTION - 75% */}
-              <div className="pn-left">
-                {/* myTVS Recommended Products */}
-                <Product1
-                  title={`myTVS Recommended Products (${recommendedProducts.length})`}
-                  products={recommendedProducts.map((item, index) => ({
-                    id: item.id,
-                    partNumber: item.partNo,
-                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
-                    name: item.description,
-                    image: item.imageUrl,
-                    brand: item.brand,
-                    price: item.price,
-                    mrp: item.mrp,
-                    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
-                    deliveryTime: item.eta,
-                    compatibleVehicles: vehicleCounts[item.partNo] || 0,
+            <div className="pn-products-layout">
+              {/* LEFT SIDE - 75% */}
+              <div className="pn-left-section">
+                <Product2
+                  title="myTVS Recommended Products"
+                  products={recommendedProducts.map(p => ({
+                    id: p.id || p.partNumber,
+                    brand: p.brandName || "myTVS",
+                    partNumber: p.partNumber,
+                    name: p.name || p.itemDescription,
+                    price: parseFloat(p.listPrice) || 0,
+                    mrp: parseFloat(p.mrp) || 0,
+                    image: p.imageUrl || NoImage,
+                    stockStatus: p.stockStatus || "Unknown",
+                    deliveryTime: p.eta || "1-2 Days",
+                    compatibleVehicles: p.compatibleVehicles || 0,
+                    cartId: p.partNumber,
                   }))}
                   layout="horizontal"
                   onAddToCart={(product) => {
                     addToCart({
-                      partNumber: product.cartId, // Use unique cartId
-                      itemDescription: product.name,
-                      listPrice: product.price,
-                      imageUrl: product.image,
-                      brand: product.brand,
+                      partNumber: product.cartId,
+                      name: product.name,
+                      price: product.price,
                       mrp: product.mrp,
-                      actualPartNumber: product.partNumber, // Keep original for reference
+                      brand: product.brand,
+                      quantity: 1,
                     });
                   }}
                   onCompatibilityClick={handleCompatibilityClick}
-                  isLoadingCounts={loadingCounts}
                 />
 
-                {/* Other Products */}
-                <Product1
-                  title={`Other Products (${otherBrandProducts.length})`}
-                  products={otherBrandProducts.map((item, index) => ({
-                    id: item.id,
-                    partNumber: item.partNo,
-                    cartId: `${item.partNo}_${item.brand}_${index}`, // Unique cart identifier
-                    name: item.description,
-                    image: item.imageUrl,
-                    brand: item.brand,
-                    price: item.price,
-                    mrp: item.mrp,
-                    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
-                    deliveryTime: item.eta,
-                    compatibleVehicles: vehicleCounts[item.partNo] || 0,
+                <Product2
+                  title="Other Brand Products"
+                  products={otherBrandProducts.map(p => ({
+                    id: p.id || p.partNumber,
+                    brand: p.brandName || "Other",
+                    partNumber: p.partNumber,
+                    name: p.name || p.itemDescription,
+                    price: parseFloat(p.listPrice) || 0,
+                    mrp: parseFloat(p.mrp) || 0,
+                    image: p.imageUrl || NoImage,
+                    stockStatus: p.stockStatus || "Unknown",
+                    deliveryTime: p.eta || "1-2 Days",
+                    compatibleVehicles: p.compatibleVehicles || 0,
+                    cartId: p.partNumber,
                   }))}
                   layout="horizontal"
                   onAddToCart={(product) => {
                     addToCart({
-                      partNumber: product.cartId, // Use unique cartId
-                      itemDescription: product.name,
-                      listPrice: product.price,
-                      imageUrl: product.image,
-                      brand: product.brand,
+                      partNumber: product.cartId,
+                      name: product.name,
+                      price: product.price,
                       mrp: product.mrp,
-                      actualPartNumber: product.partNumber, // Keep original for reference
+                      brand: product.brand,
+                      quantity: 1,
                     });
                   }}
                   onCompatibilityClick={handleCompatibilityClick}
-                  isLoadingCounts={loadingCounts}
                 />
               </div>
 
-              {/* RIGHT SECTION - 25% */}
-              <div className="pn-right">
-                {/* Aligned Products */}
+              {/* RIGHT SIDE - 25% - ALIGNED PRODUCTS (COMMENTED OUT - NOT NEEDED) */}
+              {/* <div className="pn-right-section">
                 <Product1
-  title={`Aligned Products (${alignedProducts.length})`}
-  products={alignedProducts.map((item, index) => ({
-    id: item.id,
-    partNumber: item.partNo,
-    cartId: `${item.partNo}_${item.brand}_${index}`,
-    name: item.description,
-    image: item.imageUrl,
-    brand: item.brand,
-    price: item.price,
-    mrp: item.mrp,
-    stockStatus: stockData[item.partNo]?.inStock ? "in stock" : "out of stock",
-    deliveryTime: item.eta,
-    compatibleVehicles: vehicleCounts[item.partNo] || 0,
-  }))}
-  layout="horizontal"
-  onAddToCart={(product) => {
-    addToCart({
-      partNumber: product.cartId,
-      itemDescription: product.name,
-      listPrice: product.price,
-      imageUrl: product.image,
-      brand: product.brand,
-      mrp: product.mrp,
-      actualPartNumber: product.partNumber,
-    });
-  }}
-  onCompatibilityClick={handleCompatibilityClick}
-  isLoadingCounts={alignedLoading}
-/>
-
-              </div>
-            </>
+                  title="Aligned Products"
+                  products={alignedProducts.map(p => ({
+                    id: p.id || p.partNumber,
+                    brand: p.brandName || "myTVS",
+                    partNumber: p.partNumber,
+                    name: p.name || p.itemDescription,
+                    price: parseFloat(p.listPrice) || 0,
+                    mrp: parseFloat(p.mrp) || 0,
+                    image: p.imageUrl || NoImage,
+                    stockStatus: p.stockStatus || "Unknown",
+                    deliveryTime: p.eta || "1-2 Days",
+                    compatibleVehicles: p.compatibleVehicles || 0,
+                    cartId: p.partNumber,
+                  }))}
+                  layout="vertical"
+                  onAddToCart={(product) => {
+                    addToCart({
+                      partNumber: product.cartId,
+                      name: product.name,
+                      price: product.price,
+                      mrp: product.mrp,
+                      brand: product.brand,
+                      quantity: 1,
+                    });
+                  }}
+                  onCompatibilityClick={handleCompatibilityClick}
+                />
+              </div> */}
+            </div>
           )}
         </div>
       </div>
 
-      {/* ✅ MODAL MUST BE INSIDE RETURN */}
-      {showCompatibility && selectedPartNumber && (
+      {showCompatibility && (
         <CompatibilityModal
-          onClose={() => {
-            setShowCompatibility(false);
-            setSelectedPartNumber("");
-          }}
+          onClose={() => setShowCompatibility(false)}
           partNumber={selectedPartNumber}
+          vehicles={selectedPartVehicles}
           onVehicleSelect={handleVehicleSelection}
         />
       )}
+      
+      <VehicleContextModal
+        isOpen={vehicleModal.isOpen}
+        onClose={() => setVehicleModal(prev => ({ ...prev, isOpen: false }))}
+        searchQuery={vehicleModal.searchQuery}
+        missingFields={vehicleModal.missingFields}
+        extractedFields={vehicleModal.extractedFields}
+        onSearchComplete={handleVehicleModalComplete}
+      />
     </div>
   );
 };

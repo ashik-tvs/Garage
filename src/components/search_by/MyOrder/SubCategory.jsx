@@ -704,8 +704,8 @@ console.log("🔢 Total services:", services.length);
           )}
         </div>
 
-        {/* Service Type Sidebar */}
-        <div className="service-type-sidebar">
+        {/* SERVICE TYPE SIDEBAR (COMMENTED OUT - NOT NEEDED) */}
+        {/* <div className="service-type-sidebar">
           <div className="service-type-header">
             <div className="service-type-icon">
               <img
@@ -739,7 +739,7 @@ console.log("🔢 Total services:", services.length);
               ))
             )}
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

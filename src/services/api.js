@@ -244,6 +244,177 @@ export const onlyWithUsAPI = async () => {
 };
 
 /* ============================
+   PARTSMART UNIFIED SEARCH API (via Backend Proxy)
+============================ */
+
+/**
+ * Partsmart Autocomplete Suggestions API
+ * Get real-time search suggestions as user types
+ * @param {string} query - Search query (partial or complete)
+ * @param {number} limit - Maximum suggestions to return (1-20, default: 5)
+ */
+export const partsmartSuggestionsAPI = async (query, limit = 5) => {
+  try {
+    console.log('🔍 Calling Partsmart Suggestions API (via proxy) with query:', query);
+    
+    const response = await apiService.get(`/partsmart/suggestions?q=${encodeURIComponent(query)}&limit=${limit}`);
+    
+    console.log('✅ Suggestions data:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Partsmart suggestions API error:', error);
+    return null;
+  }
+};
+
+/**
+ * Partsmart Unified Text Search API
+ * Search using natural language with automatic NLP extraction
+ * @param {Object} params - Search parameters
+ * @param {string} params.query - Search query (natural language, vehicle number, or part number)
+ * @param {Array<string>} params.sources - Search sources: ["tvs", "boodmo", "smart"] (default: ["tvs"])
+ * @param {number} params.limit - Results per source (default: 10)
+ * @param {Object} params.vehicle - Optional explicit vehicle context
+ */
+export const partsmartTextSearchAPI = async ({ query, sources = ['tvs'], limit = 10, vehicle = null }) => {
+  try {
+    console.log('🔍 Calling Partsmart Text Search API (via proxy) with query:', query);
+
+    const requestBody = {
+      query,
+      sources,
+      limitPerPart: limit  // Use limitPerPart instead of limit
+    };
+
+    if (vehicle) {
+      requestBody.vehicle = vehicle;
+    }
+
+    console.log('📡 Request body:', requestBody);
+
+    const response = await apiService.post('/partsmart/search', requestBody);
+
+    console.log('✅ Text search data:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Partsmart text search API error:', error);
+    return null;
+  }
+};
+
+/**
+ * Partsmart Image Search API
+ * Upload image(s) for part detection and search
+ * @param {Object} params - Search parameters
+ * @param {File|File[]} params.image - Single image or array of images
+ * @param {string} params.query - Optional vehicle number for NLP detection
+ * @param {Object} params.vehicle - Optional explicit vehicle context
+ * @param {Array<string>} params.sources - Search sources (default: ["tvs"])
+ * @param {number} params.limit - Results per source (default: 5)
+ */
+export const partsmartImageSearchAPI = async ({ image, query = null, vehicle = null, sources = ['tvs'], limit = 5, limitPerPart = null }) => {
+  try {
+    console.log('🔍 Calling Partsmart Image Search API (via proxy)');
+
+    const formData = new FormData();
+    formData.append('search_type', 'image');
+    
+    // Handle single or multiple images
+    if (Array.isArray(image)) {
+      image.forEach(img => formData.append('images', img));
+    } else {
+      formData.append('image', image);
+    }
+
+    if (query) {
+      formData.append('query', query);
+    }
+
+    if (vehicle) {
+      formData.append('vehicle', JSON.stringify(vehicle));
+    }
+
+    // Add sources as JSON array
+    if (sources && sources.length > 0) {
+      formData.append('sources', JSON.stringify(sources));
+    }
+
+    // Use limitPerPart if provided, otherwise use limit
+    if (limitPerPart) {
+      formData.append('limitPerPart', limitPerPart.toString());
+    } else {
+      formData.append('limit', limit.toString());
+    }
+
+    const response = await apiService.post('/partsmart/image-search', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    });
+
+    console.log('✅ Image search data:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Partsmart image search API error:', error);
+    return null;
+  }
+};
+
+/**
+ * Partsmart Audio Search API
+ * Voice search with automatic speech-to-text
+ * Note: This requires backend proxy support
+ */
+export const partsmartAudioSearchAPI = async ({ audio, mode = 'translate', vehicle = null, sources = ['tvs'], limit = 5 }) => {
+  console.warn('Audio search not yet implemented in backend proxy');
+  return null;
+};
+
+/**
+ * Partsmart Multipart Search API
+ * Search for multiple parts simultaneously
+ * @param {Object} params - Search parameters
+ * @param {string} params.query - Natural language query with multiple parts (for NLP extraction)
+ * @param {Array<Object>} params.parts - Array of part objects: [{partDescription: "brake pad"}, ...]
+ * @param {Object} params.vehicle - Vehicle context (optional for NLP, recommended for better results)
+ * @param {Array<string>} params.sources - Search sources (default: ["tvs"])
+ * @param {number} params.limit - Results per part (default: 10)
+ */
+export const partsmartMultipartSearchAPI = async ({ query = null, parts = null, vehicle = null, sources = ['tvs'], limit = 10 }) => {
+  try {
+    console.log('🔍 Calling Partsmart Multipart Search API (via proxy)');
+
+    const requestBody = {
+      search_type: 'multipart',
+      sources,
+      limitPerPart: limit  // Use limitPerPart instead of limit
+    };
+
+    // Either query (for NLP extraction) or parts array (structured)
+    if (query) {
+      requestBody.query = query;
+    } else if (parts) {
+      requestBody.parts = parts;
+    }
+
+    // Vehicle context is optional but recommended for better results
+    if (vehicle) {
+      requestBody.vehicle = vehicle;
+    }
+
+    console.log('📡 Multipart request body:', requestBody);
+
+    const response = await apiService.post('/partsmart/search', requestBody);
+
+    console.log('✅ Multipart search data:', response);
+    return response;
+  } catch (error) {
+    console.error('❌ Partsmart multipart search API error:', error);
+    return null;
+  }
+};
+
+/* ============================
    LOCAL BACKEND APIs
 ============================ */
 
@@ -331,6 +502,13 @@ export default {
   highValueAPI,
   discontinuedModelAPI,
   onlyWithUsAPI,
+  
+  // Partsmart Unified Search APIs
+  partsmartSuggestionsAPI,
+  partsmartTextSearchAPI,
+  partsmartImageSearchAPI,
+  partsmartAudioSearchAPI,
+  partsmartMultipartSearchAPI,
   
   // Local Backend APIs
   loginAPI,

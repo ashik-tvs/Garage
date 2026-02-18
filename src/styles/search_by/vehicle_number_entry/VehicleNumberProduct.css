@@ -999,7 +999,7 @@ padding: 6px 12px;
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  z-index: 999999;
+  z-index: 9998;
 }
 
 .vnp-filter-option {

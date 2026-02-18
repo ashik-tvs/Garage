@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Search from "../../home/Search";
 import { getAssets, getAsset } from "../../../utils/assets";
 import EditIcon from "../../../assets/vehicle_search_entry/edit.png";
@@ -207,13 +207,37 @@ const ServicePanel = ({ services, onSelectService, activeService }) => {
 const VehicleNumberEntry = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const searchKey = state?.vehicleNumber || "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchKey = state?.vehicleNumber || searchParams.get('vehicleNumber') || "";
 
   const [vehicle] = useState({
     ...MOCK_VEHICLE,
-    number: state?.vehicleNumber,
+    number: state?.vehicleNumber || searchParams.get('vehicleNumber'),
   });
   const [selectedService, setSelectedService] = useState(null);
+
+  // Function to update URL with vehicle context
+  const updateURLParams = (vehicleData, category = null, subCategory = null) => {
+    const params = new URLSearchParams();
+    
+    if (vehicleData.number) params.set('vehicleNumber', vehicleData.number);
+    if (vehicleData.make) params.set('make', vehicleData.make);
+    if (vehicleData.model) params.set('model', vehicleData.model);
+    if (vehicleData.variant) params.set('variant', vehicleData.variant);
+    if (vehicleData.fuel) params.set('fuelType', vehicleData.fuel);
+    if (vehicleData.year) params.set('year', vehicleData.year);
+    if (category) params.set('category', category);
+    if (subCategory) params.set('subCategory', subCategory);
+    
+    setSearchParams(params, { replace: true });
+  };
+
+  // Update URL on mount
+  useEffect(() => {
+    if (vehicle.number) {
+      updateURLParams(vehicle, selectedCategory, selectedSubCategory);
+    }
+  }, []);
 
   const handleServiceClick = (serviceType) => {
     setSelectedService(serviceType);
@@ -295,7 +319,8 @@ const VehicleNumberEntry = () => {
             )}
           </div>
 
-          <div className="Vne-right-section">
+          {/* SERVICE TYPE PANEL (COMMENTED OUT - NOT NEEDED) */}
+          {/* <div className="Vne-right-section">
             <ServicePanel
               services={[
                 "Brake Service",
@@ -314,7 +339,7 @@ const VehicleNumberEntry = () => {
               onSelectService={handleServiceClick}
               activeService={selectedService}
             />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

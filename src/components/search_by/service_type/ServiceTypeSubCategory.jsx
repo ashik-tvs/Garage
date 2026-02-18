@@ -137,8 +137,8 @@ const Sub_Category = () => {
           </div>
         </div>
 
-        {/* Service Type Sidebar */}
-        <div className="service-type-sidebar">
+        {/* SERVICE TYPE SIDEBAR (COMMENTED OUT - NOT NEEDED) */}
+        {/* <div className="service-type-sidebar">
           <div className="service-type-header">
             <span>Service Type for {category}</span>
             <div className="service-type-icon">
@@ -146,7 +146,6 @@ const Sub_Category = () => {
             </div>
           </div>
           <div className="service-type-list">
-            {/* Static list retained, can be made dynamic if API provides service types */}
             {[
               "Complete Brake System Inspection",
               "Brake Noise / Vibration Diagnosis",
@@ -175,7 +174,7 @@ const Sub_Category = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

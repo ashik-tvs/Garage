@@ -3,15 +3,19 @@ import ReactDOM from "react-dom";
 import { HiOutlineMicrophone } from "react-icons/hi";
 import { AiOutlineCamera } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
-import { generalSearchAPI, labourAPI } from "../../services/api";
+import { labourAPI, partsmartTextSearchAPI, partsmartSuggestionsAPI, partsmartImageSearchAPI } from "../../services/api";
 import { getAssets, getAsset } from "../../utils/assets";
+import { useVehicleContext } from "../../contexts/VehicleContext";
 import SearchIcon from "../../assets/search/search.png";
 import ImageUpload from "./ImageUpload";
+import VehicleContextModal from "./VehicleContextModal";
+import ImageSearchModal from "./ImageSearchModal";
 import "../../styles/home/Search.css";
 import "../../styles/skeleton/skeleton.css";
 
 const Search = () => {
   const navigate = useNavigate();
+  const { vehicle, missingFields, updateMultipleFields, resetVehicle, isComplete } = useVehicleContext();
   const [assets, setAssets] = useState({});
   const fileInputRef = useRef(null);
   
@@ -19,19 +23,84 @@ const Search = () => {
   useEffect(() => {
     getAssets().then(setAssets);
   }, []);
+
+  // Initialize Web Speech API for voice recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+
+      recognitionRef.current.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        console.log("🎤 Voice transcribed:", transcript);
+        setSearchValue(transcript);
+        setIsRecording(false);
+        
+        // Auto-trigger suggestions for the transcribed text
+        fetchSuggestions(transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("❌ Speech recognition error:", event.error);
+        setIsRecording(false);
+        if (event.error !== 'no-speech') {
+          alert(`Voice recognition error: ${event.error}`);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsRecording(false);
+      };
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
   const [searchValue, setSearchValue] = useState("");
   const [showImageUpload, setShowImageUpload] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef(null);
   const [dropdownPosition, setDropdownPosition] = useState({
     top: 0,
     left: 0,
     width: 0,
   });
+  const [vehicleModal, setVehicleModal] = useState({
+    isOpen: false,
+    searchQuery: "",
+    missingFields: [],
+    extractedFields: {},
+  });
+  
+  const [imageSearchModal, setImageSearchModal] = useState({
+    isOpen: false,
+    imageFile: null,
+    imagePreview: null,
+    detectedPart: "",
+  });
   const searchRef = useRef(null);
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
+
+  // Close suggestions when vehicle modal opens
+  useEffect(() => {
+    if (vehicleModal.isOpen) {
+      setShowSuggestions(false);
+    }
+  }, [vehicleModal.isOpen]);
 
   // Vehicle number validation
   const isVehicleNumber = (value) =>
@@ -48,42 +117,36 @@ const Search = () => {
     }
 
     try {
-      setLoading(true);
+      setSuggestionsLoading(true);
       
-      // Fetch both parts and labour search using centralized API functions
-      const [partsResponse, labourResponse] = await Promise.allSettled([
-        // Parts search - Use generalSearchAPI with correct request body
-        generalSearchAPI({
-          customerCode: "0046",
-          searchKey: searchKey.trim()
-        }),
-        // Labour search - Use labourAPI with correct request body
+      // Fetch both Partsmart suggestions and labour search
+      const [partsmartResponse, labourResponse] = await Promise.allSettled([
+        // Partsmart Unified Search - Autocomplete suggestions
+        partsmartSuggestionsAPI(searchKey.trim(), 5),
+        // Labour search - Use labourAPI
         labourAPI()
       ]);
 
-      console.log("Parts API Response:", partsResponse);
+      console.log("Partsmart Suggestions Response:", partsmartResponse);
       console.log("Labour API Response:", labourResponse);
 
       let allSuggestions = [];
 
-      // Process parts suggestions
-      if (partsResponse.status === 'fulfilled' && partsResponse.value) {
-        const response = partsResponse.value;
-        let partsData = [];
-        if (response?.success && response?.data && Array.isArray(response.data)) {
-          partsData = response.data;
-        } else if (response?.data && Array.isArray(response.data)) {
-          partsData = response.data;
-        } else if (Array.isArray(response)) {
-          partsData = response;
+      // Process Partsmart suggestions
+      if (partsmartResponse.status === 'fulfilled' && partsmartResponse.value) {
+        const response = partsmartResponse.value;
+        
+        // Partsmart suggestions response format: { success: true, data: { suggestions: [...] } }
+        if (response?.success && response?.data?.suggestions && Array.isArray(response.data.suggestions)) {
+          const partsmartSuggestions = response.data.suggestions.map(suggestion => ({
+            partNumber: suggestion.part_number || suggestion.text || suggestion,
+            itemName: suggestion.description || suggestion.text || suggestion,
+            searchValue: suggestion.text || suggestion,
+            source: 'partsmart',
+            type: 'part'
+          }));
+          allSuggestions.push(...partsmartSuggestions);
         }
-
-        // Mark parts suggestions
-        const partsSuggestions = partsData.map(item => ({
-          ...item,
-          type: 'part'
-        }));
-        allSuggestions.push(...partsSuggestions);
       }
 
       // Process labour suggestions
@@ -141,7 +204,7 @@ const Search = () => {
       setSuggestions([]);
       setShowSuggestions(false);
     } finally {
-      setLoading(false);
+      setSuggestionsLoading(false);
     }
   };
 
@@ -149,56 +212,37 @@ const Search = () => {
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchValue(value);
+    setSelectedSuggestionIndex(-1);
     fetchSuggestions(value);
   };
 
-  // Handle suggestion click
+  // Handle suggestion click - ONLY fill input, don't navigate
   const handleSuggestionClick = (suggestion) => {
     console.log("=== SUGGESTION CLICKED ===");
     console.log("Full suggestion object:", suggestion);
 
-    // Check if this is a labour service suggestion
-    if (suggestion.type === 'labour') {
-      console.log("Labour service selected:", suggestion.itemName);
-      
-      // Set the search value
-      setSearchValue(suggestion.itemName);
-      
-      // Hide suggestions
-      setShowSuggestions(false);
-      setSuggestions([]);
-      
-      // Navigate to service type page
-      navigate("/search-by-service-type", { 
-        state: { 
-          serviceType: suggestion.itemName,
-          categoryId: suggestion.categoryId
-        } 
-      });
-      return;
-    }
-
-    // Handle parts suggestions (existing logic)
-    // Determine if the typed search value looks like a part number
+    // Determine the value to fill
     const typedValue = searchValue.trim().replace(/\s+/g, "");
     const isTypedPartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(typedValue);
     
-    // Use partNumber if search looks like part number, otherwise use itemName
-    const searchTerm = isTypedPartNumber
+    const fillValue = isTypedPartNumber
       ? suggestion.partNumber || suggestion.searchValue || suggestion.itemName
       : suggestion.itemName || suggestion.partNumber || suggestion.searchValue;
 
-    console.log("Setting search value to:", searchTerm);
+    console.log("Filling input with:", fillValue);
 
-    // Set the value immediately
-    setSearchValue(searchTerm);
+    // Set the value in input
+    setSearchValue(fillValue);
 
-    // Hide suggestions immediately
+    // Hide suggestions
     setShowSuggestions(false);
     setSuggestions([]);
-
-    // Navigate to PartNumber page with the search term
-    navigate("/search-by-part-number", { state: { partNumber: searchTerm } });
+    setSelectedSuggestionIndex(-1);
+    
+    // Focus back on input
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
   };
 
   // Calculate dropdown position
@@ -239,6 +283,7 @@ const Search = () => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
       }
     };
 
@@ -246,74 +291,313 @@ const Search = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-  const handleSearch = (e) => {
+  // Handle keyboard navigation
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      return;
+    }
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => 
+        prev < suggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedSuggestionIndex(prev => prev > 0 ? prev - 1 : -1);
+    } else if (e.key === "Tab") {
+      e.preventDefault();
+      // Autocomplete with first suggestion or selected suggestion
+      const suggestionToUse = selectedSuggestionIndex >= 0 
+        ? suggestions[selectedSuggestionIndex] 
+        : suggestions[0];
+      
+      if (suggestionToUse) {
+        const typedValue = searchValue.trim().replace(/\s+/g, "");
+        const isTypedPartNumber = /^(?=.*\d)[A-Z0-9\-]+$/i.test(typedValue);
+        
+        const fillValue = isTypedPartNumber
+          ? suggestionToUse.partNumber || suggestionToUse.searchValue || suggestionToUse.itemName
+          : suggestionToUse.itemName || suggestionToUse.partNumber || suggestionToUse.searchValue;
+        
+        setSearchValue(fillValue);
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }
+  };
+
+  const handleSearch = async (e) => {
     if (e.key !== "Enter") return;
 
     // Hide suggestions when Enter is pressed
     setShowSuggestions(false);
     setSuggestions([]);
+    setSelectedSuggestionIndex(-1);
 
     const rawValue = searchValue.trim();
     if (!rawValue) return;
     
-    // For vehicle numbers, remove spaces. For part numbers, keep hyphens
-    const noSpaceValue = rawValue.replace(/\s+/g, "");
-
-    if (isVehicleNumber(noSpaceValue.toUpperCase())) {
-      navigate("/search-by-vehicle-number", {
-        state: { vehicleNumber: noSpaceValue.toUpperCase() },
+    // Reset vehicle context for new search
+    resetVehicle();
+    
+    // All searches now use Unified Search API
+    console.log("🔍 Unified Search for:", rawValue);
+    
+    try {
+      setLoading(true);
+      const partsmartResult = await partsmartTextSearchAPI({
+        query: rawValue,
+        sources: ['tvs'],
+        limit: 10
       });
-    } else if (isPartNumber(noSpaceValue)) {
-      // Keep original case and hyphens for part numbers like 8502KPA1MFSU-TR0118
-      navigate("/search-by-part-number", {
-        state: { partNumber: noSpaceValue },
-      });
-    } else {
-      // Check if the search term might be a service type
-      // If it contains service-related keywords, try service type search first
-      const serviceKeywords = ['r&r', 'repair', 'replace', 'service', 'maintenance', 'belt', 'gas', 'blower', 'compressor', 'filter', 'brake', 'door', 'glass', 'seat', 'engine', 'oil'];
-      const isLikelyService = serviceKeywords.some(keyword => 
-        rawValue.toLowerCase().includes(keyword.toLowerCase())
-      );
-
-      if (isLikelyService) {
-        // Try service type search first
-        navigate("/search-by-service-type", { 
-          state: { 
-            serviceType: rawValue,
-            searchQuery: rawValue
-          } 
+      
+      console.log("✅ Unified Search result:", partsmartResult);
+      
+      // Check for incomplete extraction
+      if (partsmartResult?.summary?.status === 'incomplete_extraction') {
+        // Extract fields from Partsmart response
+        const extractedFields = partsmartResult.summary.extracted_fields || {};
+        
+        // Update VehicleContext with extracted fields
+        updateMultipleFields(extractedFields);
+        
+        setVehicleModal({
+          isOpen: true,
+          searchQuery: rawValue,
+          missingFields: partsmartResult.summary.missing_fields || [],
+          extractedFields: extractedFields,
         });
-      } else {
-        // Item name search - navigate to PartNumber page with item name
-        navigate("/search-by-part-number", { state: { partNumber: rawValue } });
+        return;
       }
+      
+      // Navigate to results page with Unified Search results
+      navigate("/search-by-part-number", {
+        state: { 
+          partNumber: rawValue,
+          partsmartResults: partsmartResult
+        },
+      });
+    } catch (error) {
+      console.error("❌ Unified Search error:", error);
+      // Navigate without results on error
+      navigate("/search-by-part-number", {
+        state: { partNumber: rawValue },
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 📸 Image search
-  const handleImageSelect = (e) => {
-    const file = e.target.files[0];
+  // 📸 Image search - Updated to use modal
+  const handleImageUploadSelect = async (file) => {
     if (!file) return;
 
-    navigate("/search-by-image", {
-      state: { imageFile: file, previewUrl: URL.createObjectURL(file) },
-    });
+    const previewUrl = URL.createObjectURL(file);
+    setShowImageUpload(false);
+    
+    // Show loading state
+    setLoading(true);
+    
+    try {
+      console.log("🖼️ Analyzing uploaded image...");
+      
+      // Call Partsmart Image Search API to detect part
+      const result = await partsmartImageSearchAPI({
+        image: file,
+        limit: 5
+      });
+      
+      console.log("✅ Image analysis result:", result);
+      
+      // Extract detected part from AI analysis
+      const detectedPart = result?.data?.ai_analysis?.detected_part || 
+                          result?.summary?.detected_part || 
+                          "Unknown Part";
+      
+      console.log("🎯 Detected part:", detectedPart);
+      
+      // Open the image search modal with detected part
+      setImageSearchModal({
+        isOpen: true,
+        imageFile: file,
+        imagePreview: previewUrl,
+        detectedPart: detectedPart
+      });
+      
+    } catch (error) {
+      console.error("❌ Error analyzing image:", error);
+      alert("Failed to analyze image. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleImageUploadSelect = (file) => {
-    if (!file) return;
+  // 🎤 Voice search handler
+  const handleVoiceSearch = () => {
+    if (!recognitionRef.current) {
+      alert("Voice recognition is not supported in your browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
 
-    navigate("/search-by-image", {
-      state: { imageFile: file, previewUrl: URL.createObjectURL(file) },
-    });
-    setShowImageUpload(false);
+    if (isRecording) {
+      // Stop recording
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    } else {
+      // Start recording
+      try {
+        setIsRecording(true);
+        recognitionRef.current.start();
+        console.log("🎤 Voice recording started...");
+      } catch (error) {
+        console.error("❌ Error starting voice recognition:", error);
+        setIsRecording(false);
+        alert("Failed to start voice recording. Please try again.");
+      }
+    }
+  };
+  
+  const handleImageSearchComplete = async (searchData) => {
+    console.log("🔍 Image search complete:", searchData);
+    
+    // Close the modal
+    setImageSearchModal(prev => ({ ...prev, isOpen: false }));
+    
+    setLoading(true);
+    
+    try {
+      // Use multipart NLP extraction with detected part + vehicle context
+      console.log("📡 Calling multipart API with NLP extraction...");
+      console.log("🎯 Detected part:", searchData.detectedPart);
+      console.log("🚗 Vehicle context:", searchData.vehicle);
+      
+      // Build query in format: MAKE MODEL VARIANT FUELTYPE YEAR PARTNAME
+      // This matches the other application's format for better results
+      const queryParts = [
+        searchData.vehicle.make,
+        searchData.vehicle.model,
+        searchData.vehicle.variant,
+        searchData.vehicle.fuelType,
+        searchData.vehicle.year,
+        searchData.detectedPart
+      ].filter(Boolean); // Remove null/undefined values
+      
+      const nlpQuery = queryParts.join(' ').toUpperCase();
+      
+      console.log("💬 NLP Query:", nlpQuery);
+      
+      const { partsmartMultipartSearchAPI } = await import("../../services/api");
+      
+      let multipartResult = await partsmartMultipartSearchAPI({
+        query: nlpQuery,
+        vehicle: {
+          make: searchData.vehicle.make,
+          model: searchData.vehicle.model,
+          variant: searchData.vehicle.variant,
+          fuelType: searchData.vehicle.fuelType,
+          year: searchData.vehicle.year ? Number(searchData.vehicle.year) : undefined
+        },
+        sources: ['tvs', 'boodmo','smart'],
+        limit: 10 // Use higher limit for better results
+      });
+      
+      console.log("✅ Multipart search result:", multipartResult);
+      
+      // Check if there's a validation error - retry WITHOUT vehicle object (NLP only)
+      if (!multipartResult?.success && multipartResult?.error?.code === 'VALIDATION_ERROR') {
+        console.warn("⚠️ Validation error detected:", multipartResult.error);
+        console.log("🔄 Retrying search with NLP query only (no vehicle object)");
+        
+        // Retry with just the query - let NLP extract vehicle info
+        multipartResult = await partsmartMultipartSearchAPI({
+          query: nlpQuery,
+          sources: ['tvs', 'boodmo','smart'],
+          limit: 10
+        });
+        
+        console.log("✅ Retry search result (NLP only):", multipartResult);
+      }
+      
+      // Navigate to search results page with multipart results
+      navigate("/search-by-image", {
+        state: {
+          imageFile: searchData.imageFile,
+          previewUrl: searchData.imageFile ? URL.createObjectURL(searchData.imageFile) : null,
+          detectedPart: searchData.detectedPart,
+          vehicle: searchData.vehicle,
+          multipartResults: multipartResult
+        }
+      });
+    } catch (error) {
+      console.error("❌ Multipart search error:", error);
+      
+      // Fallback: Navigate with basic data if multipart fails
+      navigate("/search-by-image", {
+        state: {
+          imageFile: searchData.imageFile,
+          previewUrl: searchData.imageFile ? URL.createObjectURL(searchData.imageFile) : null,
+          detectedPart: searchData.detectedPart,
+          vehicle: searchData.vehicle
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Detect if current search is a part number search
   const isPartNumberSearch = /^(?=.*\d)[A-Z0-9\-]+$/i.test(
     searchValue.trim().replace(/\s+/g, "")
   );
+
+  const handleVehicleModalComplete = (results, vehicleContextFromModal) => {
+    console.log("Vehicle modal search complete:", results);
+    console.log("Vehicle context from modal:", vehicleContextFromModal);
+    
+    // Close the modal
+    setVehicleModal(prev => ({ ...prev, isOpen: false }));
+    
+    // Extract ONLY the part name from results (not the full search query)
+    // The modal already searched with just the part name, so use that
+    const partName = results?.summary?.extracted_fields?.part || 
+                     results?.summary?.extracted_fields?.aggregate || 
+                     vehicleModal.extractedFields?.part ||
+                     vehicleModal.extractedFields?.aggregate ||
+                     vehicle.aggregate ||
+                     vehicleModal.searchQuery;
+    
+    console.log("🔍 Extracted part name:", partName);
+    
+    // Use the vehicle context from modal (which has the complete, corrected values including year)
+    // This is more reliable than trying to reconstruct from results or vehicle context
+    const vehicleDetails = vehicleContextFromModal || {
+      make: vehicle.make || results?.summary?.extracted_fields?.make,
+      model: vehicle.model || results?.summary?.extracted_fields?.model,
+      variant: vehicle.variant || results?.summary?.extracted_fields?.variant,
+      fuelType: vehicle.fuelType || results?.summary?.extracted_fields?.fuelType,
+      year: vehicle.year || results?.summary?.extracted_fields?.year,
+    };
+    
+    console.log("📡 Navigating to PartNumber with:", {
+      partNumber: partName,
+      vehicle: vehicleDetails,
+      searchQuery: vehicleModal.searchQuery
+    });
+    
+    // Navigate to part number page with complete context
+    navigate("/search-by-part-number", {
+      state: {
+        partNumber: partName,  // Use ONLY the part name, not the full search query
+        searchQuery: vehicleModal.searchQuery,  // Keep original for display
+        vehicle: vehicleDetails,
+        partsmartResults: results
+      }
+    });
+  };
 
   return (
     <div className="search-wrapper" ref={searchRef}>
@@ -341,35 +625,23 @@ const Search = () => {
                 ref={searchInputRef}
                 value={searchValue}
                 onChange={handleInputChange}
-                onKeyDown={handleSearch}
+                onKeyDown={(e) => {
+                  handleKeyDown(e);
+                  handleSearch(e);
+                }}
               />
 
-              {loading && (
-                <div className="skeleton-list" style={{ 
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  background: '#fff',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  zIndex: 1000,
-                  padding: '8px'
-                }}>
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="skeleton-card" style={{ 
-                      padding: '8px',
-                      marginBottom: '4px'
-                    }}>
-                      <div className="skeleton skeleton-text medium"></div>
-                    </div>
-                  ))}
+              {(suggestionsLoading || loading) && (
+                <div className="search-input-loading-spinner">
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
               )}
 
               <HiOutlineMicrophone
-                className="search-mic"
-                onClick={() => alert("Voice search coming soon")}
+                className={`search-mic ${isRecording ? 'recording' : ''}`}
+                onClick={handleVoiceSearch}
               />
 
               <AiOutlineCamera
@@ -382,7 +654,10 @@ const Search = () => {
                 accept="image/*"
                 ref={fileInputRef}
                 style={{ display: "none" }}
-                onChange={handleImageSelect}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) handleImageUploadSelect(file);
+                }}
               />
             </div>
           </div>
@@ -395,6 +670,24 @@ const Search = () => {
           onImageSelect={handleImageUploadSelect}
         />
       )}
+
+      <VehicleContextModal
+        isOpen={vehicleModal.isOpen}
+        onClose={() => setVehicleModal(prev => ({ ...prev, isOpen: false }))}
+        searchQuery={vehicleModal.searchQuery}
+        missingFields={vehicleModal.missingFields}
+        extractedFields={vehicleModal.extractedFields}
+        onSearchComplete={handleVehicleModalComplete}
+      />
+
+      <ImageSearchModal
+        isOpen={imageSearchModal.isOpen}
+        onClose={() => setImageSearchModal(prev => ({ ...prev, isOpen: false }))}
+        imageFile={imageSearchModal.imageFile}
+        imagePreview={imageSearchModal.imagePreview}
+        detectedPart={imageSearchModal.detectedPart}
+        onSearchComplete={handleImageSearchComplete}
+      />
 
       {showSuggestions &&
         suggestions.length > 0 &&
@@ -410,11 +703,13 @@ const Search = () => {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className={`search-suggestion-item ${suggestion.type === 'labour' ? 'labour-suggestion' : 'part-suggestion'}`}
+                className={`search-suggestion-item ${suggestion.type === 'labour' ? 'labour-suggestion' : 'part-suggestion'} ${index === selectedSuggestionIndex ? 'selected' : ''}`}
+                data-source={suggestion.source || ''}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   handleSuggestionClick(suggestion);
                 }}
+                onMouseEnter={() => setSelectedSuggestionIndex(index)}
               >
                 {suggestion.type === 'labour' ? (
                   // Labour service suggestion
@@ -431,6 +726,11 @@ const Search = () => {
                   <>
                     <div className="suggestion-part-number">
                       {suggestion.partNumber || suggestion.searchValue}
+                      {/* {suggestion.source === 'partsmart' && (
+                        <span className="suggestion-source-badge partsmart">
+                          Partsmart
+                        </span>
+                      )} */}
                     </div>
                     {!isPartNumberSearch && (
                       <div className="suggestion-item-name">

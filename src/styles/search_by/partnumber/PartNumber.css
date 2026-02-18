@@ -183,7 +183,7 @@
   background: #fff;
   border-radius: 6px;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  z-index: 999999;
+  z-index: 9998;
 }
 
 .pn-filter-option {
@@ -256,8 +256,26 @@
 /* CONTENT */
 .pn-content {
   display: flex;
-  /* gap: 25px;
-  justify-content: center; */
+  width: 100%;
+}
+
+/* 75/25 Layout Split */
+.pn-products-layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.pn-left-section {
+    flex: 0 0 100%;
+    max-width: 100%;
+}
+
+.pn-right-section {
+  flex: 0 0 25%;
+  max-width: 25%;
+  border-left: 1px solid #e0e0e0;
+  padding-left: 20px;
 }
 
 .pn-left {

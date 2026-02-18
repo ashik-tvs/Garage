@@ -23,11 +23,11 @@ import SeviceTypeSubCategory from "./components/search_by/service_type/ServiceTy
 import Product1Example from "./components/search_by/partnumber/Product1Example.jsx";
 
 import { CartProvider } from "./context/CartContext.js";
+import { VehicleContextProvider } from "./contexts/VehicleContext.jsx";
 import Login from "./components/Login/Login.jsx";
 import ForgotPassword from "./components/Login/Forgotpassword.jsx";
 import VerifyOtp from "./components/Login/VerifyOtp.jsx";
 import ScrollToTop from "./components/ScrollToTop.jsx";
-import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import { initAssets } from "./utils/assets.js";
 import apiConfigManager from "./services/apiConfig.js";
 
@@ -48,16 +48,16 @@ function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
+    <VehicleContextProvider>
       <CartProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            {/* Login page without Layout */}
-            <Route path="/" element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify-otp" element={<VerifyOtp />} />
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              {/* Login page without Layout */}
+              <Route path="/" element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<VerifyOtp />} />
 
             <Route element={<Layout />}>
               <Route path="/home" element={<Home />} />
@@ -106,7 +106,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </CartProvider>
-    </ErrorBoundary>
+    </VehicleContextProvider>
   );
 }
 

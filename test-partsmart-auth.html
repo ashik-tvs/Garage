@@ -1,0 +1,150 @@
+          Check the browser console for more details.
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+nnerHTML = `
+                    <div class="result error">
+                        <strong>❌ Authentication Failed</strong><br><br>
+                        <strong>Error:</strong> ${error.message}<br><br>
+                        <strong>Possible Issues:</strong><br>
+                        1. Invalid client credentials<br>
+                        2. CORS policy blocking the request<br>
+                        3. Network connectivity issues<br>
+                        4. API endpoint is down<br><br>
+                              <strong>Token Type:</strong> ${data.token_type}<br>
+                        <strong>Expires In:</strong> ${data.expires_in} seconds<br>
+                        <strong>Scope:</strong> ${data.scope || 'N/A'}<br><br>
+                        <strong>Full Response:</strong><br>
+                        ${JSON.stringify(data, null, 2)}
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Authentication failed:', error);
+                resultDiv.iror(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Success! Token data:', data);
+                
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ Authentication Successful!</strong><br><br>
+                        <strong>Access Token:</strong><br>
+                        ${data.access_token.substring(0, 50)}...<br><br>
+                            method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    throw new Erent Secret:', clientSecret);
+                
+                const params = new URLSearchParams({
+                    grant_type: 'client_credentials',
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                    scope: 'search:text search:image search:hybrid'
+                });
+                
+                console.log('Request body:', params.toString());
+                
+                const response = await fetch(`${authUrl}/api/auth/oauth/token`, {
+lass="result">⏳ Testing authentication...</div>';
+            
+            try {
+                const authUrl = document.getElementById('authUrl').value;
+                const clientId = document.getElementById('clientId').value;
+                const clientSecret = document.getElementById('clientSecret').value;
+                
+                console.log('Testing with:');
+                console.log('Auth URL:', authUrl);
+                console.log('Client ID:', clientId);
+                console.log('Cliinput type="text" id="clientId" value="ps_cl_xkNAgH1RyN6YvyV564eMkw" />
+        
+        <label>Client Secret:</label>
+        <input type="text" id="clientSecret" value="ps_sec_rZ4VKLiF4RbmjiDCJ41RyyClmehSEmta7ELuEzDAChw" />
+        
+        <br><br>
+        <button onclick="testAuth()">Test Authentication</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testAuth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div c width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Test Partsmart OAuth2 Authentication</h1>
+    
+    <div>
+        <label>Auth URL:</label>
+        <input type="text" id="authUrl" value="https://api.partsgpt.in" />
+        
+        <label>Client ID:</label>
+        < border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        button {
+            padding: 10px 20px;
+            background: #ff6a00;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #e55f00;
+        }
+        input {
+           e="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Partsmart Auth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success {
+            background: #d1fae5;
+           <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta nam

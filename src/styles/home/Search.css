@@ -88,7 +88,7 @@
   max-height: 300px;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 999999;
+  z-index: 9999;
 }
 
 .search-suggestion-item {
@@ -100,6 +100,11 @@
 
 .search-suggestion-item:hover {
   background: #f9f9f9;
+}
+
+.search-suggestion-item.selected {
+  background: #f0f0f0;
+  border-left: 3px solid #ff6a00;
 }
 
 .search-suggestion-item:last-child {
@@ -141,11 +146,33 @@
   background: #fff;
 }
 
+/* Partsmart suggestion styling - with green badge */
+.part-suggestion[data-source="partsmart"] {
+  border-left: 3px solid #10b981;
+}
+
 .suggestion-part-number {
   font-size: 14px;
   font-weight: 600;
   color: #333;
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.suggestion-source-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.suggestion-source-badge.partsmart {
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .suggestion-item-name {
@@ -158,6 +185,24 @@
   font-size: 20px;
   opacity: 0.7;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-mic.recording {
+  color: #ff0000;
+  opacity: 1;
+  animation: pulse-mic 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-mic {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
 }
 
 .search-upload {
@@ -198,4 +243,48 @@
   .search-title {
     font-size: 15px;
   }
+}
+
+/* Loading dots animation */
+@keyframes wave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+.search-input-loading-spinner {
+  position: absolute;
+  right: 80px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+}
+
+.search-input-loading-spinner span {
+  width: 6px;
+  height: 6px;
+  background: #ff6b35;
+  border-radius: 50%;
+  display: inline-block;
+  animation: wave 1.4s ease-in-out infinite;
+}
+
+.search-input-loading-spinner span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.search-input-loading-spinner span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.search-input-loading-spinner span:nth-child(3) {
+  animation-delay: 0.4s;
 }
