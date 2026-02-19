@@ -4,6 +4,40 @@ import { partsmartTextSearchAPI } from "../../services/api";
 import apiService from "../../services/apiservice";
 import "../../styles/home/VehicleContextModal.css";
 
+// Icon components
+const InfoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2"/>
+    <path d="M10 6V10M10 14H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M9 1L1 16H17L9 1Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+    <path d="M9 7V10M9 13H9.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="2"/>
+    <path d="M11 11L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const CarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 10L5 4H15L17 10M3 10V16H5V14H15V16H17V10M3 10H17M6 14C5.44772 14 5 13.5523 5 13C5 12.4477 5.44772 12 6 12C6.55228 12 7 12.4477 7 13C7 13.5523 6.55228 14 6 14ZM14 14C13.4477 14 13 13.5523 13 13C13 12.4477 13.4477 12 14 12C14.5523 12 15 12.4477 15 13C15 13.5523 14.5523 14 14 14Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: propMissingFields, extractedFields, onSearchComplete }) => {
   const { vehicle, updateField } = useVehicleContext();
   
@@ -422,37 +456,48 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
         <div className="vehicle-modal-header">
           <div className="header-left">
             <div className="info-icon">
-              <span>i</span>
+              <InfoIcon />
             </div>
             <div className="header-text">
               <h2>Additional Information Required</h2>
               <p>Please provide the missing vehicle details</p>
             </div>
           </div>
-          <button className="vehicle-modal-close" onClick={onClose}>×</button>
+          <button className="vehicle-modal-close" onClick={onClose}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+          </button>
         </div>
 
         <div className="vehicle-modal-body">
           <div className="search-query-section">
-            <label>Search Query:</label>
+            <label>
+              <SearchIcon />
+              <span>Search Query</span>
+            </label>
             <div className="search-query-display">{searchQuery}</div>
           </div>
 
           {errors.api && (
             <div className="vehicle-modal-error">
-              ⚠️ {errors.api}
+              <AlertIcon />
+              <span>{errors.api}</span>
             </div>
           )}
           
           {validationWarning && (
             <div className="vehicle-modal-warning">
-              ℹ️ {validationWarning}
+              <InfoIcon />
+              <span>{validationWarning}</span>
             </div>
           )}
 
           <div className="vehicle-details-section">
             <div className="section-header">
-              <div className={`check-icon ${allFieldsFilled ? 'filled' : 'empty'}`}>✓</div>
+              <div className={`check-icon ${allFieldsFilled ? 'filled' : 'empty'}`}>
+                <CheckIcon />
+              </div>
               <h3>Vehicle Details</h3>
             </div>
             <p className="section-description">
@@ -461,26 +506,42 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
 
             {/* Vehicle Number Input */}
             <div className="vehicle-number-section">
-              <label>Vehicle Number (Auto-fills all details)</label>
-              <div className="vehicle-number-plate">
-                <input
-                  type="text"
-                  value={vehicleNumber}
-                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                  placeholder="TN01AZ2345"
-                  maxLength={10}
-                />
+              <label>
+                <CarIcon />
+                <span>Vehicle Number (Auto-fills all details)</span>
+              </label>
+              <div className="vehicle-number-input-wrapper">
+                <div className="vehicle-number-plate">
+                  <input
+                    type="text"
+                    value={vehicleNumber}
+                    onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                    placeholder="TN01AZ2345"
+                    maxLength={10}
+                  />
+                </div>
                 <button 
                   className="btn-lookup" 
                   onClick={handleVehicleNumberLookup}
                   disabled={loading.make || !vehicleNumber}
                 >
-                  {loading.make ? 'Looking up...' : 'Lookup'}
+                  {loading.make ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span>Looking up...</span>
+                    </>
+                  ) : (
+                    <>
+                      <SearchIcon />
+                      <span>Lookup</span>
+                    </>
+                  )}
                 </button>
               </div>
               {vehicleFound && (
                 <div className="vehicle-found-message">
-                  ✅ Vehicle Found: {vehicleFound}
+                  <CheckIcon />
+                  <span>Vehicle Found: {vehicleFound}</span>
                 </div>
               )}
             </div>
@@ -492,12 +553,15 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
             {/* Display already extracted fields */}
             {(extractedFields?.make || extractedFields?.model || extractedFields?.variant || extractedFields?.fuelType) && (
               <div className="extracted-fields-section">
-                <label>Extracted from search query:</label>
+                <label>
+                  <CheckIcon />
+                  <span>Extracted from search query</span>
+                </label>
                 <div className="extracted-fields-display">
-                  {extractedFields?.make && <span className="extracted-field">Make: {extractedFields.make}</span>}
-                  {extractedFields?.model && <span className="extracted-field">Model: {extractedFields.model}</span>}
-                  {extractedFields?.variant && <span className="extracted-field">Variant: {extractedFields.variant}</span>}
-                  {extractedFields?.fuelType && <span className="extracted-field">Fuel Type: {extractedFields.fuelType}</span>}
+                  {extractedFields?.make && <span className="extracted-field"><strong>Make:</strong> {extractedFields.make}</span>}
+                  {extractedFields?.model && <span className="extracted-field"><strong>Model:</strong> {extractedFields.model}</span>}
+                  {extractedFields?.variant && <span className="extracted-field"><strong>Variant:</strong> {extractedFields.variant}</span>}
+                  {extractedFields?.fuelType && <span className="extracted-field"><strong>Fuel Type:</strong> {extractedFields.fuelType}</span>}
                 </div>
               </div>
             )}
@@ -551,13 +615,27 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
         </div>
 
         <div className="vehicle-modal-footer">
-          <button className="btn-cancel" onClick={onClose}>Cancel</button>
+          <button className="btn-cancel" onClick={onClose}>
+            Cancel
+          </button>
           <button
             className="btn-continue"
             onClick={handleContinue}
             disabled={localMissingFields.length > 0 || searching}
           >
-            {searching ? 'Searching...' : 'Continue Search →'}
+            {searching ? (
+              <>
+                <span className="spinner"></span>
+                <span>Searching...</span>
+              </>
+            ) : (
+              <>
+                <span>Continue Search</span>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </>
+            )}
           </button>
         </div>
       </div>

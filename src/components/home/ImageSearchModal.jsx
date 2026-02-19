@@ -3,6 +3,48 @@ import { useVehicleContext } from '../../contexts/VehicleContext';
 import apiService from '../../services/apiservice';
 import '../../styles/home/ImageSearchModal.css';
 
+// Icon components
+const InfoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2"/>
+    <path d="M10 6V10M10 14H10.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M13.5 4L6 11.5L2.5 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const SearchIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="2"/>
+    <path d="M11 11L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
+const CarIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 10L5 4H15L17 10M3 10V16H5V14H15V16H17V10M3 10H17M6 14C5.44772 14 5 13.5523 5 13C5 12.4477 5.44772 12 6 12C6.55228 12 7 12.4477 7 13C7 13.5523 6.55228 14 6 14ZM14 14C13.4477 14 13 13.5523 13 13C13 12.4477 13.4477 12 14 12C14.5523 12 15 12.4477 15 13C15 13.5523 14.5523 14 14 14Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ImageIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="16" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="2"/>
+    <path d="M2 14L6 10L10 14L14 10L18 14V16C18 17.1046 17.1046 18 16 18H4C2.89543 18 2 17.1046 2 16V14Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+  </svg>
+);
+
+const HelpIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="2"/>
+    <path d="M7.5 7.5C7.5 5.84315 8.84315 4.5 10.5 4.5C12.1569 4.5 13.5 5.84315 13.5 7.5C13.5 9.15685 12.1569 10.5 10.5 10.5V12M10.5 15H10.51" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+  </svg>
+);
+
 const ImageSearchModal = ({ 
   isOpen, 
   onClose, 
@@ -276,19 +318,26 @@ const ImageSearchModal = ({
       <div className="image-search-modal">
         {/* Header */}
         <div className="image-search-modal-header">
-          <div className="image-search-modal-header-icon">ℹ</div>
+          <div className="image-search-modal-header-icon">
+            <InfoIcon />
+          </div>
           <div className="image-search-modal-header-text">
             <h3>Additional Information Required</h3>
             <p>Please provide the missing vehicle details</p>
           </div>
           <button className="image-search-modal-close" onClick={handleClose}>
-            ✕
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
           </button>
         </div>
 
         {/* Search Query */}
         <div className="image-search-modal-query">
-          <label>Search Query</label>
+          <label>
+            <SearchIcon />
+            <span>Search Query</span>
+          </label>
           <input 
             type="text" 
             value={detectedPart || ""} 
@@ -302,7 +351,9 @@ const ImageSearchModal = ({
           {/* Left: Part Information */}
           <div className="image-search-modal-section">
             <div className="image-search-modal-section-header">
-              <span className="image-search-modal-section-icon">✓</span>
+              <span className="image-search-modal-section-icon">
+                <CheckIcon />
+              </span>
               <h4>Part Information</h4>
             </div>
             <p className="image-search-modal-section-subtitle">
@@ -315,14 +366,20 @@ const ImageSearchModal = ({
                 {detectedPart || "BRAKE PAD SET"}
               </div>
               <p className="image-search-modal-part-selected">
-                ✓ 1 part(s) selected (see details under each image below)
+                <CheckIcon />
+                <span>1 part(s) selected (see details under each image below)</span>
               </p>
             </div>
 
-            <div className="image-search-modal-divider">OR</div>
+            <div className="image-search-modal-divider">
+              <span>OR</span>
+            </div>
 
             <div className="image-search-modal-upload">
-              <label>Upload Part Image <span className="image-search-modal-upload-count">(up to 5 images)</span></label>
+              <label>
+                <ImageIcon />
+                <span>Upload Part Image <span className="image-search-modal-upload-count">(up to 5 images)</span></span>
+              </label>
               <div className="image-search-modal-image-preview">
                 <img src={imagePreview} alt="Uploaded part" />
                 <div className="image-search-modal-image-label">
@@ -336,7 +393,9 @@ const ImageSearchModal = ({
           {/* Right: Vehicle Details */}
           <div className="image-search-modal-section">
             <div className="image-search-modal-section-header">
-              <span className="image-search-modal-section-icon">?</span>
+              <span className="image-search-modal-section-icon vehicle-icon">
+                <CarIcon />
+              </span>
               <h4>Vehicle Details</h4>
             </div>
             <p className="image-search-modal-section-subtitle">
@@ -345,34 +404,48 @@ const ImageSearchModal = ({
 
             {/* Vehicle Number Input */}
             <div className="image-search-modal-field">
-              <label>Vehicle Number (Auto-fills all details)</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <label>
+                <CarIcon />
+                <span>Vehicle Number (Auto-fills all details)</span>
+              </label>
+              <div className="vehicle-number-input-wrapper">
                 <input
                   type="text"
                   value={vehicleNumber}
                   onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
                   placeholder="TN01AZ2345"
                   maxLength={10}
-                  className="image-search-modal-select"
-                  style={{ flex: 1 }}
+                  className="image-search-modal-select vehicle-number-input"
                 />
                 <button 
                   onClick={handleVehicleNumberLookup}
                   disabled={loading || !vehicleNumber}
-                  className="image-search-modal-continue"
-                  style={{ width: 'auto', padding: '0 20px' }}
+                  className="image-search-modal-lookup-btn"
                 >
-                  {loading ? 'Looking up...' : 'Lookup'}
+                  {loading ? (
+                    <>
+                      <span className="spinner"></span>
+                      <span>Looking up...</span>
+                    </>
+                  ) : (
+                    <>
+                      <SearchIcon />
+                      <span>Lookup</span>
+                    </>
+                  )}
                 </button>
               </div>
               {vehicleFound && (
-                <div style={{ marginTop: '8px', padding: '8px', backgroundColor: '#e8f5e9', borderRadius: '4px', fontSize: '14px', color: '#2e7d32' }}>
-                  ✅ Vehicle Found: {vehicleFound}
+                <div className="vehicle-found-message">
+                  <CheckIcon />
+                  <span>Vehicle Found: {vehicleFound}</span>
                 </div>
               )}
             </div>
 
-            <div style={{ textAlign: 'center', margin: '16px 0', color: '#666', fontSize: '14px' }}>OR</div>
+            <div className="image-search-modal-divider">
+              <span>OR</span>
+            </div>
 
             {/* Make */}
             <div className="image-search-modal-field">
@@ -469,7 +542,10 @@ const ImageSearchModal = ({
             onClick={handleContinueSearch}
             disabled={!vehicle.make || !vehicle.model}
           >
-            Continue Search →
+            <span>Continue Search</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </div>
       </div>
