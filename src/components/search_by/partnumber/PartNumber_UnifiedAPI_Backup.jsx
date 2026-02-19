@@ -256,7 +256,7 @@ const PartNumber = () => {
         
         const response = await partsmartTextSearchAPI({
           query: searchKey,
-          sources: ['tvs'],
+          sources: ['tvs','boodmo','smart'],
           limit: 100
         });
 
@@ -310,7 +310,7 @@ const PartNumber = () => {
       const response = await partsmartTextSearchAPI({
         query: searchKey,
         vehicle: vehicleContext,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limit: 100
       });
 
@@ -356,7 +356,7 @@ const PartNumber = () => {
       const response = await partsmartTextSearchAPI({
         query: searchKey,
         vehicle: vehicleContext,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limit: 100
       });
 

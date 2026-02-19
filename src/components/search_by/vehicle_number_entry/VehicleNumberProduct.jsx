@@ -986,7 +986,7 @@ const fetchVehicleCompatibility = async (partNumber) => {
         aggregate: part.aggregate,
         subAggregate: part.subAggregate,
         taxPercent: part.taxpercent,
-      }));
+      })); 
 
       console.log("🔄 Transformed Products:", transformedProducts.length);
 
@@ -1064,19 +1064,21 @@ const fetchVehicleCompatibility = async (partNumber) => {
   };
 
   // Split products into categories based on brand
-  // myTVS Recommended Products: Only myTVS brand products
+  // myTVS Recommended Products: myTVS and VALEO brand products
   const recommendedProducts = products.filter(
     (product) =>
       product.brand?.toUpperCase().includes("MYTVS") ||
-      product.brand?.toUpperCase().includes("MY TVS"),
+      product.brand?.toUpperCase().includes("MY TVS") ||
+      product.brand?.toUpperCase().includes("VALEO"),
   );
 
-  // Other Products: All brands except myTVS
+  // Other Products: All brands except myTVS and VALEO
   const otherProducts = products.filter(
     (product) =>
       !(
         product.brand?.toUpperCase().includes("MYTVS") ||
-        product.brand?.toUpperCase().includes("MY TVS")
+        product.brand?.toUpperCase().includes("MY TVS") ||
+        product.brand?.toUpperCase().includes("VALEO")
       ),
   );
 

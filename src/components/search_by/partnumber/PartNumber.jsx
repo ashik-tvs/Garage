@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import {
   partRelationsAPI,
@@ -198,6 +198,15 @@ const PartNumber = () => {
   const [totalPartsCount, setTotalPartsCount] = useState(0);
   const [openFilter, setOpenFilter] = useState(null);
   const [batchLoadingProgress, setBatchLoadingProgress] = useState(null);
+
+  // Lazy loading state
+  const [displayedRecommendedCount, setDisplayedRecommendedCount] = useState(10);
+  const [displayedOtherBrandCount, setDisplayedOtherBrandCount] = useState(10);
+  const ITEMS_PER_PAGE = 10;
+
+  // Ref to prevent infinite loop when updating URL
+  const isInitialMount = useRef(true);
+  const lastSearchKey = useRef(null);
 
   // Vehicle filter states - Initialize with vehicle from navigation state
   const [selectedMake, setSelectedMake] = useState(initialVehicle.make || "");
@@ -399,12 +408,12 @@ const PartNumber = () => {
         // Fetch stock status for all products
         allProducts = await fetchStockStatus(allProducts);
 
-        // Separate myTVS and other brands
+        // Separate myTVS and other brands (including VALEO in recommended)
         const myTvsProducts = allProducts.filter(p => 
-          p.brandName?.toUpperCase() === "MYTVS"
+          p.brandName?.toUpperCase() === "MYTVS" || p.brandName?.toUpperCase() === "VALEO"
         );
         const otherProducts = allProducts.filter(p => 
-          p.brandName?.toUpperCase() !== "MYTVS"
+          p.brandName?.toUpperCase() !== "MYTVS" && p.brandName?.toUpperCase() !== "VALEO"
         );
 
         setRecommendedProducts(myTvsProducts);
@@ -822,11 +831,8 @@ const PartNumber = () => {
 
       return products.map(product => {
         const stockInfo = stockMap[product.partNumber];
-        let stockStatus = "Out of Stock";
-        
-        if (stockInfo && stockInfo.totalQty > 0) {
-          stockStatus = "In Stock";
-        }
+        // Always show "In Stock" - static display
+        const stockStatus = "In Stock";
         
         return {
           ...product,
@@ -914,14 +920,8 @@ const PartNumber = () => {
       setBatchLoadingProgress(null);
 
       try {
-        // Build complete search query with year if available and not already in query
+        // Use the search key as-is without adding vehicle context again
         let finalSearchQuery = searchKey;
-        
-        // Add year if available and not in query
-        if (initialVehicle.year && !finalSearchQuery.includes(initialVehicle.year.toString())) {
-          finalSearchQuery = `${finalSearchQuery} ${initialVehicle.year}`;
-          console.log("📝 Added year to search query:", finalSearchQuery);
-        }
         
         console.log("🔍 Fetching products using Unified Search API for:", finalSearchQuery);
         console.log("🚗 Initial vehicle context:", initialVehicle);
@@ -943,7 +943,7 @@ const PartNumber = () => {
         // Use Unified Search API (max limit is 50)
         const requestBody = {
           query: finalSearchQuery,
-          sources: ["tvs"],
+          sources: ["tvs","boodmo","smart"],
           limitPerPart: 50
         };
         
@@ -961,17 +961,44 @@ const PartNumber = () => {
 
         console.log("✅ Unified Search response:", response);
         
+        // If 0 results with full context, try with just make+model (broader search)
+        let finalResponse = response;
+        if (response?.summary?.results_returned === 0 && vehicleContext.variant) {
+          console.log("⚠️ 0 results with full vehicle context, retrying with make+model only");
+          const broaderRequestBody = {
+            query: finalSearchQuery,
+            sources: ["tvs","boodmo","smart"],
+            limitPerPart: 50
+          };
+          
+          // Only include make and model for broader search
+          if (vehicleContext.make && vehicleContext.model) {
+            broaderRequestBody.vehicle = {
+              make: vehicleContext.make,
+              model: vehicleContext.model
+            };
+          }
+          
+          const broaderResponse = await partsmartTextSearchAPI(broaderRequestBody);
+          console.log("✅ Broader search result (make+model only):", broaderResponse);
+          
+          if (broaderResponse?.summary?.results_returned > 0) {
+            console.log("✅ Broader search found results");
+            finalResponse = broaderResponse;
+          }
+        }
+        
         // Check for incomplete extraction - show modal to collect missing fields
-        if (response?.summary?.status === 'incomplete_extraction') {
+        if (finalResponse?.summary?.status === 'incomplete_extraction') {
           console.log("⚠️ Incomplete extraction detected");
-          console.log("   Extracted fields:", response.summary.extracted_fields);
-          console.log("   Missing fields:", response.summary.missing_fields);
+          console.log("   Extracted fields:", finalResponse.summary.extracted_fields);
+          console.log("   Missing fields:", finalResponse.summary.missing_fields);
           
           setVehicleModal({
             isOpen: true,
             searchQuery: finalSearchQuery,
-            missingFields: response.summary.missing_fields || [],
-            extractedFields: response.summary.extracted_fields || {},
+            missingFields: finalResponse.summary.missing_fields || [],
+            extractedFields: finalResponse.summary.extracted_fields || {},
           });
           
           setLoading(false);
@@ -979,8 +1006,8 @@ const PartNumber = () => {
         }
 
         // Check for validation errors and retry with NLP only (no vehicle object)
-        if (response?.summary?.status === 'error' && response?.error?.code === 'VALIDATION_ERROR') {
-          console.warn("⚠️ API validation error:", response.error.message);
+        if (finalResponse?.summary?.status === 'error' && finalResponse?.error?.code === 'VALIDATION_ERROR') {
+          console.warn("⚠️ API validation error:", finalResponse.error.message);
           console.log("🔄 Retrying search with NLP only (no vehicle object)");
           
           // Build a natural language query with all vehicle info
@@ -992,7 +1019,7 @@ const PartNumber = () => {
           // Retry search with just the query - let NLP extract vehicle info
           const retryResponse = await partsmartTextSearchAPI({
             query: nlpQuery,
-            sources: ['tvs'],
+            sources: ['tvs',"boodmo","smart"],
             limitPerPart: 10
           });
           
@@ -1005,7 +1032,7 @@ const PartNumber = () => {
           }
         }
 
-        if (!response?.data?.tvs) {
+        if (!finalResponse?.data?.tvs) {
           setError("No products found for this search.");
           setRecommendedProducts([]);
           setOtherBrandProducts([]);
@@ -1015,7 +1042,7 @@ const PartNumber = () => {
         }
 
         // Process successful response
-        processSearchResponse(response, finalSearchQuery);
+        processSearchResponse(finalResponse, finalSearchQuery);
       } catch (err) {
         console.error("❌ Error fetching products:", err);
         setError("Failed to load products. Please try again.");
@@ -1092,25 +1119,40 @@ const PartNumber = () => {
       // Fetch stock status for all products
       allProducts = await fetchStockStatus(allProducts);
 
-      // Separate myTVS and other brands
+      // Separate myTVS and other brands (including VALEO in recommended)
       const myTvsProducts = allProducts.filter(p => 
-        p.brandName?.toUpperCase() === "MYTVS"
+        p.brandName?.toUpperCase() === "MYTVS" || p.brandName?.toUpperCase() === "VALEO"
       );
       const otherProducts = allProducts.filter(p => 
-        p.brandName?.toUpperCase() !== "MYTVS"
+        p.brandName?.toUpperCase() !== "MYTVS" && p.brandName?.toUpperCase() !== "VALEO"
       );
 
       setRecommendedProducts(myTvsProducts);
       setOtherBrandProducts(otherProducts);
+      
+      // Reset lazy loading counters
+      setDisplayedRecommendedCount(10);
+      setDisplayedOtherBrandCount(10);
 
-      // Update URL with vehicle context after successful search
-      updateURLParams(initialVehicle, searchQuery || originalSearchQuery);
+      // Update URL with vehicle context after successful search (only if not from URL params)
+      if (!isInitialMount.current) {
+        updateURLParams(initialVehicle, searchQuery || originalSearchQuery);
+      }
 
       // FETCH ALIGNED PRODUCTS (COMMENTED OUT - NOT NEEDED)
       // await fetchAlignedProducts(searchKey);
     };
 
-    fetchProducts();
+    // Only fetch if searchKey changed (prevent duplicate fetches)
+    if (lastSearchKey.current !== searchKey) {
+      lastSearchKey.current = searchKey;
+      fetchProducts();
+    }
+    
+    // Mark that initial mount is complete
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    }
   }, [searchKey]);
 
   // Fetch aligned products using partRelationsAPI
@@ -1182,7 +1224,7 @@ const PartNumber = () => {
         search_type: "text",
         query: searchKey,
         vehicle: vehicleContext,
-        sources: ["tvs"],
+        sources: ["tvs","boodmo","smart"],
         limit: 50
       });
 
@@ -1232,12 +1274,12 @@ const PartNumber = () => {
       // Fetch stock status only
       filteredProducts = await fetchStockStatus(filteredProducts);
 
-      // Separate myTVS and other brands
+      // Separate myTVS and other brands (including VALEO in recommended)
       const myTvsProducts = filteredProducts.filter(p => 
-        p.brandName?.toUpperCase() === "MYTVS"
+        p.brandName?.toUpperCase() === "MYTVS" || p.brandName?.toUpperCase() === "VALEO"
       );
       const otherProducts = filteredProducts.filter(p => 
-        p.brandName?.toUpperCase() !== "MYTVS"
+        p.brandName?.toUpperCase() !== "MYTVS" && p.brandName?.toUpperCase() !== "VALEO"
       );
 
       setRecommendedProducts(myTvsProducts);
@@ -1284,7 +1326,7 @@ const PartNumber = () => {
         search_type: "text",
         query: searchKey,
         vehicle: vehicleContext,
-        sources: ["tvs"],
+        sources: ["tvs","boodmo","smart"],
         limit: 50
       });
 
@@ -1327,10 +1369,10 @@ const PartNumber = () => {
         filteredProducts = await fetchStockStatus(filteredProducts);
 
         const myTvsProducts = filteredProducts.filter(p => 
-          p.brandName?.toUpperCase() === "MYTVS"
+          p.brandName?.toUpperCase() === "MYTVS" || p.brandName?.toUpperCase() === "VALEO"
         );
         const otherProducts = filteredProducts.filter(p => 
-          p.brandName?.toUpperCase() !== "MYTVS"
+          p.brandName?.toUpperCase() !== "MYTVS" && p.brandName?.toUpperCase() !== "VALEO"
         );
 
         setRecommendedProducts(myTvsProducts);
@@ -1379,8 +1421,8 @@ const PartNumber = () => {
       // Apply ETA filter logic here
     }
 
-    const myTvs = filtered.filter(p => p.brandName?.toUpperCase() === "MYTVS");
-    const others = filtered.filter(p => p.brandName?.toUpperCase() !== "MYTVS");
+    const myTvs = filtered.filter(p => p.brandName?.toUpperCase() === "MYTVS" || p.brandName?.toUpperCase() === "VALEO");
+    const others = filtered.filter(p => p.brandName?.toUpperCase() !== "MYTVS" && p.brandName?.toUpperCase() !== "VALEO");
 
     setRecommendedProducts(myTvs);
     setOtherBrandProducts(others);
@@ -1394,15 +1436,8 @@ const PartNumber = () => {
 
   // Build complete search key display with vehicle details
   const getCompleteSearchKey = () => {
-    // Use the original search query if available, otherwise use searchKey
-    let displayKey = originalSearchQuery || searchKey;
-    
-    // Add year if available and not already in the query
-    if (initialVehicle.year && !displayKey.includes(initialVehicle.year.toString())) {
-      displayKey += " " + initialVehicle.year;
-    }
-    
-    return displayKey;
+    // Just return the original search query without adding anything
+    return originalSearchQuery || searchKey;
   };
 
   return (
@@ -1424,7 +1459,7 @@ const PartNumber = () => {
           )}
         </div>
 
-        {/* FILTERS */}
+        {/* FILTERS
         <div className="pn-top">
           <div className="pn-compatibility">
             <select 
@@ -1607,7 +1642,7 @@ const PartNumber = () => {
               <option value="1 Week">1 Week</option>
             </select>
           </div>
-        </div>
+        </div> */}
 
         {/* CONTENT */}
         <div className="pn-content">
@@ -1696,7 +1731,7 @@ const PartNumber = () => {
               <div className="pn-left-section">
                 <Product2
                   title="myTVS Recommended Products"
-                  products={recommendedProducts.map(p => ({
+                  products={recommendedProducts.slice(0, displayedRecommendedCount).map(p => ({
                     id: p.id || p.partNumber,
                     brand: p.brandName || "myTVS",
                     partNumber: p.partNumber,
@@ -1704,7 +1739,7 @@ const PartNumber = () => {
                     price: parseFloat(p.listPrice) || 0,
                     mrp: parseFloat(p.mrp) || 0,
                     image: p.imageUrl || NoImage,
-                    stockStatus: p.stockStatus || "Unknown",
+                    stockStatus: "In Stock",
                     deliveryTime: p.eta || "1-2 Days",
                     compatibleVehicles: p.compatibleVehicles || 0,
                     cartId: p.partNumber,
@@ -1722,10 +1757,21 @@ const PartNumber = () => {
                   }}
                   onCompatibilityClick={handleCompatibilityClick}
                 />
+                
+                {displayedRecommendedCount < recommendedProducts.length && (
+                  <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                    <button 
+                      className="pn-search-btn"
+                      onClick={() => setDisplayedRecommendedCount(prev => prev + ITEMS_PER_PAGE)}
+                    >
+                      Load More myTVS Products ({recommendedProducts.length - displayedRecommendedCount} remaining)
+                    </button>
+                  </div>
+                )}
 
                 <Product2
                   title="Other Brand Products"
-                  products={otherBrandProducts.map(p => ({
+                  products={otherBrandProducts.slice(0, displayedOtherBrandCount).map(p => ({
                     id: p.id || p.partNumber,
                     brand: p.brandName || "Other",
                     partNumber: p.partNumber,
@@ -1733,7 +1779,7 @@ const PartNumber = () => {
                     price: parseFloat(p.listPrice) || 0,
                     mrp: parseFloat(p.mrp) || 0,
                     image: p.imageUrl || NoImage,
-                    stockStatus: p.stockStatus || "Unknown",
+                    stockStatus: "In Stock",
                     deliveryTime: p.eta || "1-2 Days",
                     compatibleVehicles: p.compatibleVehicles || 0,
                     cartId: p.partNumber,
@@ -1751,6 +1797,17 @@ const PartNumber = () => {
                   }}
                   onCompatibilityClick={handleCompatibilityClick}
                 />
+                
+                {displayedOtherBrandCount < otherBrandProducts.length && (
+                  <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                    <button 
+                      className="pn-search-btn"
+                      onClick={() => setDisplayedOtherBrandCount(prev => prev + ITEMS_PER_PAGE)}
+                    >
+                      Load More Other Brand Products ({otherBrandProducts.length - displayedOtherBrandCount} remaining)
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* RIGHT SIDE - 25% - ALIGNED PRODUCTS (COMMENTED OUT - NOT NEEDED) */}

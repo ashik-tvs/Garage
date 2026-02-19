@@ -351,7 +351,7 @@ const Search = () => {
       setLoading(true);
       const partsmartResult = await partsmartTextSearchAPI({
         query: rawValue,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limit: 10
       });
       
@@ -562,13 +562,46 @@ const Search = () => {
     setVehicleModal(prev => ({ ...prev, isOpen: false }));
     
     // Extract ONLY the part name from results (not the full search query)
-    // The modal already searched with just the part name, so use that
-    const partName = results?.summary?.extracted_fields?.part || 
-                     results?.summary?.extracted_fields?.aggregate || 
-                     vehicleModal.extractedFields?.part ||
-                     vehicleModal.extractedFields?.aggregate ||
-                     vehicle.aggregate ||
-                     vehicleModal.searchQuery;
+    // Priority: 1) API extracted part, 2) Initial extracted fields, 3) Parse from search query
+    let partName = results?.summary?.extracted_fields?.part || 
+                   results?.summary?.extracted_fields?.aggregate || 
+                   vehicleModal.extractedFields?.part ||
+                   vehicleModal.extractedFields?.aggregate ||
+                   vehicle.aggregate;
+    
+    // If still no part name, extract it from the original search query
+    // by removing vehicle context (make, model, variant, fuelType, year)
+    if (!partName && vehicleModal.searchQuery) {
+      const query = vehicleModal.searchQuery;
+      let cleanedQuery = query;
+      
+      // Remove vehicle details from the query to get just the part name
+      const vehicleDetails = vehicleContextFromModal || vehicle;
+      const fieldsToRemove = [
+        vehicleDetails.make,
+        vehicleDetails.model,
+        vehicleDetails.variant,
+        vehicleDetails.fuelType,
+        vehicleDetails.year?.toString()
+      ].filter(Boolean);
+      
+      // Remove each vehicle field from the query
+      fieldsToRemove.forEach(field => {
+        if (field) {
+          // Create a regex that matches the field with word boundaries
+          const regex = new RegExp(`\\b${field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+          cleanedQuery = cleanedQuery.replace(regex, '');
+        }
+      });
+      
+      // Clean up extra spaces and trim
+      partName = cleanedQuery.replace(/\s+/g, ' ').trim();
+    }
+    
+    // Final fallback to original query if extraction failed
+    if (!partName) {
+      partName = vehicleModal.searchQuery;
+    }
     
     console.log("🔍 Extracted part name:", partName);
     

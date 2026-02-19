@@ -269,6 +269,7 @@
 .pn-left-section {
     flex: 0 0 100%;
     max-width: 100%;
+        margin-top: 28px;
 }
 
 .pn-right-section {

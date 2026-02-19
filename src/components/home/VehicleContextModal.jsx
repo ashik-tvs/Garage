@@ -362,12 +362,24 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
     setErrors({ api: null });
     
     try {
+      // Normalize variant format: add spaces for better API compatibility
+      const normalizeVariant = (variant) => {
+        if (!variant) return variant;
+        // Add space before numbers: "SPORTZ1.2" -> "SPORTZ 1.2"
+        // Add space before uppercase after lowercase: "KAPPAMT" -> "KAPPA MT"
+        return variant
+          .replace(/([A-Z])(\d)/g, '$1 $2') // Space before numbers
+          .replace(/(\d)([A-Z])/g, '$1 $2') // Space after numbers before letters
+          .replace(/([a-z])([A-Z])/g, '$1 $2') // Space between camelCase
+          .replace(/\s+/g, ' ') // Normalize multiple spaces
+          .trim();
+      };
+
       // Build complete query with all vehicle fields
-      // Pass data as-is to API - let API handle validation
       const vehicleContext = {
         make: vehicle.make || extractedFields?.make,
         model: vehicle.model || extractedFields?.model,
-        variant: vehicle.variant || extractedFields?.variant,
+        variant: normalizeVariant(vehicle.variant || extractedFields?.variant),
         fuelType: vehicle.fuelType || extractedFields?.fuelType,
       };
       
@@ -389,11 +401,36 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
       let result = await partsmartTextSearchAPI({
         query: partName,
         vehicle: vehicleContext,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limit: 10
       });
       
       console.log("✅ PartSmart search result:", result);
+      
+      // If 0 results with full context, try with just make+model (broader search)
+      if (result?.summary?.results_returned === 0 && vehicleContext.variant) {
+        console.log("⚠️ 0 results with full vehicle context, retrying with make+model only");
+        const broaderContext = {
+          make: vehicleContext.make,
+          model: vehicleContext.model,
+        };
+        
+        result = await partsmartTextSearchAPI({
+          query: partName,
+          vehicle: broaderContext,
+          sources: ['tvs','boodmo','smart'],
+          limit: 10
+        });
+        
+        console.log("✅ Broader search result (make+model only):", result);
+        
+        // If broader search succeeds, use it but keep the full vehicle context for filtering
+        if (result?.summary?.results_returned > 0) {
+          console.log("✅ Broader search found results, navigating with full context for filtering");
+          onSearchComplete(result, vehicleContext);
+          return;
+        }
+      }
       
       // Check if search was successful - navigate regardless of results count
       if (result?.summary?.status === 'incomplete_extraction') {
@@ -414,7 +451,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
         // Retry search with just the query - let NLP extract vehicle info
         result = await partsmartTextSearchAPI({
           query: nlpQuery,
-          sources: ['tvs'],
+          sources: ['tvs','boodmo','smart'],
           limit: 10
         });
         

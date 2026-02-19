@@ -352,7 +352,7 @@ const ImageSearch = () => {
       // STEP 1: Image detection only (no catalog search)
       const detectionResult = await partsmartImageSearchAPI({
         image: imageFile,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limitPerPart: 50
       });
       
@@ -403,7 +403,7 @@ const ImageSearch = () => {
         search_type: 'multipart',
         query: structuredQuery,
         vehicle: vehicleData,
-        sources: ['tvs'],
+        sources: ['tvs','boodmo','smart'],
         limitPerPart: 50
       });
       
@@ -417,7 +417,7 @@ const ImageSearch = () => {
         searchResult = await apiService.post('/partsmart/search', {
           search_type: 'multipart',
           query: structuredQuery,
-          sources: ['tvs'],
+          sources: ['tvs','boodmo','smart'],
           limitPerPart: 50
         });
         
@@ -457,12 +457,12 @@ const ImageSearch = () => {
         
         console.log(`✅ Total products found: ${allProducts.length}`);
         
-        // Separate myTVS and other brands
+        // Separate myTVS and other brands (including VALEO in recommended)
         const myTvsProducts = allProducts.filter(p => 
-          p.brand?.toUpperCase() === "MYTVS"
+          p.brand?.toUpperCase() === "MYTVS" || p.brand?.toUpperCase() === "VALEO"
         );
         const otherBrands = allProducts.filter(p => 
-          p.brand?.toUpperCase() !== "MYTVS"
+          p.brand?.toUpperCase() !== "MYTVS" && p.brand?.toUpperCase() !== "VALEO"
         );
         
         setProducts(myTvsProducts);
@@ -550,12 +550,12 @@ const ImageSearch = () => {
       
       console.log("✅ Total products extracted:", allProducts.length);
       
-      // Separate myTVS and other brands
+      // Separate myTVS and other brands (including VALEO in recommended)
       const myTvsProducts = allProducts.filter(p => 
-        p.brand?.toUpperCase() === "MYTVS"
+        p.brand?.toUpperCase() === "MYTVS" || p.brand?.toUpperCase() === "VALEO"
       );
       const otherBrands = allProducts.filter(p => 
-        p.brand?.toUpperCase() !== "MYTVS"
+        p.brand?.toUpperCase() !== "MYTVS" && p.brand?.toUpperCase() !== "VALEO"
       );
       
       setProducts(myTvsProducts);
@@ -814,12 +814,12 @@ const ImageSearch = () => {
         
         console.log(`✅ Total products found: ${allProducts.length}`);
         
-        // Separate myTVS and other brands
+        // Separate myTVS and other brands (including VALEO in recommended)
         const myTvsProducts = allProducts.filter(p => 
-          p.brand?.toUpperCase() === "MYTVS"
+          p.brand?.toUpperCase() === "MYTVS" || p.brand?.toUpperCase() === "VALEO"
         );
         const otherBrands = allProducts.filter(p => 
-          p.brand?.toUpperCase() !== "MYTVS"
+          p.brand?.toUpperCase() !== "MYTVS" && p.brand?.toUpperCase() !== "VALEO"
         );
         
         setProducts(myTvsProducts);

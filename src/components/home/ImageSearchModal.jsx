@@ -113,6 +113,15 @@ const ImageSearchModal = ({
   };
 
   const fetchModels = async (make) => {
+    // Clear models immediately before fetching
+    setDropdownOptions(prev => ({
+      ...prev,
+      models: [],
+      variants: [],
+      fuelTypes: [],
+      years: []
+    }));
+    
     setLoadingDropdowns(prev => ({ ...prev, models: true }));
     try {
       const response = await apiService.post('/partsmart/search', {
@@ -128,19 +137,13 @@ const ImageSearchModal = ({
       if (response?.data?.data?.models) {
         setDropdownOptions(prev => ({
           ...prev,
-          models: response.data.data.models,
-          variants: [],
-          fuelTypes: [],
-          years: []
+          models: response.data.data.models
         }));
       } else if (response?.data?.models) {
         // Fallback if data is at root level
         setDropdownOptions(prev => ({
           ...prev,
-          models: response.data.models,
-          variants: [],
-          fuelTypes: [],
-          years: []
+          models: response.data.models
         }));
       }
     } catch (error) {
@@ -195,16 +198,39 @@ const ImageSearchModal = ({
     updateField(field, value);
     
     if (field === 'make' && value) {
-      fetchModels(value);
+      // Clear dependent fields in context
       updateField('model', null);
       updateField('variant', null);
       updateField('fuelType', null);
       updateField('year', null);
+      
+      // Clear dependent dropdown options immediately
+      setDropdownOptions(prev => ({
+        ...prev,
+        models: [],
+        variants: [],
+        fuelTypes: [],
+        years: []
+      }));
+      
+      // Fetch new models for selected make
+      fetchModels(value);
     } else if (field === 'model' && value && vehicle.make) {
-      fetchVariantsAndDetails(vehicle.make, value);
+      // Clear dependent fields in context
       updateField('variant', null);
       updateField('fuelType', null);
       updateField('year', null);
+      
+      // Clear dependent dropdown options immediately
+      setDropdownOptions(prev => ({
+        ...prev,
+        variants: [],
+        fuelTypes: [],
+        years: []
+      }));
+      
+      // Fetch new variants/details for selected model
+      fetchVariantsAndDetails(vehicle.make, value);
     }
   };
 
