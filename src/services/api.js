@@ -130,8 +130,8 @@ export const partRelationsAPI = async (requestBody) => {
 };
 
 /**
- * Stock List API
- * Get stock information
+ * Stock List API (OLD - Deprecated)
+ * Get stock information from old API
  */
 export const stockListAPI = async (requestBody) => {
   try {
@@ -142,6 +142,58 @@ export const stockListAPI = async (requestBody) => {
     console.error('Stock list API error:', error);
   }
   return null;
+};
+
+/**
+ * External Stock API (NEW)
+ * Get stock and ETA information from external API
+ * @param {string} customerCode - Customer code
+ * @param {string} partNo - Part number (partNumber in our system)
+ * @param {string} warehouse - Warehouse location
+ */
+export const externalStockAPI = async (customerCode, partNo, warehouse) => {
+  try {
+    const url = process.env.REACT_APP_EXTERNAL_STOCK_API_URL;
+    const username = process.env.REACT_APP_EXTERNAL_STOCK_API_USERNAME;
+    const password = process.env.REACT_APP_EXTERNAL_STOCK_API_PASSWORD;
+
+    if (!url || !username || !password) {
+      console.error('External Stock API credentials not configured');
+      return null;
+    }
+
+    // Create Basic Auth header
+    const authHeader = 'Basic ' + btoa(`${username}:${password}`);
+
+    const requestBody = {
+      customerCode,
+      partNo,
+      warehouse
+    };
+
+    console.log('🔍 Calling External Stock API:', requestBody);
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ External Stock API response:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('External Stock API error:', error);
+    return null;
+  }
 };
 
 /**
@@ -495,6 +547,7 @@ export default {
   masterListAPI,
   partRelationsAPI,
   stockListAPI,
+  externalStockAPI,
   imageAPI,
   cngAPI,
   electricAPI,

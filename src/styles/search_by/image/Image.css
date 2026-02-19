@@ -289,8 +289,9 @@
 }
 
 .tag.stock {
-  background: #e8f5e9;
-  color: #4caf50;
+  background: #d4edda !important; /* Light green background */
+  color: #28a745 !important; /* Green text */
+  font-weight: 600 !important; /* Bold text */
 }
 
 .tag.eta {

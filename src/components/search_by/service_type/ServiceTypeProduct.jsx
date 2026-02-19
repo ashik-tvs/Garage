@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import Search from "../../home/Search";
 import Navigation from "../../Navigation/Navigation";
 import apiService from "../../../services/apiservice";
-import { masterListAPI, partsListAPI, stockListAPI, generalSearchAPI } from "../../../services/api";
+import { masterListAPI, partsListAPI, stockListAPI, externalStockAPI, generalSearchAPI } from "../../../services/api";
 import { debugNavigationState } from "../../../utils/navigationHelper";
 
 import "../../../styles/search_by/service_type/ServiceTypeProduct.css";
@@ -200,43 +200,14 @@ const ServiceTypeProduct = () => {
     });
 
     const stockPromises = allProducts.map(async (product) => {
-      try {
-        const response = await stockListAPI({
-          customerCode: "0046",
-          partNumber: product.partNumber,
-          inventoryName: null,
-          entity: null,
-          software: null,
-          limit: 2,
-          offset: 0,
-          sortOrder: "ASC",
-          fieldOrder: "lotAgeDate",
-        });
-
-        // Check if stock data exists and has quantity
-        const stockItems = Array.isArray(response?.data) ? response.data : [];
-        const totalQty = stockItems.reduce(
-          (sum, item) => sum + (item.qty || 0),
-          0,
-        );
-
-        return {
-          partNumber: product.partNumber,
-          productId: product.productId,
-          inStock: totalQty > 0,
-          quantity: totalQty,
-          stockItems: stockItems, // Store detailed stock info
-        };
-      } catch (err) {
-        console.error(`Error fetching stock for ${product.partNumber}:`, err);
-        return {
-          partNumber: product.partNumber,
-          productId: product.productId,
-          inStock: false,
-          quantity: 0,
-          stockItems: [],
-        };
-      }
+      // Return static "In Stock" for all products
+      return {
+        partNumber: product.partNumber,
+        productId: product.productId,
+        inStock: true,
+        quantity: 10,
+        eta: "Same Day",
+      };
     });
 
     try {

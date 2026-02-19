@@ -34,6 +34,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
   const [validationWarning, setValidationWarning] = useState(null);
   
   const [searching, setSearching] = useState(false);
+  const [vehicleFound, setVehicleFound] = useState(null);
 
   // Initialize local missing fields from props (filter out non-vehicle fields)
   useEffect(() => {
@@ -52,6 +53,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
       
       // Clear validation warning when modal opens
       setValidationWarning(null);
+      setVehicleFound(null);
     }
   }, [isOpen, propMissingFields]);
 
@@ -64,7 +66,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
     }
   }, [isOpen, localMissingFields.length]);
 
-  const fetchOptionsForField = async (field) => {
+  const fetchOptionsForField = async (field, updatedValues = {}) => {
     setLoading(prev => ({ ...prev, [field]: true }));
     setErrors({ api: null });
     
@@ -81,7 +83,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
       const fieldsToInclude = hierarchy.slice(0, currentFieldIndex);
       
       fieldsToInclude.forEach(fieldName => {
-        const value = extractedFields?.[fieldName] || vehicle[fieldName];
+        const value = updatedValues[fieldName] || extractedFields?.[fieldName] || vehicle[fieldName];
         if (value) {
           vehicleContext[fieldName] = value;
         }
@@ -219,8 +221,98 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
       // Fetch options for next field in hierarchy
       const nextField = hierarchy[currentIndex + 1];
       if (nextField) {
-        setTimeout(() => fetchOptionsForField(nextField), 100);
+        // Pass the updated value so fetchOptionsForField uses the latest data
+        const updatedValues = { [field]: value };
+        setTimeout(() => fetchOptionsForField(nextField, updatedValues), 100);
       }
+    }
+  };
+
+  const handleVehicleNumberLookup = async () => {
+    if (!vehicleNumber || vehicleNumber.length < 6) {
+      setErrors({ api: "Please enter a valid vehicle number" });
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, make: true }));
+    setErrors({ api: null });
+    setVehicleFound(null);
+
+    try {
+      console.log("🔍 Looking up vehicle number:", vehicleNumber);
+
+      // Build query: include part name from original search + vehicle number
+      // This matches Postman format: "oil filter for TN12AU9523"
+      const partName = extractedFields?.part || searchQuery || "parts";
+      const lookupQuery = `${partName} for ${vehicleNumber}`;
+
+      const requestBody = {
+        search_type: "text",
+        query: lookupQuery,
+        sources: ["tvs","boodmo","smart"],
+        limit: 1
+      };
+
+      console.log("📡 Vehicle lookup request:", requestBody);
+
+      const response = await apiService.post('/partsmart/search', requestBody);
+      console.log("📥 Vehicle number lookup response:", response);
+
+      // Response structure: { success, received, data, summary, meta }
+      // summary is at top level, not inside data
+      console.log("🔍 Summary:", response?.summary);
+      console.log("🔍 Vehicle Context:", response?.summary?.vehicle_context);
+
+      // Check if vehicle_context exists in summary
+      if (response && response.summary && response.summary.vehicle_context) {
+        const vehicleData = response.summary.vehicle_context;
+        console.log("✅ Vehicle found:", vehicleData);
+
+        // Build display message
+        const displayParts = [
+          vehicleData.make,
+          vehicleData.model,
+          vehicleData.variant,
+          vehicleData.fuelType,
+          vehicleData.year
+        ].filter(Boolean);
+        
+        setVehicleFound(displayParts.join(' | '));
+
+        // Auto-fill all fields
+        if (vehicleData.make) {
+          updateField('make', vehicleData.make);
+          setLocalMissingFields(prev => prev.filter(f => f !== 'make'));
+        }
+        if (vehicleData.model) {
+          updateField('model', vehicleData.model);
+          setLocalMissingFields(prev => prev.filter(f => f !== 'model'));
+        }
+        if (vehicleData.variant) {
+          updateField('variant', vehicleData.variant);
+          setLocalMissingFields(prev => prev.filter(f => f !== 'variant'));
+        }
+        if (vehicleData.fuelType) {
+          updateField('fuelType', vehicleData.fuelType);
+          setLocalMissingFields(prev => prev.filter(f => f !== 'fuelType'));
+        }
+        if (vehicleData.year) {
+          updateField('year', vehicleData.year.toString());
+          setLocalMissingFields(prev => prev.filter(f => f !== 'year'));
+        }
+
+        // Clear all missing fields if all data is present
+        if (vehicleData.make && vehicleData.model && vehicleData.variant && vehicleData.fuelType && vehicleData.year) {
+          setLocalMissingFields([]);
+        }
+      } else {
+        setErrors({ api: "Vehicle not found. Please enter details manually." });
+      }
+    } catch (error) {
+      console.error("❌ Error looking up vehicle number:", error);
+      setErrors({ api: "Failed to lookup vehicle number. Please try again." });
+    } finally {
+      setLoading(prev => ({ ...prev, make: false }));
     }
   };
 
@@ -378,7 +470,19 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
                   placeholder="TN01AZ2345"
                   maxLength={10}
                 />
+                <button 
+                  className="btn-lookup" 
+                  onClick={handleVehicleNumberLookup}
+                  disabled={loading.make || !vehicleNumber}
+                >
+                  {loading.make ? 'Looking up...' : 'Lookup'}
+                </button>
               </div>
+              {vehicleFound && (
+                <div className="vehicle-found-message">
+                  ✅ Vehicle Found: {vehicleFound}
+                </div>
+              )}
             </div>
 
             <div className="or-divider">
@@ -406,7 +510,7 @@ const VehicleContextModal = ({ isOpen, onClose, searchQuery, missingFields: prop
                 const currentValue = extractedFields?.[fieldKey] || vehicle[fieldKey] || "";
                 
                 // Don't show dropdown if field is already extracted (shown in "Extracted from search query" section)
-                if (extractedFields?.[fieldKey]) {
+                if (extractedFields && extractedFields[fieldKey]) {
                   return null;
                 }
                 

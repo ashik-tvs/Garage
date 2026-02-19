@@ -19,8 +19,8 @@ const Login = () => {
   // ===============================
   // STATE
   // ===============================
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("raja@tvs.in");
+  const [password, setPassword] = useState("tvs@12345");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -466,7 +466,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-content">
-        {/* LEFT SIDE */}
+       
         <div className="login-art">
           <img
             src={getAsset('LOGIN_IMAGE', assets)}
@@ -475,7 +475,7 @@ const Login = () => {
           />
         </div>
 
-        {/* RIGHT SIDE */}
+        
         <div className="login-form-section">
           <div className="login-intro">
             <div className="login-logo">
@@ -485,14 +485,13 @@ const Login = () => {
                 className="logo-image-logo"
               />
             </div>
-            <h1 className="login-heading">LOGIN</h1>
           </div>
 
           <form className="login-form" onSubmit={handleSignIn}>
             {error && <div className="login-error-message">{error}</div>}
 
             <div className="login-input-group">
-              <label className="login-label">Employee ID</label>
+              <label className="login-label">Email</label>
               <input
                 type="email"
                 className="login-input"

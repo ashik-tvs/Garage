@@ -3,99 +3,13 @@ import { useCart } from "../../../context/CartContext";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useVehicleContext } from "../../../contexts/VehicleContext";
 import Search from "../../home/Search";
-import { partsmartImageSearchAPI } from "../../../services/api";
+import { partsmartImageSearchAPI, externalStockAPI } from "../../../services/api";
 import apiService from "../../../services/apiservice";
 import serviceType from "../../../assets/vehicle_search_entry/servicetype.png";
 import NoImage from "../../../assets/No Image.png";
 import "../../../styles/search_by/image/Image.css";
-import Brake_1 from "../../../assets/brake1.png";
-import Brake_2 from "../../../assets/brake2.png";
-import Brake_3 from "../../../assets/brake3.png";
+import "../../../styles/skeleton/skeleton.css";
 
-const brakeImages = [Brake_1, Brake_2, Brake_3];
-
-const mockProducts = [
-  {
-    id: 1,
-    code: "LF6072",
-    brand: "myTVS",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 425,
-    mrp: 600,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.1L CRDi",
-    fuel: "Petrol",
-    year: "2013 to 2016",
-  },
-  {
-    id: 2,
-    code: "LF6073",
-    brand: "Valeo",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 425,
-    mrp: 600,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.2L",
-    fuel: "Petrol",
-    year: "2016 to 2020",
-  },
-  {
-    id: 3,
-    code: "LF6074",
-    brand: "Valeo",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 425,
-    mrp: 600,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.2L",
-    fuel: "Petrol",
-    year: "2016 to 2020",
-  },
-];
-const otherProducts = [
-  {
-    id: 101,
-    code: "LF6081",
-    brand: "Valeo",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 410,
-    mrp: 580,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.1L CRDi",
-    fuel: "Petrol",
-    year: "2013 to 2016",
-  },
-  {
-    id: 102,
-    code: "LF6082",
-    brand: "Bosch",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 430,
-    mrp: 620,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.2L",
-    fuel: "Petrol",
-    year: "2016 to 2020",
-  },
-  {
-    id: 103,
-    code: "LF6083",
-    brand: "TVS",
-    title: "Rear Brake Pad Disc Set - F(EON)",
-    price: 445,
-    mrp: 650,
-    stock: "In stock",
-    eta: "1-2 Days",
-    vehicle: "Grand i10 1.2L",
-    fuel: "Petrol",
-    year: "2016 to 2020",
-  },
-];
 
 const ImageSearch = () => {
   const location = useLocation();
@@ -133,6 +47,21 @@ const ImageSearch = () => {
     fuelType: false,
     year: false,
   });
+
+  // Helper function to fetch stock and ETA for products
+  const fetchStockForProducts = async (productsList) => {
+    // Static customer code and warehouse
+    const customerCode = "NMSA0987";
+    const warehouse = "PATNA";
+
+    // Return all products with static "In Stock" status
+    return productsList.map(product => ({
+      ...product,
+      stock: "In Stock",
+      eta: "Same Day",
+      stockQuantity: 10,
+    }));
+  };
 
   // Function to update URL with vehicle context
   const updateURLParams = (vehicleData, detectedPartName = null) => {
@@ -513,8 +442,8 @@ const ImageSearch = () => {
                 price: part.listPrice || part.list_price,
                 listPrice: part.listPrice || part.list_price,
                 mrp: part.mrp,
-                stock: "In stock",
-                eta: "1-2 Days",
+                stock: "In Stock",
+                eta: "Same Day",
                 vehicle: `${part.vehicleModel || ''} ${part.vehicleVariant || ''}`.trim(),
                 fuel: part.vehicleFuelType || part.fuelType,
                 year: part.vehicleFromYear || part.year,
@@ -603,8 +532,8 @@ const ImageSearch = () => {
                   price: part.listPrice || part.list_price,
                   listPrice: part.listPrice || part.list_price,
                   mrp: part.mrp,
-                  stock: "In stock",
-                  eta: "1-2 Days",
+                  stock: "In Stock",
+                  eta: "Same Day",
                   vehicle: `${part.vehicleModel || ''} ${part.vehicleVariant || ''}`.trim(),
                   fuel: part.vehicleFuelType || part.fuelType,
                   year: part.vehicleFromYear || part.year,
@@ -870,8 +799,8 @@ const ImageSearch = () => {
                 price: part.listPrice || part.list_price,
                 listPrice: part.listPrice || part.list_price,
                 mrp: part.mrp,
-                stock: "In stock",
-                eta: "1-2 Days",
+                stock: "In Stock",
+                eta: "Same Day",
                 vehicle: `${part.vehicleModel || ''} ${part.vehicleVariant || ''}`.trim(),
                 fuel: part.vehicleFuelType || part.fuelType,
                 year: part.vehicleFromYear || part.year,
@@ -1037,14 +966,55 @@ const ImageSearch = () => {
           </div>
 
           {/* Recommended Products */}
-          {products.length > 0 ? (
+          {searching ? (
+            <div className="img-grid">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="img-card skeleton-card">
+                  {/* Image */}
+                  <div className="img-card-image">
+                    <div className="skeleton skeleton-pn-image"></div>
+                  </div>
+
+                  {/* Card Body */}
+                  <div className="img-card-body">
+                    {/* Badges */}
+                    <div className="img-tags">
+                      <div className="skeleton skeleton-pn-tag"></div>
+                      <div className="skeleton skeleton-pn-tag"></div>
+                      <div className="skeleton skeleton-pn-tag"></div>
+                    </div>
+
+                    {/* Code */}
+                    <div className="skeleton skeleton-pn-part-code"></div>
+
+                    {/* Title */}
+                    <div className="skeleton skeleton-pn-name"></div>
+
+                    {/* Price row */}
+                    <div className="img-price-row">
+                      <div className="skeleton skeleton-pn-price"></div>
+                      <div className="skeleton skeleton-pn-mrp"></div>
+                      <div className="skeleton skeleton-pn-button"></div>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="img-meta">
+                      <div className="skeleton skeleton-pn-tag"></div>
+                      <div className="skeleton skeleton-pn-tag"></div>
+                      <div className="skeleton skeleton-pn-tag"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length > 0 ? (
             <div className="img-grid">
               {products.map((p, idx) => (
                 <div key={p.partNumber || idx} className="img-card">
                   {/* Image */}
                   <div className="img-card-image">
                     <img
-                      src={p.imageUrl || brakeImages[idx % brakeImages.length]}
+                      src={p.imageUrl || NoImage}
                       alt={p.partDescription}
                       onError={(e) => { e.target.src = NoImage; }}
                     />
@@ -1055,8 +1025,8 @@ const ImageSearch = () => {
                     {/* Badges */}
                     <div className="img-tags">
                       <span className="tag brand">{p.brand || 'myTVS'}</span>
-                      <span className="tag stock">In stock</span>
-                      <span className="tag eta">1-2 Days</span>
+                      <span className="tag stock">In Stock</span>
+                      <span className="tag eta">Same Day</span>
                     </div>
 
                     {/* Code */}
@@ -1083,7 +1053,7 @@ const ImageSearch = () => {
                               brand: p.brand || 'myTVS',
                               listPrice: p.listPrice || p.price,
                               mrp: p.mrp,
-                              image: p.imageUrl || brakeImages[idx % brakeImages.length],
+                              image: p.imageUrl || NoImage,
                             });
                           }
                         }}
@@ -1104,7 +1074,7 @@ const ImageSearch = () => {
             </div>
           ) : (
             <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
-              {searching ? "Searching..." : "No products found. Upload an image and select vehicle details to search."}
+              No products found. Upload an image and select vehicle details to search.
             </div>
           )}
 
@@ -1118,7 +1088,7 @@ const ImageSearch = () => {
                   <div key={`o-${p.partNumber || idx}`} className="img-card">
                     <div className="img-card-image">
                       <img
-                        src={p.imageUrl || brakeImages[idx % brakeImages.length]}
+                        src={p.imageUrl || NoImage}
                         alt={p.partDescription}
                         onError={(e) => { e.target.src = NoImage; }}
                       />
@@ -1127,8 +1097,8 @@ const ImageSearch = () => {
                     <div className="img-card-body">
                       <div className="img-tags">
                         <span className="tag brand">{p.brand || 'Valeo'}</span>
-                        <span className="tag stock">In stock</span>
-                        <span className="tag eta">1-2 Days</span>
+                        <span className="tag stock">In Stock</span>
+                        <span className="tag eta">Same Day</span>
                       </div>
 
                       <p className="img-code">{p.partNumber}</p>
@@ -1149,7 +1119,7 @@ const ImageSearch = () => {
                                 brand: p.brand || 'Valeo',
                                 listPrice: p.listPrice || p.price,
                                 mrp: p.mrp,
-                                image: p.imageUrl || brakeImages[idx % brakeImages.length],
+                                image: p.imageUrl || NoImage,
                               });
                             }
                           }}
@@ -1205,3 +1175,4 @@ const ImageSearch = () => {
 };
 
 export default ImageSearch;
+

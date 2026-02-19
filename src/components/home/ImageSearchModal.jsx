@@ -14,6 +14,8 @@ const ImageSearchModal = ({
   const { vehicle, updateField, resetVehicle } = useVehicleContext();
   
   const [loading, setLoading] = useState(false);
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [vehicleFound, setVehicleFound] = useState(null);
   const [dropdownOptions, setDropdownOptions] = useState({
     makes: [],
     models: [],
@@ -164,6 +166,82 @@ const ImageSearchModal = ({
     }
   };
 
+  const handleVehicleNumberLookup = async () => {
+    if (!vehicleNumber || vehicleNumber.length < 6) {
+      alert("Please enter a valid vehicle number");
+      return;
+    }
+
+    setLoading(true);
+    setVehicleFound(null);
+
+    try {
+      console.log("🔍 Looking up vehicle number:", vehicleNumber);
+
+      // Build query: include part name + vehicle number
+      const partName = detectedPart || "parts";
+      const lookupQuery = `${partName} for ${vehicleNumber}`;
+
+      const requestBody = {
+        search_type: "text",
+        query: lookupQuery,
+        sources: ["tvs","boodmo","smart"],
+        limit: 1
+      };
+
+      console.log("📡 Vehicle lookup request:", requestBody);
+
+      const response = await apiService.post('/partsmart/search', requestBody);
+      console.log("📥 Vehicle number lookup response:", response);
+
+      console.log("🔍 Summary:", response?.summary);
+      console.log("🔍 Vehicle Context:", response?.summary?.vehicle_context);
+
+      // Check if vehicle_context exists in summary
+      if (response && response.summary && response.summary.vehicle_context) {
+        const vehicleData = response.summary.vehicle_context;
+        console.log("✅ Vehicle found:", vehicleData);
+
+        // Build display message
+        const displayParts = [
+          vehicleData.make,
+          vehicleData.model,
+          vehicleData.variant,
+          vehicleData.fuelType,
+          vehicleData.year
+        ].filter(Boolean);
+        
+        setVehicleFound(displayParts.join(' | '));
+
+        // Auto-fill all fields
+        if (vehicleData.make) {
+          updateField('make', vehicleData.make);
+          await fetchModels(vehicleData.make);
+        }
+        if (vehicleData.model && vehicleData.make) {
+          updateField('model', vehicleData.model);
+          await fetchVariantsAndDetails(vehicleData.make, vehicleData.model);
+        }
+        if (vehicleData.variant) {
+          updateField('variant', vehicleData.variant);
+        }
+        if (vehicleData.fuelType) {
+          updateField('fuelType', vehicleData.fuelType);
+        }
+        if (vehicleData.year) {
+          updateField('year', vehicleData.year.toString());
+        }
+      } else {
+        alert("Vehicle not found. Please enter details manually.");
+      }
+    } catch (error) {
+      console.error("❌ Error looking up vehicle number:", error);
+      alert("Failed to lookup vehicle number. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleContinueSearch = () => {
     if (!vehicle.make || !vehicle.model) {
       alert("Please select at least Make and Model");
@@ -264,6 +342,37 @@ const ImageSearchModal = ({
             <p className="image-search-modal-section-subtitle">
               Please provide vehicle details by entering vehicle number or selecting from dropdowns
             </p>
+
+            {/* Vehicle Number Input */}
+            <div className="image-search-modal-field">
+              <label>Vehicle Number (Auto-fills all details)</label>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input
+                  type="text"
+                  value={vehicleNumber}
+                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
+                  placeholder="TN01AZ2345"
+                  maxLength={10}
+                  className="image-search-modal-select"
+                  style={{ flex: 1 }}
+                />
+                <button 
+                  onClick={handleVehicleNumberLookup}
+                  disabled={loading || !vehicleNumber}
+                  className="image-search-modal-continue"
+                  style={{ width: 'auto', padding: '0 20px' }}
+                >
+                  {loading ? 'Looking up...' : 'Lookup'}
+                </button>
+              </div>
+              {vehicleFound && (
+                <div style={{ marginTop: '8px', padding: '8px', backgroundColor: '#e8f5e9', borderRadius: '4px', fontSize: '14px', color: '#2e7d32' }}>
+                  ✅ Vehicle Found: {vehicleFound}
+                </div>
+              )}
+            </div>
+
+            <div style={{ textAlign: 'center', margin: '16px 0', color: '#666', fontSize: '14px' }}>OR</div>
 
             {/* Make */}
             <div className="image-search-modal-field">

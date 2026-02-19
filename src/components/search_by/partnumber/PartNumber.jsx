@@ -1612,7 +1612,76 @@ const PartNumber = () => {
         {/* CONTENT */}
         <div className="pn-content">
           {loading && !batchLoadingProgress && (
-            <div className="pn-loading">Loading products...</div>
+            <div className="pn-products-layout">
+              {/* LEFT SIDE - Skeleton Loading */}
+              <div className="pn-left-section">
+                {/* myTVS Recommended Products Skeleton */}
+                <div className="product2-section">
+                  <h2 className="product2-section-title">myTVS Recommended Products</h2>
+                  <div className="product2-container horizontal">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="product2-card skeleton-card">
+                        <div className="product2-content">
+                          <div className="product2-info">
+                            <div className="product2-tags">
+                              <span className="skeleton skeleton-pn-tag"></span>
+                              <span className="skeleton skeleton-pn-tag"></span>
+                              <span className="skeleton skeleton-pn-tag"></span>
+                            </div>
+                            <div className="skeleton skeleton-pn-part-code"></div>
+                            <div className="skeleton skeleton-pn-name"></div>
+                          </div>
+                          <div className="product2-image-wrapper">
+                            <div className="skeleton skeleton-pn-image"></div>
+                          </div>
+                        </div>
+                        <div className="product2-price-section">
+                          <span className="skeleton skeleton-pn-price"></span>
+                          <span className="skeleton skeleton-pn-mrp"></span>
+                          <div className="skeleton skeleton-pn-button"></div>
+                        </div>
+                        <div className="product2-compatible">
+                          <span className="skeleton skeleton-pn-compatible"></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Other Brand Products Skeleton */}
+                <div className="product2-section">
+                  <h2 className="product2-section-title">Other Brand Products</h2>
+                  <div className="product2-container horizontal">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="product2-card skeleton-card">
+                        <div className="product2-content">
+                          <div className="product2-info">
+                            <div className="product2-tags">
+                              <span className="skeleton skeleton-pn-tag"></span>
+                              <span className="skeleton skeleton-pn-tag"></span>
+                              <span className="skeleton skeleton-pn-tag"></span>
+                            </div>
+                            <div className="skeleton skeleton-pn-part-code"></div>
+                            <div className="skeleton skeleton-pn-name"></div>
+                          </div>
+                          <div className="product2-image-wrapper">
+                            <div className="skeleton skeleton-pn-image"></div>
+                          </div>
+                        </div>
+                        <div className="product2-price-section">
+                          <span className="skeleton skeleton-pn-price"></span>
+                          <span className="skeleton skeleton-pn-mrp"></span>
+                          <div className="skeleton skeleton-pn-button"></div>
+                        </div>
+                        <div className="product2-compatible">
+                          <span className="skeleton skeleton-pn-compatible"></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {!loading && error && (
